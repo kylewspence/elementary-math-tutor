@@ -28,6 +28,8 @@ export interface DivisionStep {
     bringDown?: number;    // Next digit brought down (if any)
 }
 
+export type GameMode = 'practice' | 'rescue';
+
 export interface GameState {
     currentLevel: number;
     currentProblem: number; // 1-10 within the level
@@ -37,6 +39,7 @@ export interface GameState {
     userAnswers: UserAnswer[];
     errors: string[];
     isSubmitted?: boolean; // New flag to track if problem has been submitted
+    gameMode?: GameMode; // New field to track current game mode
 }
 
 export interface UserAnswer {

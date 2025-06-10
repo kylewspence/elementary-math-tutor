@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import Header from './components/Header/Header';
 import LevelSelector from './components/LevelSelector/LevelSelector';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
+import RescueMode from './components/RescueMode/RescueMode';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 
@@ -19,6 +20,7 @@ function App() {
     updateProblem,
     enableEditing,
     disableEditing,
+    switchGameMode,
   } = useGameState();
 
   const {
@@ -65,8 +67,20 @@ function App() {
     jumpToLevel(levelId);
   };
 
-  // Show completion message
-  if (gameState.isComplete && gameState.problem) {
+  // Handle game mode toggle
+  const handleGameModeToggle = () => {
+    const newMode = gameState.gameMode === 'practice' ? 'rescue' : 'practice';
+    switchGameMode(newMode);
+  };
+
+  // Handle rescue mission complete
+  const handleRescueComplete = () => {
+    // Could add celebration or reset logic here
+    console.log('Rescue mission completed!');
+  };
+
+  // Show completion message - but not in rescue mode
+  if (gameState.isComplete && gameState.problem && gameState.gameMode !== 'rescue') {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -96,10 +110,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header
+        gameMode={gameState.gameMode}
+        onGameModeToggle={handleGameModeToggle}
+      />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className={`grid gap-8 max-w-7xl mx-auto ${gameState.gameMode === 'rescue'
+          ? 'grid-cols-1 lg:grid-cols-5'
+          : 'grid-cols-1 lg:grid-cols-4'
+          }`}>
 
           {/* Level Selector Sidebar */}
           <div className="lg:col-span-1">
@@ -109,8 +129,8 @@ function App() {
             />
           </div>
 
-          {/* Division Problem Area */}
-          <div className="lg:col-span-3">
+          {/* Division Problem Area - Center */}
+          <div className={gameState.gameMode === 'rescue' ? 'lg:col-span-3' : 'lg:col-span-3'}>
             {gameState.problem ? (
               <DivisionDisplay
                 problem={gameState.problem}
@@ -135,6 +155,16 @@ function App() {
               </div>
             )}
           </div>
+
+          {/* Rescue Mode Sidebar - Right */}
+          {gameState.gameMode === 'rescue' && (
+            <div className="lg:col-span-1">
+              <RescueMode
+                gameState={gameState}
+                onComplete={handleRescueComplete}
+              />
+            </div>
+          )}
         </div>
 
         {/* Problem controls */}

@@ -13,6 +13,7 @@ export function useGameState() {
         problem: null,
         userAnswers: [],
         errors: [],
+        gameMode: 'practice', // Default to practice mode
     });
 
     // Generate a new problem for the current level
@@ -234,6 +235,19 @@ export function useGameState() {
         }
     }, [gameState.problem]);
 
+    // Switch game mode
+    const switchGameMode = useCallback((mode: 'practice' | 'rescue') => {
+        setGameState(prev => ({
+            ...prev,
+            gameMode: mode,
+            // Reset some state when switching modes
+            isSubmitted: false,
+            isComplete: false,
+            userAnswers: [],
+            errors: [],
+        }));
+    }, []);
+
     return {
         gameState,
         generateNewProblem,
@@ -248,5 +262,6 @@ export function useGameState() {
         updateProblem,
         enableEditing,
         disableEditing,
+        switchGameMode,
     };
 } 
