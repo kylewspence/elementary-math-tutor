@@ -46,7 +46,7 @@ export function generateProblem(level: GameLevel): DivisionProblem {
     };
 }
 
-function calculateDivisionSteps(dividend: number, divisor: number): DivisionStep[] {
+export function calculateDivisionSteps(dividend: number, divisor: number): DivisionStep[] {
     const steps: DivisionStep[] = [];
     const dividendStr = dividend.toString();
 

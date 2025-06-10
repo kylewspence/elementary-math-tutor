@@ -9,6 +9,11 @@ interface DivisionDisplayProps {
     currentFocus: CurrentFocus;
     onAnswerSubmit: (answer: UserAnswer) => void;
     onAnswerClear: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => void;
+    onProblemChange?: (dividend: number, divisor: number) => void;
+    onProblemSubmit?: () => void;
+    onEnableEditing?: () => void;
+    onDisableEditing?: () => void;
+    isSubmitted?: boolean;
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
 }
@@ -19,10 +24,16 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     currentFocus,
     onAnswerSubmit,
     onAnswerClear,
+    onProblemChange,
+    onProblemSubmit,
+    onEnableEditing,
+    onDisableEditing,
+    isSubmitted,
     onKeyDown,
     onFieldClick,
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
+    const problemRef = useRef<HTMLDivElement>(null);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -31,19 +42,56 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         }
     }, [currentFocus]);
 
+    // Handle clicking outside the problem area to disable editing
+    useEffect(() => {
+        if (!problem.isEditable) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+
+            // Check if click is outside the editable header area
+            if (problemRef.current && !problemRef.current.contains(target)) {
+                onDisableEditing?.();
+            }
+        };
+
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onDisableEditing?.();
+            }
+        };
+
+        // Add listeners with a small delay
+        const timeoutId = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscapeKey);
+        }, 150);
+
+        return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscapeKey);
+        };
+    }, [problem.isEditable, onDisableEditing]);
+
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
         return userAnswers.find(a => a.stepNumber === stepNumber && a.fieldType === fieldType && a.fieldPosition === position);
     };
 
-    // Helper to determine input variant
+    // Helper to determine input variant (only show colors after submission)
     const getInputVariant = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
         const userAnswer = getUserAnswer(stepNumber, fieldType, position);
         const isActive = currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position;
 
         if (isActive) return 'active';
-        if (userAnswer?.isCorrect === true) return 'correct';
-        if (userAnswer?.isCorrect === false) return 'error';
+
+        // Only show validation colors after submission
+        if (isSubmitted && userAnswer) {
+            if (userAnswer.isCorrect === true) return 'correct';
+            if (userAnswer.isCorrect === false) return 'error';
+        }
+
         return 'default';
     };
 
@@ -123,15 +171,66 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         }, 100);
     };
 
+    // Handle problem editing
+    const handleDividendChange = (value: string) => {
+        const newDividend = parseInt(value, 10);
+        if (!isNaN(newDividend) && newDividend > 0 && onProblemChange) {
+            onProblemChange(newDividend, problem.divisor);
+        }
+    };
+
+    const handleDivisorChange = (value: string) => {
+        const newDivisor = parseInt(value, 10);
+        if (!isNaN(newDivisor) && newDivisor > 0 && onProblemChange) {
+            onProblemChange(problem.dividend, newDivisor);
+        }
+    };
+
     const dividendStr = problem.dividend.toString();
 
     return (
         <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
-            {/* Problem header */}
-            <div className="text-center mb-6">
-                <div className="text-xl text-gray-600">
-                    {problem.dividend} ÷ {problem.divisor}
+            {/* Problem header - clickable to edit */}
+            <div className="text-center mb-6" ref={problemRef}>
+                <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
+                    {problem.isEditable ? (
+                        <>
+                            <input
+                                type="text"
+                                value={problem.dividend.toString()}
+                                onChange={(e) => handleDividendChange(e.target.value)}
+                                className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Dividend"
+                                autoFocus
+                            />
+                            <span>÷</span>
+                            <input
+                                type="text"
+                                value={problem.divisor.toString()}
+                                onChange={(e) => handleDivisorChange(e.target.value)}
+                                className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Divisor"
+                            />
+                        </>
+                    ) : (
+                        <div
+                            className="cursor-pointer hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border-2 border-transparent hover:border-blue-200"
+                            onClick={() => onEnableEditing?.()}
+                            title="Click to edit problem"
+                        >
+                            {problem.dividend} ÷ {problem.divisor}
+                        </div>
+                    )}
                 </div>
+                {problem.isEditable ? (
+                    <div className="text-sm text-blue-600 mt-2">
+                        ✏️ Edit the numbers above - click elsewhere when done
+                    </div>
+                ) : (
+                    <div className="text-sm text-gray-500 mt-2">
+                        💡 Click the problem above to edit it
+                    </div>
+                )}
             </div>
 
             {/* Division layout */}
@@ -250,8 +349,22 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 </div>
             </div>
 
+            {/* Submit Button */}
+            <div className="mt-6 text-center">
+                <button
+                    onClick={() => onProblemSubmit?.()}
+                    disabled={!userAnswers.length || isSubmitted}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length || isSubmitted
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        }`}
+                >
+                    {isSubmitted ? '✓ Submitted' : '📝 Submit Answers'}
+                </button>
+            </div>
+
             {/* Instructions */}
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <div className="mt-4 text-center text-sm text-gray-500">
                 💡 Use Tab to move forward, Shift+Tab to go back, Backspace to delete
             </div>
         </div>

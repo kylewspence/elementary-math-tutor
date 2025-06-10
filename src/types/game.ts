@@ -16,6 +16,7 @@ export interface DivisionProblem {
     quotient: number;
     remainder: number;
     steps: DivisionStep[];
+    isEditable?: boolean;
 }
 
 export interface DivisionStep {
@@ -35,6 +36,7 @@ export interface GameState {
     problem: DivisionProblem | null;
     userAnswers: UserAnswer[];
     errors: string[];
+    isSubmitted?: boolean; // New flag to track if problem has been submitted
 }
 
 export interface UserAnswer {
