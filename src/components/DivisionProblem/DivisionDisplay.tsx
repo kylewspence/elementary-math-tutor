@@ -130,41 +130,38 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
-        // Small delay to ensure current input is processed
-        setTimeout(() => {
-            // Don't use the global keyboard handler, just move to next field
-            if (currentFocus.fieldType === 'multiply') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next multiply digit
-                    onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
-                } else {
-                    // Move to subtract
-                    onFieldClick(currentFocus.stepNumber, 'subtract', Math.max(0, getDigitCount(step.subtract) - 1));
-                }
-            } else if (currentFocus.fieldType === 'subtract') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next subtract digit
-                    onFieldClick(currentFocus.stepNumber, 'subtract', currentFocus.fieldPosition - 1);
-                } else if (step.bringDown !== undefined) {
-                    // Move to bring down
-                    onFieldClick(currentFocus.stepNumber, 'bringDown', 0);
-                } else if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                    // Move to next step quotient
-                    onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-                }
-            } else if (currentFocus.fieldType === 'quotient') {
-                // Move to multiply
-                const step = problem.steps[currentFocus.stepNumber];
-                onFieldClick(currentFocus.stepNumber, 'multiply', getDigitCount(step.multiply) - 1);
-            } else if (currentFocus.fieldType === 'bringDown') {
-                // Move to next step quotient
-                if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                    onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-                }
+        // Move to next field immediately
+        if (currentFocus.fieldType === 'multiply') {
+            const step = problem.steps[currentFocus.stepNumber];
+            if (currentFocus.fieldPosition > 0) {
+                // Move to next multiply digit
+                onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
+            } else {
+                // Move to subtract
+                onFieldClick(currentFocus.stepNumber, 'subtract', Math.max(0, getDigitCount(step.subtract) - 1));
             }
-        }, 100);
+        } else if (currentFocus.fieldType === 'subtract') {
+            const step = problem.steps[currentFocus.stepNumber];
+            if (currentFocus.fieldPosition > 0) {
+                // Move to next subtract digit
+                onFieldClick(currentFocus.stepNumber, 'subtract', currentFocus.fieldPosition - 1);
+            } else if (step.bringDown !== undefined) {
+                // Move to bring down
+                onFieldClick(currentFocus.stepNumber, 'bringDown', 0);
+            } else if (currentFocus.stepNumber + 1 < problem.steps.length) {
+                // Move to next step quotient
+                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
+            }
+        } else if (currentFocus.fieldType === 'quotient') {
+            // Move to multiply
+            const step = problem.steps[currentFocus.stepNumber];
+            onFieldClick(currentFocus.stepNumber, 'multiply', getDigitCount(step.multiply) - 1);
+        } else if (currentFocus.fieldType === 'bringDown') {
+            // Move to next step quotient
+            if (currentFocus.stepNumber + 1 < problem.steps.length) {
+                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
+            }
+        }
     };
 
     // Handle problem editing

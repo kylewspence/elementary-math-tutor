@@ -8,7 +8,7 @@ export interface CurrentFocus {
     fieldPosition: number;
 }
 
-export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: UserAnswer[] = [], isSubmitted: boolean = false) {
+export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: UserAnswer[] = [], _isSubmitted: boolean = false) {
     const [currentFocus, setCurrentFocus] = useState<CurrentFocus>({
         stepNumber: 0,
         fieldType: 'quotient',
@@ -20,135 +20,71 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         return Math.max(1, value.toString().length);
     };
 
-    // Helper to check if a field has a correct answer or value
-    const hasAnswerOrIsCorrect = (stepNumber: number, fieldType: string, fieldPosition: number): boolean => {
-        const answer = userAnswers.find(a =>
-            a.stepNumber === stepNumber &&
-            a.fieldType === fieldType &&
-            a.fieldPosition === fieldPosition
-        );
 
-        if (!answer) return false;
 
-        // If submitted, only consider correct answers as "complete"
-        if (isSubmitted) {
-            return answer.isCorrect === true;
-        }
+    // Create a list of all fields in proper sequential order
+    const getAllFieldsInOrder = useCallback((): CurrentFocus[] => {
+        if (!problem) return [];
 
-        // If not submitted, any non-zero value counts as "filled"
-        return answer.value > 0;
-    };
-
-    // Find first empty or incorrect field (always start from beginning)
-    const findFirstEmptyField = useCallback((): CurrentFocus | null => {
-        if (!problem) return null;
-
-        // Create a list of all fields in order
         const allFields: CurrentFocus[] = [];
 
         for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
-            const step = problem.steps[stepIndex];
-
-            // Quotient
+            // Quotient field for this step
             allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
 
-            // Multiply digits (right to left)
+            // Multiply fields (right to left)
+            const step = problem.steps[stepIndex];
             const multiplyDigits = getDigitCount(step.multiply);
             for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
                 allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
             }
 
-            // Subtract digits (right to left)
+            // Subtract fields (right to left)
             const subtractDigits = getDigitCount(step.subtract);
             for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
                 allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
             }
 
-            // Bring down (if exists)
+            // Bring down field (if exists)
             if (step.bringDown !== undefined) {
                 allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
             }
         }
 
-        // Always look for the FIRST empty/incorrect field from the beginning
-        for (let i = 0; i < allFields.length; i++) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
-        }
+        return allFields;
+    }, [problem]);
 
-        return null; // All fields are complete
-    }, [problem, userAnswers, isSubmitted]);
-
-    // Find previous empty or incorrect field
-    const findPreviousEmptyField = useCallback((startStep: number, startFieldType: string, startFieldPosition: number): CurrentFocus | null => {
-        if (!problem) return null;
-
-        // Create a list of all fields in order (same as above)
-        const allFields: CurrentFocus[] = [];
-
-        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
-            const step = problem.steps[stepIndex];
-
-            allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
-
-            const multiplyDigits = getDigitCount(step.multiply);
-            for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
-                allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
-            }
-
-            const subtractDigits = getDigitCount(step.subtract);
-            for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
-                allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
-            }
-
-            if (step.bringDown !== undefined) {
-                allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
-            }
-        }
-
-        // Find current position
-        const currentIndex = allFields.findIndex(field =>
-            field.stepNumber === startStep &&
-            field.fieldType === startFieldType &&
-            field.fieldPosition === startFieldPosition
-        );
-
-        // Look backwards for empty/incorrect field
-        for (let i = currentIndex - 1; i >= 0; i--) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
-        }
-
-        // If no empty field found before, wrap around to end
-        for (let i = allFields.length - 1; i >= currentIndex; i--) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
-        }
-
-        return null;
-    }, [problem, userAnswers, isSubmitted]);
-
-    // Smart move to first empty/incorrect field
+    // Simple move to next field in sequence
     const moveNext = useCallback(() => {
-        const firstField = findFirstEmptyField();
-        if (firstField) {
-            setCurrentFocus(firstField);
-        }
-    }, [findFirstEmptyField]);
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === currentFocus.stepNumber &&
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition
+        );
 
-    // Smart move to previous empty/incorrect field
+        if (currentIndex >= 0 && currentIndex < allFields.length - 1) {
+            const nextField = allFields[currentIndex + 1];
+            setCurrentFocus(nextField);
+        }
+        // If at the last field, stay there
+    }, [currentFocus, getAllFieldsInOrder]);
+
+    // Simple move to previous field in sequence
     const movePrevious = useCallback(() => {
-        const prevField = findPreviousEmptyField(currentFocus.stepNumber, currentFocus.fieldType, currentFocus.fieldPosition);
-        if (prevField) {
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === currentFocus.stepNumber &&
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition
+        );
+
+        if (currentIndex > 0) {
+            const prevField = allFields[currentIndex - 1];
             setCurrentFocus(prevField);
         }
-    }, [currentFocus, findPreviousEmptyField]);
+        // If at the first field, stay there
+    }, [currentFocus, getAllFieldsInOrder]);
 
     // Jump to specific field
     const jumpToField = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {
