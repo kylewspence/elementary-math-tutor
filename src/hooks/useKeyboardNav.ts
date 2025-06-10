@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { DivisionProblem } from '../types/game';
+import type { DivisionProblem, UserAnswer } from '../types/game';
 import { KEYBOARD_KEYS } from '../utils/constants';
 
 export interface CurrentFocus {
@@ -8,7 +8,7 @@ export interface CurrentFocus {
     fieldPosition: number;
 }
 
-export function useKeyboardNav(problem: DivisionProblem | null) {
+export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: UserAnswer[] = [], isSubmitted: boolean = false) {
     const [currentFocus, setCurrentFocus] = useState<CurrentFocus>({
         stepNumber: 0,
         fieldType: 'quotient',
@@ -20,92 +20,135 @@ export function useKeyboardNav(problem: DivisionProblem | null) {
         return Math.max(1, value.toString().length);
     };
 
-    // Move to next logical field
+    // Helper to check if a field has a correct answer or value
+    const hasAnswerOrIsCorrect = (stepNumber: number, fieldType: string, fieldPosition: number): boolean => {
+        const answer = userAnswers.find(a =>
+            a.stepNumber === stepNumber &&
+            a.fieldType === fieldType &&
+            a.fieldPosition === fieldPosition
+        );
+
+        if (!answer) return false;
+
+        // If submitted, only consider correct answers as "complete"
+        if (isSubmitted) {
+            return answer.isCorrect === true;
+        }
+
+        // If not submitted, any non-zero value counts as "filled"
+        return answer.value > 0;
+    };
+
+    // Find first empty or incorrect field (always start from beginning)
+    const findFirstEmptyField = useCallback((): CurrentFocus | null => {
+        if (!problem) return null;
+
+        // Create a list of all fields in order
+        const allFields: CurrentFocus[] = [];
+
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
+
+            // Quotient
+            allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
+
+            // Multiply digits (right to left)
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
+            }
+
+            // Subtract digits (right to left)
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+
+            // Bring down (if exists)
+            if (step.bringDown !== undefined) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
+            }
+        }
+
+        // Always look for the FIRST empty/incorrect field from the beginning
+        for (let i = 0; i < allFields.length; i++) {
+            const field = allFields[i];
+            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
+                return field;
+            }
+        }
+
+        return null; // All fields are complete
+    }, [problem, userAnswers, isSubmitted]);
+
+    // Find previous empty or incorrect field
+    const findPreviousEmptyField = useCallback((startStep: number, startFieldType: string, startFieldPosition: number): CurrentFocus | null => {
+        if (!problem) return null;
+
+        // Create a list of all fields in order (same as above)
+        const allFields: CurrentFocus[] = [];
+
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
+
+            allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
+
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
+            }
+
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+
+            if (step.bringDown !== undefined) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
+            }
+        }
+
+        // Find current position
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === startStep &&
+            field.fieldType === startFieldType &&
+            field.fieldPosition === startFieldPosition
+        );
+
+        // Look backwards for empty/incorrect field
+        for (let i = currentIndex - 1; i >= 0; i--) {
+            const field = allFields[i];
+            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
+                return field;
+            }
+        }
+
+        // If no empty field found before, wrap around to end
+        for (let i = allFields.length - 1; i >= currentIndex; i--) {
+            const field = allFields[i];
+            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
+                return field;
+            }
+        }
+
+        return null;
+    }, [problem, userAnswers, isSubmitted]);
+
+    // Smart move to first empty/incorrect field
     const moveNext = useCallback(() => {
-        if (!problem) return;
+        const firstField = findFirstEmptyField();
+        if (firstField) {
+            setCurrentFocus(firstField);
+        }
+    }, [findFirstEmptyField]);
 
-        setCurrentFocus(prev => {
-            const { stepNumber, fieldType, fieldPosition } = prev;
-            const step = problem.steps[stepNumber];
-
-            if (fieldType === 'quotient') {
-                // Move to first multiply field
-                return { stepNumber, fieldType: 'multiply', fieldPosition: getDigitCount(step.multiply) - 1 };
-            } else if (fieldType === 'multiply') {
-                if (fieldPosition > 0) {
-                    // Move to next multiply digit
-                    return { stepNumber, fieldType: 'multiply', fieldPosition: fieldPosition - 1 };
-                } else {
-                    // Move to first subtract field
-                    return { stepNumber, fieldType: 'subtract', fieldPosition: Math.max(0, getDigitCount(step.subtract) - 1) };
-                }
-            } else if (fieldType === 'subtract') {
-                if (fieldPosition > 0) {
-                    // Move to next subtract digit
-                    return { stepNumber, fieldType: 'subtract', fieldPosition: fieldPosition - 1 };
-                } else {
-                    // Check if there's a bring down for this step
-                    if (step.bringDown !== undefined) {
-                        return { stepNumber, fieldType: 'bringDown', fieldPosition: 0 };
-                    }
-                    // Otherwise move to next step's quotient
-                    if (stepNumber + 1 < problem.steps.length) {
-                        return { stepNumber: stepNumber + 1, fieldType: 'quotient', fieldPosition: 0 };
-                    }
-                    return prev;
-                }
-            } else if (fieldType === 'bringDown') {
-                // Move to next step's quotient
-                if (stepNumber + 1 < problem.steps.length) {
-                    return { stepNumber: stepNumber + 1, fieldType: 'quotient', fieldPosition: 0 };
-                }
-                return prev;
-            }
-
-            return prev;
-        });
-    }, [problem]);
-
-    // Move to previous logical field
+    // Smart move to previous empty/incorrect field
     const movePrevious = useCallback(() => {
-        if (!problem) return;
-
-        setCurrentFocus(prev => {
-            const { stepNumber, fieldType, fieldPosition } = prev;
-            const step = problem.steps[stepNumber];
-
-            if (fieldType === 'bringDown') {
-                return { stepNumber, fieldType: 'subtract', fieldPosition: 0 };
-            } else if (fieldType === 'subtract') {
-                const subtractDigits = getDigitCount(step.subtract);
-                if (fieldPosition < subtractDigits - 1) {
-                    return { stepNumber, fieldType: 'subtract', fieldPosition: fieldPosition + 1 };
-                } else {
-                    return { stepNumber, fieldType: 'multiply', fieldPosition: 0 };
-                }
-            } else if (fieldType === 'multiply') {
-                const multiplyDigits = getDigitCount(step.multiply);
-                if (fieldPosition < multiplyDigits - 1) {
-                    return { stepNumber, fieldType: 'multiply', fieldPosition: fieldPosition + 1 };
-                } else {
-                    return { stepNumber, fieldType: 'quotient', fieldPosition: 0 };
-                }
-            } else if (fieldType === 'quotient') {
-                // Move to previous step's last field
-                if (stepNumber > 0) {
-                    const prevStep = problem.steps[stepNumber - 1];
-                    if (prevStep?.bringDown !== undefined) {
-                        return { stepNumber: stepNumber - 1, fieldType: 'bringDown', fieldPosition: 0 };
-                    } else {
-                        return { stepNumber: stepNumber - 1, fieldType: 'subtract', fieldPosition: 0 };
-                    }
-                }
-                return prev;
-            }
-
-            return prev;
-        });
-    }, [problem]);
+        const prevField = findPreviousEmptyField(currentFocus.stepNumber, currentFocus.fieldType, currentFocus.fieldPosition);
+        if (prevField) {
+            setCurrentFocus(prevField);
+        }
+    }, [currentFocus, findPreviousEmptyField]);
 
     // Jump to specific field
     const jumpToField = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {

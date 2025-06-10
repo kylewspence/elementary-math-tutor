@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
 import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
-import { generateProblem } from '../utils/problemGenerator';
+import { generateProblem, calculateDivisionSteps } from '../utils/problemGenerator';
 import { validateAnswer, isProblemComplete } from '../utils/divisionValidator';
 
 export function useGameState() {
@@ -28,17 +28,15 @@ export function useGameState() {
             userAnswers: [],
             errors: [],
             isComplete: false,
+            isSubmitted: false,
         }));
 
         return problem;
     }, [gameState.currentLevel]);
 
-    // Submit a user answer
+    // Submit a user answer (without immediate validation)
     const submitAnswer = useCallback((userAnswer: UserAnswer) => {
         if (!gameState.problem) return;
-
-        const isCorrect = validateAnswer(gameState.problem, userAnswer);
-        const answerWithValidation = { ...userAnswer, isCorrect };
 
         setGameState(prev => {
             // Remove any existing answer for this exact position
@@ -48,18 +46,46 @@ export function useGameState() {
                     ans.fieldPosition === userAnswer.fieldPosition)
             );
 
-            const updatedAnswers = [...filteredAnswers, answerWithValidation];
-            const problemComplete = isProblemComplete(prev.problem!, updatedAnswers);
+            // Add the new answer without validation
+            const answerWithoutValidation = { ...userAnswer, isCorrect: false };
+            const updatedAnswers = [...filteredAnswers, answerWithoutValidation];
 
             return {
                 ...prev,
                 userAnswers: updatedAnswers,
-                isComplete: problemComplete,
-                errors: isCorrect ? prev.errors : [...prev.errors, `Incorrect answer for step ${userAnswer.stepNumber}`],
+                isSubmitted: false, // Reset submitted state when new answers are added
+                isComplete: false,
             };
         });
 
-        return isCorrect;
+        return false; // Don't return validation result
+    }, [gameState.problem]);
+
+    // Submit the entire problem for validation
+    const submitProblem = useCallback(() => {
+        if (!gameState.problem) return false;
+
+        setGameState(prev => {
+            // Validate all answers
+            const validatedAnswers = prev.userAnswers.map(answer => ({
+                ...answer,
+                isCorrect: validateAnswer(prev.problem!, answer)
+            }));
+
+            const problemComplete = isProblemComplete(prev.problem!, validatedAnswers);
+
+            return {
+                ...prev,
+                userAnswers: validatedAnswers,
+                isSubmitted: true,
+                isComplete: problemComplete,
+                errors: validatedAnswers
+                    .filter(ans => !ans.isCorrect)
+                    .map(ans => `Incorrect answer for step ${ans.stepNumber} ${ans.fieldType}`)
+            };
+        });
+
+        return true;
     }, [gameState.problem]);
 
     // Clear a specific answer (for deletion)
@@ -151,15 +177,76 @@ export function useGameState() {
         }
     }, [gameState.problem, generateNewProblem]);
 
+    // Update problem dynamically (for editable mode)
+    const updateProblem = useCallback((dividend: number, divisor: number) => {
+        if (divisor === 0) return; // Prevent division by zero
+
+        try {
+            const quotient = Math.floor(dividend / divisor);
+            const remainder = dividend % divisor;
+            const steps = calculateDivisionSteps(dividend, divisor);
+
+            const newProblem: DivisionProblem = {
+                dividend,
+                divisor,
+                quotient,
+                remainder,
+                steps,
+                isEditable: gameState.problem?.isEditable || false
+            };
+
+            setGameState(prev => ({
+                ...prev,
+                problem: newProblem,
+                userAnswers: [], // Clear all user answers when problem changes
+                errors: [],
+                isComplete: false,
+                isSubmitted: false,
+            }));
+        } catch (error) {
+            console.error('Error updating problem:', error);
+        }
+    }, [gameState.problem?.isEditable]);
+
+    // Enable editing mode
+    const enableEditing = useCallback(() => {
+        if (gameState.problem) {
+            setGameState(prev => ({
+                ...prev,
+                problem: {
+                    ...prev.problem!,
+                    isEditable: true
+                }
+            }));
+        }
+    }, [gameState.problem]);
+
+    // Disable editing mode  
+    const disableEditing = useCallback(() => {
+        if (gameState.problem) {
+            setGameState(prev => ({
+                ...prev,
+                problem: {
+                    ...prev.problem!,
+                    isEditable: false
+                }
+            }));
+        }
+    }, [gameState.problem]);
+
     return {
         gameState,
         generateNewProblem,
         submitAnswer,
+        submitProblem,
         clearAnswer,
         nextProblem,
         jumpToLevel,
         resetProblem,
         initializeGame,
         currentLevel: GAME_LEVELS.find(l => l.id === gameState.currentLevel),
+        updateProblem,
+        enableEditing,
+        disableEditing,
     };
 } 

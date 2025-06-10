@@ -10,11 +10,15 @@ function App() {
     gameState,
     generateNewProblem,
     submitAnswer,
+    submitProblem,
     clearAnswer,
     nextProblem,
     jumpToLevel,
     resetProblem,
     initializeGame,
+    updateProblem,
+    enableEditing,
+    disableEditing,
   } = useGameState();
 
   const {
@@ -22,7 +26,7 @@ function App() {
     handleKeyDown,
     jumpToField,
     isFieldFocused,
-  } = useKeyboardNav(gameState.problem);
+  } = useKeyboardNav(gameState.problem, gameState.userAnswers, gameState.isSubmitted);
 
   // Initialize the game on mount
   useEffect(() => {
@@ -36,16 +40,14 @@ function App() {
     }
   }, [gameState.problem, generateNewProblem]);
 
-  // Handle answer submission
+  // Handle answer submission (no immediate validation)
   const handleAnswerSubmit = (answer: any) => {
-    const isCorrect = submitAnswer(answer);
-    // Auto-advance to next field if correct
-    if (isCorrect) {
-      // Small delay to show the green feedback
-      setTimeout(() => {
-        // Add navigation logic here if needed
-      }, 100);
-    }
+    submitAnswer(answer);
+  };
+
+  // Handle problem submission for validation
+  const handleProblemSubmit = () => {
+    submitProblem();
   };
 
   // Handle field clicks
@@ -116,6 +118,11 @@ function App() {
                 currentFocus={currentFocus}
                 onAnswerSubmit={handleAnswerSubmit}
                 onAnswerClear={clearAnswer}
+                onProblemChange={updateProblem}
+                onProblemSubmit={handleProblemSubmit}
+                onEnableEditing={enableEditing}
+                onDisableEditing={disableEditing}
+                isSubmitted={gameState.isSubmitted}
                 onKeyDown={handleKeyDown}
                 onFieldClick={handleFieldClick}
               />
@@ -146,6 +153,7 @@ function App() {
               >
                 🎲 New Problem
               </button>
+
             </div>
           </div>
         )}
