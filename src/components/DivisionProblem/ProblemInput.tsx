@@ -15,7 +15,6 @@ const ProblemInput: React.FC<ProblemInputProps> = ({
     // Handle divisor change
     const handleDivisorChange = (value: string) => {
         const numericValue = parseInt(value) || 0;
-        const validation = validateDivisor(numericValue);
 
         onChange({
             ...problem,
@@ -26,7 +25,6 @@ const ProblemInput: React.FC<ProblemInputProps> = ({
     // Handle dividend change
     const handleDividendChange = (value: string) => {
         const numericValue = parseInt(value) || 0;
-        const validation = validateDividend(numericValue);
 
         onChange({
             ...problem,
@@ -49,12 +47,10 @@ const ProblemInput: React.FC<ProblemInputProps> = ({
                 {/* Dividend Input */}
                 <div className="text-center">
                     <Input
-                        label="Dividend"
                         value={dividend.toString()}
                         onChange={handleDividendChange}
                         maxLength={4}
                         disabled={disabled}
-                        error={!dividendValidation.isValid ? dividendValidation.error : undefined}
                         aria-label="Enter the dividend (number being divided)"
                         className="w-20"
                     />
@@ -68,12 +64,10 @@ const ProblemInput: React.FC<ProblemInputProps> = ({
                 {/* Divisor Input */}
                 <div className="text-center">
                     <Input
-                        label="Divisor"
                         value={divisor.toString()}
                         onChange={handleDivisorChange}
                         maxLength={3}
                         disabled={disabled}
-                        error={!divisorValidation.isValid ? divisorValidation.error : undefined}
                         aria-label="Enter the divisor (number to divide by)"
                         className="w-20"
                     />

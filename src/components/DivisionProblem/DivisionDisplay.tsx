@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { DivisionProblem, UserAnswer } from '../../types/game';
+import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 
@@ -16,6 +16,7 @@ interface DivisionDisplayProps {
     isSubmitted?: boolean;
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
+    gameState?: GameState;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -31,6 +32,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     isSubmitted,
     onKeyDown,
     onFieldClick,
+    gameState,
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -138,7 +140,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             // Don't use the global keyboard handler, just move to next field
             if (currentFocus.fieldType === 'multiply') {
                 const step = problem.steps[currentFocus.stepNumber];
-                const multiplyDigits = getDigitCount(step.multiply);
                 if (currentFocus.fieldPosition > 0) {
                     // Move to next multiply digit
                     onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
@@ -241,7 +242,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     <div className="flex items-end mb-1">
                         <div className="w-16 mr-4"></div> {/* Spacer for divisor */}
                         <div className="flex gap-2">
-                            {problem.steps.map((step, index) => (
+                            {problem.steps.map((_, index) => (
                                 <Input
                                     key={`quotient-${index}`}
                                     ref={currentFocus.stepNumber === index && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
@@ -274,7 +275,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
                     {/* Working area - with multiple boxes for multi-digit numbers */}
                     <div className="ml-20 mt-6 space-y-6">
-                        {problem.steps.map((step, stepIndex) => {
+                        {problem.steps.map((_, stepIndex) => {
+                            const step = problem.steps[stepIndex];
                             const multiplyDigits = getDigitCount(step.multiply);
                             const subtractDigits = getDigitCount(step.subtract);
 
@@ -285,7 +287,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     <div className="flex gap-2 mb-2">
                                         {Array.from({ length: multiplyDigits }, (_, digitIndex) => {
                                             const position = multiplyDigits - 1 - digitIndex; // Right to left positioning
-                                            const correctDigit = getDigitAtPosition(step.multiply, position);
 
                                             return (
                                                 <Input
@@ -311,7 +312,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                         {/* Subtraction result - multiple boxes for multi-digit */}
                                         {Array.from({ length: Math.max(1, subtractDigits) }, (_, digitIndex) => {
                                             const position = Math.max(1, subtractDigits) - 1 - digitIndex;
-                                            const correctDigit = subtractDigits > 0 ? getDigitAtPosition(step.subtract, position) : 0;
 
                                             return (
                                                 <Input
@@ -362,6 +362,26 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {isSubmitted ? '✓ Submitted' : '📝 Submit Answers'}
                 </button>
             </div>
+
+            {/* Completion Success Card */}
+            {isSubmitted && gameState?.isComplete && (
+                <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
+                    <div className="text-4xl mb-3">🎉</div>
+                    <h3 className="text-xl font-bold text-green-800 mb-2">
+                        Problem Complete!
+                    </h3>
+                    <p className="text-green-700 mb-4">
+                        Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
+                        {problem.remainder > 0 && ` remainder ${problem.remainder}`}
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                    >
+                        Next Problem →
+                    </button>
+                </div>
+            )}
 
             {/* Instructions */}
             <div className="mt-4 text-center text-sm text-gray-500">

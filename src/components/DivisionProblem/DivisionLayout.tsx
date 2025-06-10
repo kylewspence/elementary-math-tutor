@@ -5,9 +5,9 @@ import InputField from './InputField';
 
 const DivisionLayout: React.FC<DivisionLayoutProps> = ({
     state,
-    onStepComplete,
-    onInputChange,
-    onFocusChange,
+    onStepComplete: _onStepComplete,
+    onInputChange: _onInputChange,
+    onFocusChange: _onFocusChange,
 }) => {
     const { problem, quotientDigits, workingArea, currentStep, isComplete, errors } = state;
     const { divisor, dividend } = problem;
@@ -58,7 +58,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
             timestamp: new Date(),
         };
 
-        onInputChange(userInput);
+        _onInputChange(userInput);
     };
 
     // Get user-friendly step description
@@ -133,7 +133,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                                             placeholder="?"
                                             onChange={(value) => handleInputChange(position, value)}
                                             onFocus={() => {
-                                                onFocusChange(position);
+                                                _onFocusChange(position);
                                                 focusField(position);
                                             }}
                                             onBlur={() => { }}
@@ -196,7 +196,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                                     }, value)}
                                     onFocus={() => {
                                         const pos = { stepNumber: 0, fieldType: 'multiply' as const, position: 0 };
-                                        onFocusChange(pos);
+                                        _onFocusChange(pos);
                                         focusField(pos);
                                     }}
                                     onBlur={() => { }}
@@ -241,7 +241,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                                     }, value)}
                                     onFocus={() => {
                                         const pos = { stepNumber: 0, fieldType: 'subtract' as const, position: 0 };
-                                        onFocusChange(pos);
+                                        _onFocusChange(pos);
                                         focusField(pos);
                                     }}
                                     onBlur={() => { }}

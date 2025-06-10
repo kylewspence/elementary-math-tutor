@@ -139,7 +139,7 @@ export function useKeyboardNavigation(
 
     // Handle keyboard events - FIXED: Allow numeric input
     const handleKeyDown = useCallback((event: KeyboardEvent): boolean => {
-        const { key, ctrlKey, shiftKey } = event;
+        const { key, shiftKey } = event;
 
         // Allow numeric input - DON'T prevent default for numbers
         if (/^[0-9]$/.test(key)) {

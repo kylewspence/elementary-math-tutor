@@ -9,9 +9,7 @@ import type {
 } from '../types/division';
 import {
     calculateLongDivision,
-    generateRandomProblem,
-    validateStepInput,
-    isDivisionComplete
+    generateRandomProblem
 } from '../utils/divisionCalculator';
 import { validateUserStepInput, validateProblemCompletion } from '../utils/validation';
 
