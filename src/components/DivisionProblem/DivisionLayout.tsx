@@ -9,22 +9,22 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
     onInputChange: _onInputChange,
     onFocusChange: _onFocusChange,
 }) => {
-    const { problem, quotientDigits, workingArea, currentStep, isComplete, errors } = state;
+    const { problem } = state;
     const { divisor, dividend } = problem;
+    const { workingArea: _workingArea, currentStep: _currentStep } = state;
 
     const dividendStr = dividend.toString();
-    const quotientLength = quotientDigits.length;
+    const quotientLength = Math.ceil(Math.log10(dividend / divisor + 1));
 
     const {
         currentFocus,
         handleKeyDown,
-        registerField,
         focusField
     } = useKeyboardNavigation(state.totalSteps, quotientLength);
 
     // Helper function to check if a field has an error
     const hasError = (position: FocusPosition): boolean => {
-        return errors.some(error =>
+        return state.errors.some(error =>
             error.stepNumber === position.stepNumber &&
             error.fieldType === position.fieldType &&
             error.position === position.position
@@ -86,7 +86,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                 <div className="text-2xl text-gray-600 mb-2">
                     {dividend} ÷ {divisor}
                 </div>
-                {isComplete && (
+                {state.isComplete && (
                     <div className="text-green-600 font-semibold">
                         ✅ Problem Complete!
                     </div>
@@ -97,10 +97,10 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
             <div className="max-w-2xl mx-auto mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-center">
                     <div className="text-sm font-medium text-blue-800 mb-1">
-                        {isComplete ? 'All done!' : 'Next Step:'}
+                        {state.isComplete ? 'All done!' : 'Next Step:'}
                     </div>
                     <div className="text-blue-700">
-                        {isComplete ? 'Great job completing the division!' : getCurrentStepDescription()}
+                        {state.isComplete ? 'Great job completing the division!' : getCurrentStepDescription()}
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                         <div className="border-l-2 border-t-2 border-gray-800 p-2 pl-4 min-w-48">
                             {/* Quotient digits */}
                             <div className="flex gap-1 mb-2">
-                                {quotientDigits.map((digit, index) => {
+                                {state.quotientDigits.map((digit, index) => {
                                     const position: FocusPosition = {
                                         stepNumber: 0,
                                         fieldType: 'quotient',

@@ -102,12 +102,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         return value.toString().length;
     };
 
-    // Helper to get digit at specific position (0 = rightmost)
-    const getDigitAtPosition = (value: number, position: number): number => {
-        const str = value.toString();
-        const index = str.length - 1 - position;
-        return index >= 0 ? parseInt(str[index]) : 0;
-    };
+
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
