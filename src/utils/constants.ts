@@ -5,13 +5,13 @@ import type { GameLevel } from '../types/game';
 export const DIVISION_CONSTANTS = {
     // Input validation
     MIN_DIVISOR: 1,
-    MAX_DIVISOR: 999,
+    MAX_DIVISOR: 9999,
     MIN_DIVIDEND: 1,
-    MAX_DIVIDEND: 9999,
+    MAX_DIVIDEND: 999999,
 
     // UI settings
-    MAX_QUOTIENT_DIGITS: 6,
-    MAX_WORKING_ROWS: 10,
+    MAX_QUOTIENT_DIGITS: 8,
+    MAX_WORKING_ROWS: 15,
     INPUT_DEBOUNCE_MS: 300,
 
     // Keyboard navigation
@@ -201,11 +201,65 @@ export const GAME_LEVELS: GameLevel[] = [
     {
         id: 4,
         name: 'Level 4',
-        description: 'Two digit divisor, 3-4 digit dividend',
+        description: 'Two digit divisor, 3-digit dividend',
+        divisorDigits: 2,
+        dividendDigits: 3,
+        maxDivisor: 99,
+        maxDividend: 999,
+    },
+    {
+        id: 5,
+        name: 'Level 5',
+        description: 'Two digit divisor, 4-digit dividend',
         divisorDigits: 2,
         dividendDigits: 4,
         maxDivisor: 99,
         maxDividend: 9999,
+    },
+    {
+        id: 6,
+        name: 'Level 6',
+        description: 'Two digit divisor, 5-digit dividend',
+        divisorDigits: 2,
+        dividendDigits: 5,
+        maxDivisor: 99,
+        maxDividend: 99999,
+    },
+    {
+        id: 7,
+        name: 'Level 7',
+        description: 'Three digit divisor, 4-digit dividend',
+        divisorDigits: 3,
+        dividendDigits: 4,
+        maxDivisor: 999,
+        maxDividend: 9999,
+    },
+    {
+        id: 8,
+        name: 'Level 8',
+        description: 'Three digit divisor, 5-digit dividend',
+        divisorDigits: 3,
+        dividendDigits: 5,
+        maxDivisor: 999,
+        maxDividend: 99999,
+    },
+    {
+        id: 9,
+        name: 'Level 9',
+        description: 'Three digit divisor, 6-digit dividend',
+        divisorDigits: 3,
+        dividendDigits: 6,
+        maxDivisor: 999,
+        maxDividend: 999999,
+    },
+    {
+        id: 10,
+        name: 'Level 10',
+        description: 'Four digit divisor, 6-digit dividend',
+        divisorDigits: 4,
+        dividendDigits: 6,
+        maxDivisor: 9999,
+        maxDividend: 999999,
     },
 ];
 
