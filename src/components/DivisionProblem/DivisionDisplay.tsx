@@ -391,9 +391,16 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             <div className="flex justify-center">
 
                 <div className="division-workspace relative">
-                    {/* Division line and divisor */}
-                    <div className="flex items-center">
-                        <div className="divisor-container mr-4 text-xl font-bold text-right" style={{ width: '3rem' }}>
+                    {/* Division line and divisor - Position the divisor to align with dividend row */}
+                    <div className="flex relative">
+                        <div className="divisor-container absolute text-xl font-bold" style={{
+                            right: '100%',
+                            top: '0',
+                            marginRight: '0.75rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            height: `${ROW_HEIGHT}px`
+                        }}>
                             {problem.divisor}
                         </div>
 
