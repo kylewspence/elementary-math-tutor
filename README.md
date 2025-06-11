@@ -2,7 +2,6 @@
 
 **✅ COMPLETE** - An interactive educational web application that teaches long division through step-by-step guidance with keyboard-optimized navigation.
 
-*Built in ~3 hours as a demonstration of rapid prototyping and modern web development practices.*
 
 ## 🎯 Project Overview
 
@@ -147,6 +146,20 @@ This application successfully demonstrates:
 - **Practice Encouragement**: Quick problem generation for repeated learning
 
 ## 🚀 Deployment
+
+For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) guide.
+
+### Environment Configuration
+The application uses environment variables for configuration. Copy `env.example` to `.env` for local development:
+
+```bash
+cp env.example .env
+```
+
+Key configuration options:
+- API endpoint
+- Feature flags
+- Logging settings
 
 ### Vercel (Recommended)
 ```bash

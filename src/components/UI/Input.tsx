@@ -76,6 +76,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             }
         }
 
+        // Always call the parent's onKeyDown first to ensure keyboard navigation works
+        if (onKeyDown) {
+            onKeyDown(e);
+
+            // If the event was prevented by the parent handler, respect that
+            if (e.defaultPrevented) {
+                return;
+            }
+        }
+
+        // Now handle our local Enter behavior if it wasn't handled by the parent
         if (e.key === 'Enter' && onEnter) {
             e.preventDefault();
             onEnter();
@@ -87,10 +98,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             if (onChange) {
                 onChange(''); // Clear the field
             }
-        }
-
-        if (onKeyDown) {
-            onKeyDown(e);
         }
     };
 

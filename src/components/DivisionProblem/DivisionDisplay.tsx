@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
@@ -15,7 +15,7 @@ interface DivisionDisplayProps {
     onEnableEditing?: () => void;
     onDisableEditing?: () => void;
     isSubmitted?: boolean;
-    onKeyDown: (e: React.KeyboardEvent) => void;
+    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
@@ -43,6 +43,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
+    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -82,6 +83,35 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             document.removeEventListener('keydown', handleEscapeKey);
         };
     }, [problem.isEditable, onDisableEditing]);
+
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // Count total required fields
+        let totalFields = 0;
+        for (const step of problem.steps) {
+            // Quotient (1)
+            totalFields += 1;
+
+            // Multiply digits
+            totalFields += getDigitCount(step.multiply);
+
+            // Subtract digits
+            totalFields += getDigitCount(step.subtract);
+
+            // Bring down (if exists)
+            if (step.bringDown !== undefined) {
+                totalFields += 1;
+            }
+        }
+
+        // Check if we have answers for all fields
+        setAllFieldsFilled(userAnswers.length >= totalFields);
+    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -202,6 +232,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         // Total grid width based on dividend length
         const gridWidth = dividendStr.length * BOX_TOTAL_WIDTH;
 
+
+
         return (
             <div className="division-grid relative" style={{ width: `${gridWidth}px` }}>
                 {/* Remove placeholder since we're aligning divisor and dividend directly */}
@@ -223,7 +255,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 <div
                     className="steps-area mt-6"
                     style={{
-                        height: `${problem.steps.length * STEP_SPACING + ROW_HEIGHT}px`
+                        height: `${problem.steps.length * STEP_SPACING + ROW_HEIGHT}px`,
+                        width: '100%' // Ensure full width
                     }}
                 >
                     {problem.steps.map((step, stepIndex) => {
@@ -231,7 +264,10 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         const subtractDigits = getDigitCount(step.subtract);
 
                         // Calculate the position based on dividend and step
+                        // This aligns each step with the correct place value in the dividend
                         const stepPosition = dividendStr.length - problem.steps.length + stepIndex;
+
+
 
                         // Calculate positions for alignment
                         const multiplyLeft = stepPosition - multiplyDigits + 1;
@@ -247,24 +283,17 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                 {/* Multiply row */}
                                 <div className="multiply-row flex justify-end absolute" style={{
                                     left: `${multiplyLeft * BOX_TOTAL_WIDTH}px`,
-                                    top: `${multiplyTop}px`
+                                    top: `${multiplyTop}px`,
+                                    minWidth: `${multiplyDigits * BOX_TOTAL_WIDTH}px` // Ensure minimum width
                                 }}>
                                     {Array.from({ length: multiplyDigits }).map((_, digitIndex) => {
                                         const position = multiplyDigits - 1 - digitIndex; // Right to left positioning
 
+
+
                                         return (
                                             <div key={`multiply-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>
-                                                <Input
-                                                    key={`multiply-${stepIndex}-${position}`}
-                                                    ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'multiply' && currentFocus.fieldPosition === position ? activeInputRef : undefined}
-                                                    value={getUserAnswer(stepIndex, 'multiply', position)?.value?.toString() || ''}
-                                                    variant={getInputVariant(stepIndex, 'multiply', position)}
-                                                    onChange={(value) => handleInputChange(stepIndex, 'multiply', position, value)}
-                                                    onKeyDown={onKeyDown}
-                                                    onClick={() => onFieldClick(stepIndex, 'multiply', position)}
-                                                    onAutoAdvance={handleAutoAdvance}
-                                                    placeholder="?"
-                                                />
+                                                {createInput(stepIndex, 'multiply', position)}
                                             </div>
                                         );
                                     })}
@@ -276,31 +305,25 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     style={{
                                         left: `${multiplyLeft * BOX_TOTAL_WIDTH}px`,
                                         top: `${multiplyTop + ROW_HEIGHT - 4}px`,
-                                        width: `${multiplyDigits * BOX_TOTAL_WIDTH}px`
+                                        width: `${multiplyDigits * BOX_TOTAL_WIDTH}px`,
+                                        minWidth: '40px' // Ensure minimum width
                                     }}
                                 ></div>
 
                                 {/* Subtraction row */}
                                 <div className="subtract-row flex justify-end absolute" style={{
                                     left: `${subtractLeft * BOX_TOTAL_WIDTH}px`,
-                                    top: `${subtractTop}px`
+                                    top: `${subtractTop}px`,
+                                    minWidth: `${subtractDigits * BOX_TOTAL_WIDTH}px` // Ensure minimum width
                                 }}>
                                     {Array.from({ length: subtractDigits }).map((_, digitIndex) => {
                                         const position = subtractDigits - 1 - digitIndex; // Right to left
 
+
+
                                         return (
                                             <div key={`subtract-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>
-                                                <Input
-                                                    key={`subtract-${stepIndex}-${position}`}
-                                                    ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'subtract' && currentFocus.fieldPosition === position ? activeInputRef : undefined}
-                                                    value={getUserAnswer(stepIndex, 'subtract', position)?.value?.toString() || ''}
-                                                    variant={getInputVariant(stepIndex, 'subtract', position)}
-                                                    onChange={(value) => handleInputChange(stepIndex, 'subtract', position, value)}
-                                                    onKeyDown={onKeyDown}
-                                                    onClick={() => onFieldClick(stepIndex, 'subtract', position)}
-                                                    onAutoAdvance={handleAutoAdvance}
-                                                    placeholder="?"
-                                                />
+                                                {createInput(stepIndex, 'subtract', position)}
                                             </div>
                                         );
                                     })}
@@ -315,16 +338,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                             top: `${subtractTop}px`
                                         }}
                                     >
-                                        <Input
-                                            ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'bringDown' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
-                                            value={getUserAnswer(stepIndex, 'bringDown', 0)?.value?.toString() || ''}
-                                            variant={getInputVariant(stepIndex, 'bringDown', 0)}
-                                            onChange={(value) => handleInputChange(stepIndex, 'bringDown', 0, value)}
-                                            onKeyDown={onKeyDown}
-                                            onClick={() => onFieldClick(stepIndex, 'bringDown', 0)}
-                                            onAutoAdvance={handleAutoAdvance}
-                                            placeholder="?"
-                                        />
+                                        {createInput(stepIndex, 'bringDown', 0)}
                                     </div>
                                 )}
                             </div>
@@ -332,6 +346,23 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     })}
                 </div>
             </div>
+        );
+    };
+
+    // Helper function to create an input with consistent keyboard event handling
+    const createInput = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
+        return (
+            <Input
+                ref={currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position ? activeInputRef : undefined}
+                value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
+                variant={getInputVariant(stepNumber, fieldType, position)}
+                onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onClick={() => onFieldClick(stepNumber, fieldType, position)}
+                onAutoAdvance={handleAutoAdvance}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
+                placeholder="?"
+            />
         );
     };
 
@@ -414,31 +445,30 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     <div className="quotient-row absolute" style={{
                                         top: `-${ROW_HEIGHT + 8}px`,  // Position above the division line
                                         left: '0',
-                                        zIndex: 10 // Ensure quotient is above everything
+                                        zIndex: 10, // Ensure quotient is above everything
+                                        width: '100%', // Ensure it spans the full width
+                                        display: 'flex', // Use flexbox for proper alignment
+                                        flexDirection: 'row', // Align boxes horizontally
+                                        justifyContent: 'flex-start' // Align from the left
                                     }}>
-                                        {problem.steps.map((_, stepIndex) => {
-                                            // Position quotient digit correctly based on the steps
-                                            const digitPosition = dividendStr.length - problem.steps.length + stepIndex;
+                                        {/* For three-digit dividends with single-digit divisors, 
+                                            we need to position the quotient correctly */}
+                                        <div style={{
+                                            width: `${(dividendStr.length - problem.steps.length) * BOX_TOTAL_WIDTH}px`,
+                                            display: 'inline-block'
+                                        }}></div>
 
+                                        {/* Generate quotient boxes for each step in the problem */}
+                                        {problem.steps.map((_, stepIndex) => {
                                             return (
                                                 <div
                                                     key={`quotient-${stepIndex}`}
-                                                    className="absolute"
                                                     style={{
-                                                        left: `${digitPosition * BOX_TOTAL_WIDTH}px`,
+                                                        width: `${BOX_TOTAL_WIDTH}px`,
+                                                        display: 'inline-block'
                                                     }}
                                                 >
-
-                                                    <Input
-                                                        ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
-                                                        value={getUserAnswer(stepIndex, 'quotient', 0)?.value?.toString() || ''}
-                                                        variant={getInputVariant(stepIndex, 'quotient', 0)}
-                                                        onChange={(value) => handleInputChange(stepIndex, 'quotient', 0, value)}
-                                                        onKeyDown={onKeyDown}
-                                                        onClick={() => onFieldClick(stepIndex, 'quotient', 0)}
-                                                        onAutoAdvance={handleAutoAdvance}
-                                                        placeholder="?"
-                                                    />
+                                                    {createInput(stepIndex, 'quotient', 0)}
                                                 </div>
                                             );
                                         })}
@@ -473,6 +503,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         <button
                             onClick={onNextProblem}
                             className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
+                            autoFocus
                         >
                             Next Problem →
                         </button>
@@ -487,17 +518,21 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     disabled={!userAnswers.length}
                     className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        : isSubmitted
+                            ? 'bg-blue-500 text-white'
+                            : allFieldsFilled
+                                ? 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 animate-pulse'
+                                : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
                         }`}
                 >
-                    {isSubmitted ? '✓ Submitted' : '📝 Submit Answers'}
+                    {isSubmitted ? '✓ Submitted' : allFieldsFilled ? '📝 Submit Answers (Enter)' : '📝 Submit Answers'}
                 </button>
             </div>
 
             {/* Instructions and Control Buttons */}
             <div className="mt-8">
                 <div className="text-center text-sm text-gray-500 mb-4">
-                    💡 Use Tab to move forward, Shift+Tab to go back, Backspace to delete
+                    💡 Use Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
                 </div>
 
                 <div className="flex justify-center gap-4">
