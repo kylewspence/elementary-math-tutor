@@ -1,5 +1,6 @@
 import type { DivisionProblem } from '../types/game';
 import { calculateDivisionSteps } from './problemGenerator';
+import { API_CONFIG } from './config';
 
 interface MathQuestion {
     question: string;
@@ -21,37 +22,29 @@ interface ApiResponse {
     };
 }
 
-const API_ENDPOINT = 'https://www.bloshup.com:8181/dev/publicmathget';
-const DEVICE_ID = '680810a0737ab55963f6223b'; // This would typically come from device storage or config
+// API endpoint for fetching math problems
+const API_ENDPOINT = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MATH_PROBLEMS}`;
 
 /**
  * Fetches math problems from the server
  */
 export async function fetchMathProblems(): Promise<ApiResponse> {
-    try {
-        console.log('🌐 Making API request to:', API_ENDPOINT);
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                tag: 'publicmath.get',
-                deviceid: DEVICE_ID
-            }),
-        });
+    const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            device_id: API_CONFIG.DEVICE_ID,
+        }),
+    });
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('📊 API Response structure:', Object.keys(data.public).filter(key => key.startsWith('division')));
-        return data;
-    } catch (error) {
-        console.error('Error fetching math problems:', error);
-        throw error;
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return data;
 }
 
 /**
@@ -130,35 +123,25 @@ function meetsLevelRequirements(problem: DivisionProblem, levelId: number): bool
     const divisorDigits = problem.divisor.toString().length;
     const dividendDigits = problem.dividend.toString().length;
 
-    // Log this problem for debugging
-    console.log(`🔍 Evaluating problem: ${problem.dividend} ÷ ${problem.divisor} = ${problem.quotient} r${problem.remainder} for level ${levelId}`);
-    console.log(`   Divisor digits: ${divisorDigits}, Dividend digits: ${dividendDigits}`);
-
-    // Level 2: Single digit divisor, 3-digit dividend or higher
+    // Level 2: Single digit divisor, 2+ digit dividend (relaxed from 3+)
     if (levelId === 2) {
-        const result = divisorDigits === 1 && dividendDigits >= 3;
-        console.log(`   Level 2 requirement met? ${result}`);
-        return result;
+        return divisorDigits === 1 && dividendDigits >= 2;
     }
 
-    // Level 3: Single digit divisor, 4-digit dividend
+    // Level 3: Single digit divisor, 3+ digit dividend (relaxed from 4+)
     if (levelId === 3) {
-        const result = divisorDigits === 1 && dividendDigits >= 4;
-        console.log(`   Level 3 requirement met? ${result}`);
-        return result;
+        return divisorDigits === 1 && dividendDigits >= 3;
     }
 
-    // Level 4: Two-digit divisor, 3-digit dividend
+    // Level 4: Single or two-digit divisor, 3+ digit dividend (more flexible)
     if (levelId === 4) {
-        const result = divisorDigits >= 2 && dividendDigits >= 3;
-        console.log(`   Level 4 requirement met? ${result}`);
-        return result;
+        return (divisorDigits >= 1 && dividendDigits >= 3) &&
+            (divisorDigits === 2 || (divisorDigits === 1 && dividendDigits >= 4));
     }
 
-    // Level 5+: Two-digit divisor, 4-digit dividend or more complex
-    const result = divisorDigits >= 2 && dividendDigits >= 4;
-    console.log(`   Level 5+ requirement met? ${result}`);
-    return result;
+    // Level 5+: Accept more complex problems
+    return (divisorDigits >= 1 && dividendDigits >= 3) &&
+        (divisorDigits >= 2 || dividendDigits >= 4);
 }
 
 /**
@@ -168,36 +151,31 @@ function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): D
     // Create a map to track unique problems
     const uniqueProblems = new Map<string, DivisionProblem>();
 
-    // Determine expected difficulty range based on level
+    // More flexible difficulty ranges
     let minDifficulty = 1;
-    let maxDifficulty = 3;
+    let maxDifficulty = 10; // Allow all difficulties initially
 
-    if (levelId >= 5) {
-        minDifficulty = 7;
-        maxDifficulty = 10;
-    } else if (levelId >= 3) {
-        minDifficulty = 4;
+    // Adjust ranges based on level but be more inclusive
+    if (levelId === 1) {
+        minDifficulty = 1;
+        maxDifficulty = 4;
+    } else if (levelId === 2) {
+        minDifficulty = 2;
+        maxDifficulty = 6;
+    } else if (levelId === 3) {
+        minDifficulty = 3;
         maxDifficulty = 7;
+    } else if (levelId >= 4) {
+        minDifficulty = 3;
+        maxDifficulty = 10;
     }
-
-    // Log breakdown of problem types to help diagnose
-    const difficultyBreakdown: { [key: string]: number } = {};
-    const digitCombos: { [key: string]: number } = {};
 
     // Filter problems
     for (const problem of problems) {
         const difficulty = evaluateProblemDifficulty(problem);
         const key = getProblemKey(problem);
 
-        // Track statistics for diagnostics
-        difficultyBreakdown[difficulty] = (difficultyBreakdown[difficulty] || 0) + 1;
-
-        const divisorDigits = problem.divisor.toString().length;
-        const dividendDigits = problem.dividend.toString().length;
-        const digitCombo = `${divisorDigits}d-${dividendDigits}d`;
-        digitCombos[digitCombo] = (digitCombos[digitCombo] || 0) + 1;
-
-        // Apply more strict filtering based on level requirements
+        // Check each filter condition separately
         if (difficulty >= minDifficulty &&
             difficulty <= maxDifficulty &&
             !uniqueProblems.has(key) &&
@@ -205,11 +183,6 @@ function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): D
             uniqueProblems.set(key, problem);
         }
     }
-
-    // Log diagnostic information
-    console.log('📊 Problem difficulty breakdown:', difficultyBreakdown);
-    console.log('📊 Problem digit combinations:', digitCombos);
-    console.log(`🔎 Filtered from ${problems.length} to ${uniqueProblems.size} problems for level ${levelId}`);
 
     // Return unique problems that meet criteria
     return Array.from(uniqueProblems.values());
@@ -221,7 +194,6 @@ function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): D
  */
 export async function fetchDivisionProblems(level: number = 0): Promise<DivisionProblem[]> {
     try {
-        console.log(`🌐 Fetching division problems for API level: ${level}`);
         const response = await fetchMathProblems();
 
         // Get all division problems from all levels - we'll filter by difficulty later
@@ -232,35 +204,14 @@ export async function fetchDivisionProblems(level: number = 0): Promise<Division
             const key = `division_${i}`;
             const divisionQuestions = response.public[key] || [];
             const problems = divisionQuestions.map(convertToDivisionProblem);
-            console.log(`📈 API Level ${i} has ${divisionQuestions.length} problems`);
-
-            // Log a sample problem from each level
-            if (divisionQuestions.length > 0) {
-                const sample = problems[0];
-                console.log(`📊 Sample from API level ${i}: ${sample.dividend} ÷ ${sample.divisor} = ${sample.quotient} r${sample.remainder}`);
-            }
-
             allDivisionProblems.push(...problems);
         }
 
-        // Log the number of problems fetched
-        console.log(`✅ Fetched ${allDivisionProblems.length} total division problems from API`);
-
         // Filter problems by difficulty level and remove duplicates
         const filteredProblems = filterProblemsForLevel(allDivisionProblems, level);
-        console.log(`📝 Filtered to ${filteredProblems.length} appropriate problems for level ${level}`);
-
-        // Log some examples of the filtered problems
-        if (filteredProblems.length > 0) {
-            console.log('📄 Sample filtered problems:');
-            filteredProblems.slice(0, Math.min(5, filteredProblems.length)).forEach((p, i) => {
-                console.log(`  ${i + 1}. ${p.dividend} ÷ ${p.divisor} = ${p.quotient} r${p.remainder}`);
-            });
-        }
 
         return filteredProblems;
-    } catch (error) {
-        console.error('❌ Error fetching division problems:', error);
+    } catch {
         // Return empty array on error
         return [];
     }

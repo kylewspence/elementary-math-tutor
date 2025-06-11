@@ -232,9 +232,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         // Total grid width based on dividend length
         const gridWidth = dividendStr.length * BOX_TOTAL_WIDTH;
 
-        // Log the problem dimensions for debugging
-        console.log(`Grid dimensions: width=${gridWidth}px, dividend=${problem.dividend}, divisor=${problem.divisor}`);
-        console.log(`Steps: ${problem.steps.length}, Dividend digits: ${dividendStr.length}`);
+
 
         return (
             <div className="division-grid relative" style={{ width: `${gridWidth}px` }}>
@@ -269,8 +267,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         // This aligns each step with the correct place value in the dividend
                         const stepPosition = dividendStr.length - problem.steps.length + stepIndex;
 
-                        // Log positioning for debugging
-                        console.log(`Step ${stepIndex}: position=${stepPosition}, multiply=${step.multiply}(${multiplyDigits}d), subtract=${step.subtract}(${subtractDigits}d)`);
+
 
                         // Calculate positions for alignment
                         const multiplyLeft = stepPosition - multiplyDigits + 1;
@@ -292,8 +289,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     {Array.from({ length: multiplyDigits }).map((_, digitIndex) => {
                                         const position = multiplyDigits - 1 - digitIndex; // Right to left positioning
 
-                                        // Log box positioning for debugging
-                                        console.log(`Multiply box ${digitIndex}: stepIndex=${stepIndex}, position=${position}`);
+
 
                                         return (
                                             <div key={`multiply-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>
@@ -323,8 +319,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     {Array.from({ length: subtractDigits }).map((_, digitIndex) => {
                                         const position = subtractDigits - 1 - digitIndex; // Right to left
 
-                                        // Log box positioning for debugging
-                                        console.log(`Subtract box ${digitIndex}: stepIndex=${stepIndex}, position=${position}`);
+
 
                                         return (
                                             <div key={`subtract-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>

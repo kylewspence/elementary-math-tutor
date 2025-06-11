@@ -8,7 +8,9 @@ interface LevelSelectorProps {
 }
 
 const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect }) => {
-    const { currentLevel, currentProblem, totalProblems } = gameState;
+    const { currentLevel, currentProblemIndex, levelProblems } = gameState;
+    const currentProblem = currentProblemIndex + 1; // Convert to 1-based
+    const totalProblems = levelProblems.length;
 
     return (
         <div className="bg-blue-100 p-4 rounded-lg border-2 border-blue-200">
