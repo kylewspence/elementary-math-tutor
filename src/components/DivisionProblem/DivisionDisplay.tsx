@@ -18,6 +18,9 @@ interface DivisionDisplayProps {
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
+    onNextProblem?: () => void;
+    onResetProblem?: () => void;
+    onNewProblem?: () => void;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -34,6 +37,9 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     onKeyDown,
     onFieldClick,
     gameState,
+    onNextProblem,
+    onResetProblem,
+    onNewProblem,
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -87,13 +93,13 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         const userAnswer = getUserAnswer(stepNumber, fieldType, position);
         const isActive = currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position;
 
-        if (isActive) return 'active';
-
-        // Only show validation colors after submission
+        // After submission, prioritize validation colors over active state
         if (isSubmitted && userAnswer) {
-            if (userAnswer.isCorrect === true) return 'correct';
-            if (userAnswer.isCorrect === false) return 'error';
+            return userAnswer.isCorrect === true ? 'correct' : 'error';
         }
+
+        // Only show active state if not submitted or when actively editing after submission
+        if (isActive) return 'active';
 
         return 'default';
     };
@@ -102,8 +108,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     const getDigitCount = (value: number): number => {
         return value.toString().length;
     };
-
-
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
@@ -376,90 +380,112 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 )}
             </div>
 
-            {/* Division layout */}
-            <div className="flex justify-center">
-
-                <div className="division-workspace relative">
-                    {/* Division line and divisor - Position the divisor to align with dividend row */}
-                    <div className="flex relative">
-                        <div className="divisor-container absolute text-xl font-bold" style={{
-                            right: '100%',
-                            top: '0',
-                            marginRight: '0.75rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            height: `${ROW_HEIGHT}px`
-                        }}>
-                            {problem.divisor}
-                        </div>
-
-                        <div className="division-symbol" style={{ position: 'relative' }}>
-                            {/* Division line - adjusted to proper length */}
-                            <div
-                                className="border-l-4 border-t-4 border-gray-800 absolute"
-                                style={{
-                                    height: `${ROW_HEIGHT}px`, // Just tall enough for the dividend row
-                                    width: `${dividendStr.length * BOX_TOTAL_WIDTH - 4}px`, // Exact width based on dividend
-                                    top: '0',
-                                    left: '0',
-                                    zIndex: 1
-                                }}
-                            >
-                                {/* Quotient row - above division line, positioned relative to the division line */}
-                                <div className="quotient-row absolute" style={{
-                                    top: `-${ROW_HEIGHT + 8}px`,  // Position above the division line
-                                    left: '0',
-                                    zIndex: 10 // Ensure quotient is above everything
-                                }}>
-                                    {problem.steps.map((_, stepIndex) => {
-                                        // Position quotient digit correctly based on the steps
-                                        const digitPosition = dividendStr.length - problem.steps.length + stepIndex;
-
-                                        return (
-                                            <div
-                                                key={`quotient-${stepIndex}`}
-                                                className="absolute"
-                                                style={{
-                                                    left: `${digitPosition * BOX_TOTAL_WIDTH}px`,
-                                                }}
-                                            >
-
-                                                <Input
-                                                    ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
-                                                    value={getUserAnswer(stepIndex, 'quotient', 0)?.value?.toString() || ''}
-                                                    variant={getInputVariant(stepIndex, 'quotient', 0)}
-                                                    onChange={(value) => handleInputChange(stepIndex, 'quotient', 0, value)}
-                                                    onKeyDown={onKeyDown}
-                                                    onClick={() => onFieldClick(stepIndex, 'quotient', 0)}
-                                                    onAutoAdvance={handleAutoAdvance}
-                                                    placeholder="?"
-                                                />
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+            {/* Main content with problem work and completion card side by side */}
+            <div className="relative">
+                {/* Division layout - centered */}
+                <div className="flex justify-center">
+                    <div className="division-workspace relative">
+                        {/* Division line and divisor - Position the divisor to align with dividend row */}
+                        <div className="flex relative">
+                            <div className="divisor-container absolute text-xl font-bold" style={{
+                                right: '100%',
+                                top: '0',
+                                marginRight: '0.75rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                height: `${ROW_HEIGHT}px`
+                            }}>
+                                {problem.divisor}
                             </div>
 
-                            {/* Content area with proper spacing */}
-                            <div style={{
-                                paddingLeft: '4px',
-                                position: 'relative',
-                                zIndex: 2
-                            }}>
-                                {/* All content aligned in a grid */}
-                                {renderInputGrid()}
+                            <div className="division-symbol" style={{ position: 'relative' }}>
+                                {/* Division line - adjusted to proper length */}
+                                <div
+                                    className="border-l-4 border-t-4 border-gray-800 absolute"
+                                    style={{
+                                        height: `${ROW_HEIGHT}px`, // Just tall enough for the dividend row
+                                        width: `${dividendStr.length * BOX_TOTAL_WIDTH - 4}px`, // Exact width based on dividend
+                                        top: '0',
+                                        left: '0',
+                                        zIndex: 1
+                                    }}
+                                >
+                                    {/* Quotient row - above division line, positioned relative to the division line */}
+                                    <div className="quotient-row absolute" style={{
+                                        top: `-${ROW_HEIGHT + 8}px`,  // Position above the division line
+                                        left: '0',
+                                        zIndex: 10 // Ensure quotient is above everything
+                                    }}>
+                                        {problem.steps.map((_, stepIndex) => {
+                                            // Position quotient digit correctly based on the steps
+                                            const digitPosition = dividendStr.length - problem.steps.length + stepIndex;
+
+                                            return (
+                                                <div
+                                                    key={`quotient-${stepIndex}`}
+                                                    className="absolute"
+                                                    style={{
+                                                        left: `${digitPosition * BOX_TOTAL_WIDTH}px`,
+                                                    }}
+                                                >
+
+                                                    <Input
+                                                        ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
+                                                        value={getUserAnswer(stepIndex, 'quotient', 0)?.value?.toString() || ''}
+                                                        variant={getInputVariant(stepIndex, 'quotient', 0)}
+                                                        onChange={(value) => handleInputChange(stepIndex, 'quotient', 0, value)}
+                                                        onKeyDown={onKeyDown}
+                                                        onClick={() => onFieldClick(stepIndex, 'quotient', 0)}
+                                                        onAutoAdvance={handleAutoAdvance}
+                                                        placeholder="?"
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Content area with proper spacing */}
+                                <div style={{
+                                    paddingLeft: '4px',
+                                    position: 'relative',
+                                    zIndex: 2
+                                }}>
+                                    {/* All content aligned in a grid */}
+                                    {renderInputGrid()}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Completion card - positioned to the right without affecting problem layout */}
+                {isSubmitted && gameState?.isComplete && (
+                    <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
+                        <div className="text-2xl mb-2">🎉</div>
+                        <h3 className="text-lg font-bold text-green-800 mb-1">
+                            Problem Complete!
+                        </h3>
+                        <p className="text-sm text-green-700 mb-3">
+                            Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
+                            {problem.remainder > 0 && ` remainder ${problem.remainder}`}
+                        </p>
+                        <button
+                            onClick={onNextProblem}
+                            className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
+                        >
+                            Next Problem →
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Submit Button */}
             <div className="mt-8 text-center">
                 <button
                     onClick={() => onProblemSubmit?.()}
-                    disabled={!userAnswers.length || isSubmitted}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length || isSubmitted
+                    disabled={!userAnswers.length}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
                         }`}
@@ -468,29 +494,26 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 </button>
             </div>
 
-            {/* Completion Success Card */}
-            {isSubmitted && gameState?.isComplete && (
-                <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
-                    <div className="text-4xl mb-3">🎉</div>
-                    <h3 className="text-xl font-bold text-green-800 mb-2">
-                        Problem Complete!
-                    </h3>
-                    <p className="text-green-700 mb-4">
-                        Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
-                        {problem.remainder > 0 && ` remainder ${problem.remainder}`}
-                    </p>
+            {/* Instructions and Control Buttons */}
+            <div className="mt-8">
+                <div className="text-center text-sm text-gray-500 mb-4">
+                    💡 Use Tab to move forward, Shift+Tab to go back, Backspace to delete
+                </div>
+
+                <div className="flex justify-center gap-4">
                     <button
-                        onClick={() => window.location.reload()}
-                        className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                        onClick={onResetProblem}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                     >
-                        Next Problem →
+                        🔄 Reset Problem
+                    </button>
+                    <button
+                        onClick={onNewProblem}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        🎲 New Problem
                     </button>
                 </div>
-            )}
-
-            {/* Instructions */}
-            <div className="mt-4 text-center text-sm text-gray-500">
-                💡 Use Tab to move forward, Shift+Tab to go back, Backspace to delete
             </div>
         </div>
     );
