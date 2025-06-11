@@ -39,6 +39,14 @@ function App() {
     }
   }, [gameState.problem, generateNewProblem]);
 
+  // Always set initial focus to the first quotient box when a new problem is generated
+  useEffect(() => {
+    if (gameState.problem && gameState.userAnswers.length === 0) {
+      // Reset focus to the first quotient input
+      jumpToField(0, 'quotient', 0);
+    }
+  }, [gameState.problem, gameState.userAnswers.length, jumpToField]);
+
   // Handle answer submission (no immediate validation)
   const handleAnswerSubmit = (answer: any) => {
     submitAnswer(answer);
