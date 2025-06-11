@@ -272,6 +272,13 @@ export const UI_COLORS = {
     DEFAULT: 'bg-white border-gray-300 text-gray-800',
 };
 
+export const GRID_CONSTANTS = {
+    BOX_WIDTH: 40, // Width of each input box in pixels
+    BOX_HEIGHT: 40, // Height of each input box in pixels
+    BOX_GAP: 8, // Gap between boxes in pixels
+    BOX_TOTAL_WIDTH: 48, // Total width including gap (BOX_WIDTH + BOX_GAP)
+};
+
 export const KEYBOARD_KEYS = {
     TAB: 'Tab',
     ENTER: 'Enter',

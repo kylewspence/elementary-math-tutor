@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { UI_COLORS } from '../../utils/constants';
+import { UI_COLORS, GRID_CONSTANTS } from '../../utils/constants';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     variant?: 'default' | 'correct' | 'error' | 'active';
@@ -24,8 +24,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         active: UI_COLORS.ACTIVE,
     };
 
+    const { BOX_WIDTH, BOX_HEIGHT } = GRID_CONSTANTS;
+
     const baseClasses = `
-    w-12 h-12 text-center text-lg font-mono border-2 rounded-lg
+    text-center text-lg font-mono border-2 rounded-lg
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
     transition-all duration-200
   `.trim();
@@ -51,6 +53,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        // Always select all content when input receives focus - important for going back with shift+tab
+        e.target.select();
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && onEnter) {
             e.preventDefault();
@@ -70,6 +77,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }
     };
 
+    const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+        // Select all on click too, for better UX
+        e.currentTarget.select();
+    };
+
     return (
         <input
             ref={ref}
@@ -78,8 +90,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             pattern="[0-9]*"
             maxLength={1}
             className={combinedClasses}
+            style={{
+                width: `${BOX_WIDTH}px`,
+                height: `${BOX_HEIGHT}px`,
+            }}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+            onClick={handleClick}
             {...props}
         />
     );

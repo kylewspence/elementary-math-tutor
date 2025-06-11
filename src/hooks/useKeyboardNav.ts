@@ -39,8 +39,8 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         return answer.value > 0;
     };
 
-    // Find first empty or incorrect field (always start from beginning)
-    const findFirstEmptyField = useCallback((): CurrentFocus | null => {
+    // Find first field (renamed from findFirstEmptyField to be consistent)
+    const findNextField = useCallback((): CurrentFocus | null => {
         if (!problem) return null;
 
         // Create a list of all fields in order
@@ -70,19 +70,32 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             }
         }
 
-        // Always look for the FIRST empty/incorrect field from the beginning
-        for (let i = 0; i < allFields.length; i++) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
+        // Find current position
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === currentFocus.stepNumber &&
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition
+        );
+
+        // Move to next field regardless of whether it's empty or filled
+        if (currentIndex < allFields.length - 1 && currentIndex !== -1) {
+            return allFields[currentIndex + 1];
         }
 
-        return null; // All fields are complete
-    }, [problem, userAnswers, isSubmitted]);
+        // Wrap around to the first field if we're at the end
+        return allFields[0];
+    }, [problem, currentFocus]);
 
-    // Find previous empty or incorrect field
-    const findPreviousEmptyField = useCallback((startStep: number, startFieldType: string, startFieldPosition: number): CurrentFocus | null => {
+    // Smart move to next field (regardless of if it's filled)
+    const moveNext = useCallback(() => {
+        const nextField = findNextField();
+        if (nextField) {
+            setCurrentFocus(nextField);
+        }
+    }, [findNextField]);
+
+    // Find previous field (changed from findPreviousEmptyField to work on all fields)
+    const findPreviousField = useCallback((startStep: number, startFieldType: string, startFieldPosition: number): CurrentFocus | null => {
         if (!problem) return null;
 
         // Create a list of all fields in order (same as above)
@@ -115,40 +128,22 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             field.fieldPosition === startFieldPosition
         );
 
-        // Look backwards for empty/incorrect field
-        for (let i = currentIndex - 1; i >= 0; i--) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
+        // Move to previous field regardless of whether it's empty or filled
+        if (currentIndex > 0) {
+            return allFields[currentIndex - 1];
         }
 
-        // If no empty field found before, wrap around to end
-        for (let i = allFields.length - 1; i >= currentIndex; i--) {
-            const field = allFields[i];
-            if (!hasAnswerOrIsCorrect(field.stepNumber, field.fieldType, field.fieldPosition)) {
-                return field;
-            }
-        }
+        // Wrap around to the last field if we're at the beginning
+        return allFields[allFields.length - 1];
+    }, [problem]);
 
-        return null;
-    }, [problem, userAnswers, isSubmitted]);
-
-    // Smart move to first empty/incorrect field
-    const moveNext = useCallback(() => {
-        const firstField = findFirstEmptyField();
-        if (firstField) {
-            setCurrentFocus(firstField);
-        }
-    }, [findFirstEmptyField]);
-
-    // Smart move to previous empty/incorrect field
+    // Smart move to previous field (regardless of if it's filled)
     const movePrevious = useCallback(() => {
-        const prevField = findPreviousEmptyField(currentFocus.stepNumber, currentFocus.fieldType, currentFocus.fieldPosition);
+        const prevField = findPreviousField(currentFocus.stepNumber, currentFocus.fieldType, currentFocus.fieldPosition);
         if (prevField) {
             setCurrentFocus(prevField);
         }
-    }, [currentFocus, findPreviousEmptyField]);
+    }, [currentFocus, findPreviousField]);
 
     // Jump to specific field
     const jumpToField = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {
