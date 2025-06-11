@@ -1,5 +1,4 @@
-
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 import { UI_COLORS, GRID_CONSTANTS } from '../../utils/constants';
 
 
@@ -67,11 +66,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        // Always select all content when input receives focus - important for going back with shift+tab
-        e.target.select();
-    };
-
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         // Handle numeric input - if there's existing content, replace it
         if (/^[0-9]$/.test(e.key)) {
@@ -103,6 +97,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
         // Select all on click too, for better UX
         e.currentTarget.select();
+    };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         // Select all content when focused for easy replacement
@@ -124,21 +119,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             pattern="[0-9]*"
             maxLength={1}
             className={combinedClasses}
-
             style={{
                 width: `${BOX_WIDTH}px`,
                 height: `${BOX_HEIGHT}px`,
             }}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-            onClick={handleClick}
-
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
-
+            onClick={handleClick}
             {...props}
         />
     );
