@@ -47,14 +47,13 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect 
                         <button
                             key={level.id}
                             onClick={() => onLevelSelect(level.id)}
-                            disabled={!isUnlocked}
                             className={`
                 w-full p-3 rounded-lg text-left transition-all duration-200
                 ${isCurrentLevel
                                     ? 'bg-blue-500 text-white border-2 border-blue-600'
                                     : isUnlocked
                                         ? 'bg-white text-blue-800 border-2 border-blue-300 hover:bg-blue-50'
-                                        : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'
+                                        : 'bg-gray-100 text-gray-500 border-2 border-gray-200 hover:bg-gray-50'
                                 }
               `}
                         >
@@ -69,7 +68,9 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect 
                                     </div>
                                 )}
                                 {!isUnlocked && (
-                                    <div className="text-xs">🔒</div>
+                                    <div className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                        Skip To
+                                    </div>
                                 )}
                             </div>
                         </button>
