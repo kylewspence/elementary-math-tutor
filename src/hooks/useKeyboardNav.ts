@@ -8,7 +8,7 @@ export interface CurrentFocus {
     fieldPosition: number;
 }
 
-export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: UserAnswer[] = [], isSubmitted: boolean = false) {
+export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: UserAnswer[] = [], _isSubmitted: boolean = false) {
     const [currentFocus, setCurrentFocus] = useState<CurrentFocus>({
         stepNumber: 0,
         fieldType: 'quotient',
