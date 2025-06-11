@@ -235,18 +235,7 @@ export function useGameState() {
         }
     }, [gameState.problem]);
 
-    // Switch game mode
-    const switchGameMode = useCallback((mode: 'practice' | 'rescue') => {
-        setGameState(prev => ({
-            ...prev,
-            gameMode: mode,
-            // Reset some state when switching modes
-            isSubmitted: false,
-            isComplete: false,
-            userAnswers: [],
-            errors: [],
-        }));
-    }, []);
+
 
     return {
         gameState,
@@ -262,6 +251,5 @@ export function useGameState() {
         updateProblem,
         enableEditing,
         disableEditing,
-        switchGameMode,
     };
 } 

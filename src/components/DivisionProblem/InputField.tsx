@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import type { InputFieldProps } from '../../types/division';
 import Input from '../UI/Input';
 
@@ -46,7 +46,7 @@ const InputField: React.FC<InputFieldProps> = ({
     // Determine variant based on state
     const getVariant = () => {
         if (isError) return 'error';
-        if (isCorrect) return 'success';
+        if (isCorrect) return 'correct';
         return 'default';
     };
 
@@ -76,8 +76,7 @@ const InputField: React.FC<InputFieldProps> = ({
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={handleKeyDown}
-            variant={getVariant()}
-            isActive={isActive}
+            variant={isActive ? 'active' : getVariant()}
             placeholder={placeholder || ''}
             maxLength={3}
             aria-label={getAriaLabel()}

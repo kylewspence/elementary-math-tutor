@@ -10,8 +10,6 @@ import type {
 import {
     calculateLongDivision,
     generateRandomProblem,
-    validateStepInput,
-    isDivisionComplete
 } from '../utils/divisionCalculator';
 import { validateUserStepInput, validateProblemCompletion } from '../utils/validation';
 

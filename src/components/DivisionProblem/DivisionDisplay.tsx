@@ -138,7 +138,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             // Don't use the global keyboard handler, just move to next field
             if (currentFocus.fieldType === 'multiply') {
                 const step = problem.steps[currentFocus.stepNumber];
-                const multiplyDigits = getDigitCount(step.multiply);
                 if (currentFocus.fieldPosition > 0) {
                     // Move to next multiply digit
                     onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
@@ -241,7 +240,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     <div className="flex items-end mb-1">
                         <div className="w-16 mr-4"></div> {/* Spacer for divisor */}
                         <div className="flex gap-2">
-                            {problem.steps.map((step, index) => (
+                            {problem.steps.map((_step, index) => (
                                 <Input
                                     key={`quotient-${index}`}
                                     ref={currentFocus.stepNumber === index && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
@@ -274,9 +273,9 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
                     {/* Working area - with multiple boxes for multi-digit numbers */}
                     <div className="ml-20 mt-6 space-y-6">
-                        {problem.steps.map((step, stepIndex) => {
-                            const multiplyDigits = getDigitCount(step.multiply);
-                            const subtractDigits = getDigitCount(step.subtract);
+                        {problem.steps.map((_step, stepIndex) => {
+                            const multiplyDigits = getDigitCount(_step.multiply);
+                            const subtractDigits = getDigitCount(_step.subtract);
 
                             return (
                                 <div key={`step-${stepIndex}`} className="step-work">
@@ -285,7 +284,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     <div className="flex gap-2 mb-2">
                                         {Array.from({ length: multiplyDigits }, (_, digitIndex) => {
                                             const position = multiplyDigits - 1 - digitIndex; // Right to left positioning
-                                            const correctDigit = getDigitAtPosition(step.multiply, position);
+                                            const _correctDigit = getDigitAtPosition(_step.multiply, position);
 
                                             return (
                                                 <Input
@@ -311,7 +310,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                         {/* Subtraction result - multiple boxes for multi-digit */}
                                         {Array.from({ length: Math.max(1, subtractDigits) }, (_, digitIndex) => {
                                             const position = Math.max(1, subtractDigits) - 1 - digitIndex;
-                                            const correctDigit = subtractDigits > 0 ? getDigitAtPosition(step.subtract, position) : 0;
+                                            const _correctDigit = subtractDigits > 0 ? getDigitAtPosition(_step.subtract, position) : 0;
 
                                             return (
                                                 <Input
@@ -329,7 +328,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                         })}
 
                                         {/* Bring down input box - NEXT TO the subtract result */}
-                                        {step.bringDown !== undefined && (
+                                        {_step.bringDown !== undefined && (
                                             <Input
                                                 ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'bringDown' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
                                                 value={getUserAnswer(stepIndex, 'bringDown', 0)?.value?.toString() || ''}
