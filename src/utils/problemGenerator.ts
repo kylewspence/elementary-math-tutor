@@ -57,14 +57,18 @@ export function calculateDivisionSteps(dividend: number, divisor: number): Divis
 
     let currentDividend = 0;
     let stepNumber = 0;
-    let digitIndex = 0;
 
-    while (digitIndex < dividendStr.length) {
-        // Build up the current dividend part by adding the next digit
+    // Process each digit of the dividend
+    for (let digitIndex = 0; digitIndex < dividendStr.length; digitIndex++) {
+        // Add the next digit to our current dividend
         currentDividend = currentDividend * 10 + parseInt(dividendStr[digitIndex]);
 
-        // If current dividend is large enough to divide, or we're at the last digit
-        if (currentDividend >= divisor || digitIndex === dividendStr.length - 1) {
+        // We create a step when:
+        // 1. We can divide (currentDividend >= divisor), OR
+        // 2. This is not the first digit (we've already started the quotient)
+        const shouldCreateStep = currentDividend >= divisor || stepNumber > 0;
+
+        if (shouldCreateStep) {
             const quotientDigit = Math.floor(currentDividend / divisor);
             const multiply = quotientDigit * divisor;
             const subtract = currentDividend - multiply;
@@ -86,8 +90,6 @@ export function calculateDivisionSteps(dividend: number, divisor: number): Divis
             currentDividend = subtract; // The remainder becomes the base for next step
             stepNumber++;
         }
-
-        digitIndex++;
     }
 
     return steps;

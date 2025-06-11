@@ -451,12 +451,23 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                         flexDirection: 'row', // Align boxes horizontally
                                         justifyContent: 'flex-start' // Align from the left
                                     }}>
-                                        {/* For three-digit dividends with single-digit divisors, 
-                                            we need to position the quotient correctly */}
-                                        <div style={{
-                                            width: `${(dividendStr.length - problem.steps.length) * BOX_TOTAL_WIDTH}px`,
-                                            display: 'inline-block'
-                                        }}></div>
+                                        {/* Calculate proper quotient positioning based on first step's dividend part */}
+                                        {(() => {
+                                            // Find how many digits are in the first step's dividend part
+                                            const firstStepDividendPart = problem.steps[0]?.dividendPart || 0;
+                                            const firstStepDigits = firstStepDividendPart.toString().length;
+
+                                            // The quotient should start at the position of the last digit of the first dividend part
+                                            const quotientStartPosition = firstStepDigits - 1;
+                                            const spacerWidth = quotientStartPosition * BOX_TOTAL_WIDTH;
+
+                                            return (
+                                                <div style={{
+                                                    width: `${spacerWidth}px`,
+                                                    display: 'inline-block'
+                                                }}></div>
+                                            );
+                                        })()}
 
                                         {/* Generate quotient boxes for each step in the problem */}
                                         {problem.steps.map((_, stepIndex) => {
