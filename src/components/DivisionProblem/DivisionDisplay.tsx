@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { DivisionProblem, UserAnswer } from '../../types/game';
+import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -17,6 +17,7 @@ interface DivisionDisplayProps {
     isSubmitted?: boolean;
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
+    gameState?: GameState;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -32,6 +33,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     isSubmitted,
     onKeyDown,
     onFieldClick,
+    gameState,
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -101,12 +103,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         return value.toString().length;
     };
 
-    // Helper to get digit at specific position (0 = rightmost)
-    const getDigitAtPosition = (value: number, position: number): number => {
-        const str = value.toString();
-        const index = str.length - 1 - position;
-        return index >= 0 ? parseInt(str[index]) : 0;
-    };
+
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
@@ -134,6 +131,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
+
         // Small delay to ensure current input is processed
         setTimeout(() => {
             if (currentFocus.fieldType === 'quotient') {
@@ -164,12 +162,20 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
                 }
             } else if (currentFocus.fieldType === 'bringDown') {
+
                 // Move to next step quotient
-                if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                    onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-                }
+                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
             }
-        }, 100);
+        } else if (currentFocus.fieldType === 'quotient') {
+            // Move to multiply
+            const step = problem.steps[currentFocus.stepNumber];
+            onFieldClick(currentFocus.stepNumber, 'multiply', getDigitCount(step.multiply) - 1);
+        } else if (currentFocus.fieldType === 'bringDown') {
+            // Move to next step quotient
+            if (currentFocus.stepNumber + 1 < problem.steps.length) {
+                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
+            }
+        }
     };
 
     // Handle problem editing
@@ -383,12 +389,14 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
             {/* Division layout */}
             <div className="flex justify-center">
+
                 <div className="division-workspace relative">
                     {/* Division line and divisor */}
                     <div className="flex items-center">
                         <div className="divisor-container mr-4 text-xl font-bold text-right" style={{ width: '3rem' }}>
                             {problem.divisor}
                         </div>
+
                         <div className="division-symbol" style={{ position: 'relative' }}>
                             {/* Division line - adjusted to proper length */}
                             <div
@@ -419,6 +427,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                                     left: `${digitPosition * BOX_TOTAL_WIDTH}px`,
                                                 }}
                                             >
+
                                                 <Input
                                                     ref={currentFocus.stepNumber === stepIndex && currentFocus.fieldType === 'quotient' && currentFocus.fieldPosition === 0 ? activeInputRef : undefined}
                                                     value={getUserAnswer(stepIndex, 'quotient', 0)?.value?.toString() || ''}
@@ -462,6 +471,26 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {isSubmitted ? '✓ Submitted' : '📝 Submit Answers'}
                 </button>
             </div>
+
+            {/* Completion Success Card */}
+            {isSubmitted && gameState?.isComplete && (
+                <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
+                    <div className="text-4xl mb-3">🎉</div>
+                    <h3 className="text-xl font-bold text-green-800 mb-2">
+                        Problem Complete!
+                    </h3>
+                    <p className="text-green-700 mb-4">
+                        Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
+                        {problem.remainder > 0 && ` remainder ${problem.remainder}`}
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                    >
+                        Next Problem →
+                    </button>
+                </div>
+            )}
 
             {/* Instructions */}
             <div className="mt-4 text-center text-sm text-gray-500">

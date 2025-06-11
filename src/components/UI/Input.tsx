@@ -1,5 +1,7 @@
+
 import React, { forwardRef } from 'react';
 import { UI_COLORS, GRID_CONSTANTS } from '../../utils/constants';
+
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     variant?: 'default' | 'correct' | 'error' | 'active';
@@ -15,6 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     onEnter,
     onAutoAdvance,
     onKeyDown,
+    value,
     ...props
 }, ref) => {
     const variantClasses = {
@@ -38,17 +41,28 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className,
     ].join(' ');
 
+    // Auto-select content when focused (for easy replacement)
+    useEffect(() => {
+        if (variant === 'active' && ref && typeof ref !== 'function' && ref.current) {
+            const input = ref.current;
+            // Small delay to ensure focus has completed
+            setTimeout(() => {
+                if (input === document.activeElement && input.value) {
+                    input.select();
+                }
+            }, 10);
+        }
+    }, [variant, ref]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
 
         if (onChange) {
             onChange(value);
 
-            // Auto-advance if user typed a digit
+            // Auto-advance immediately if user typed a digit
             if (value.length === 1 && onAutoAdvance) {
-                setTimeout(() => {
-                    onAutoAdvance();
-                }, 50); // Small delay to ensure the value is processed
+                onAutoAdvance();
             }
         }
     };
@@ -59,6 +73,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Handle numeric input - if there's existing content, replace it
+        if (/^[0-9]$/.test(e.key)) {
+            const input = e.target as HTMLInputElement;
+            if (input.value && input.selectionStart === input.selectionEnd) {
+                // If there's content and nothing is selected, select all first
+                input.select();
+            }
+        }
+
         if (e.key === 'Enter' && onEnter) {
             e.preventDefault();
             onEnter();
@@ -80,6 +103,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
         // Select all on click too, for better UX
         e.currentTarget.select();
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        // Select all content when focused for easy replacement
+        if (e.target.value) {
+            e.target.select();
+        }
+
+        // Call original onFocus if provided
+        if (props.onFocus) {
+            props.onFocus(e);
+        }
     };
 
     return (
@@ -90,6 +124,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             pattern="[0-9]*"
             maxLength={1}
             className={combinedClasses}
+
             style={{
                 width: `${BOX_WIDTH}px`,
                 height: `${BOX_HEIGHT}px`,
@@ -98,6 +133,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onClick={handleClick}
+
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+
             {...props}
         />
     );

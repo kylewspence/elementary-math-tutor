@@ -7,7 +7,7 @@ import type {
 
 export function useKeyboardNavigation(
     totalSteps: number,
-    quotientLength: number
+    _quotientLength: number
 ): UseKeyboardNavigationReturn {
     const [currentFocus, setCurrentFocus] = useState<FocusPosition>({
         stepNumber: 0,
@@ -43,93 +43,62 @@ export function useKeyboardNavigation(
         }
     }, [getFocusKey]);
 
-    // Navigate to next field in logical order
-    const nextField = useCallback(() => {
-        const { fieldType, stepNumber, position } = currentFocus;
+    // Create a list of all fields in proper sequential order
+    const getAllFieldsInOrder = useCallback((): FocusPosition[] => {
+        const allFields: FocusPosition[] = [];
 
-        let nextPosition: FocusPosition;
+        for (let stepNumber = 0; stepNumber < totalSteps; stepNumber++) {
+            // Quotient - only position 0 exists for each step
+            allFields.push({ fieldType: 'quotient', stepNumber, position: 0 });
 
-        switch (fieldType) {
-            case 'quotient':
-                if (position < quotientLength - 1) {
-                    // Next quotient position
-                    nextPosition = { fieldType: 'quotient', stepNumber, position: position + 1 };
-                } else {
-                    // Move to multiply step
-                    nextPosition = { fieldType: 'multiply', stepNumber, position: 0 };
-                }
-                break;
+            // Multiply - position 0 only (simplified for now)
+            allFields.push({ fieldType: 'multiply', stepNumber, position: 0 });
 
-            case 'multiply':
-                // Move to subtract step
-                nextPosition = { fieldType: 'subtract', stepNumber, position };
-                break;
+            // Subtract - position 0 only (simplified for now)
+            allFields.push({ fieldType: 'subtract', stepNumber, position: 0 });
 
-            case 'subtract':
-                // Move to bring down step or next quotient
-                if (stepNumber < totalSteps - 1) {
-                    nextPosition = { fieldType: 'bringDown', stepNumber, position };
-                } else {
-                    // Problem complete, stay here
-                    return;
-                }
-                break;
-
-            case 'bringDown':
-                // Move to next quotient digit
-                nextPosition = { fieldType: 'quotient', stepNumber: stepNumber + 1, position: 0 };
-                break;
-
-            default:
-                return;
+            // Bring down - position 0, only if not the last step
+            if (stepNumber < totalSteps - 1) {
+                allFields.push({ fieldType: 'bringDown', stepNumber, position: 0 });
+            }
         }
 
-        setCurrentFocus(nextPosition);
-        focusField(nextPosition);
-    }, [currentFocus, totalSteps, quotientLength, focusField]);
+        return allFields;
+    }, [totalSteps]);
+
+    // Navigate to next field in logical order
+    const nextField = useCallback(() => {
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.fieldType === currentFocus.fieldType &&
+            field.stepNumber === currentFocus.stepNumber &&
+            field.position === currentFocus.position
+        );
+
+        if (currentIndex >= 0 && currentIndex < allFields.length - 1) {
+            const nextPosition = allFields[currentIndex + 1];
+            setCurrentFocus(nextPosition);
+            focusField(nextPosition);
+        }
+        // If at the last field, stay there (do nothing)
+    }, [currentFocus, getAllFieldsInOrder, focusField]);
 
     // Navigate to previous field
     const previousField = useCallback(() => {
-        const { fieldType, stepNumber, position } = currentFocus;
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.fieldType === currentFocus.fieldType &&
+            field.stepNumber === currentFocus.stepNumber &&
+            field.position === currentFocus.position
+        );
 
-        let prevPosition: FocusPosition;
-
-        switch (fieldType) {
-            case 'quotient':
-                if (position > 0) {
-                    // Previous quotient position
-                    prevPosition = { fieldType: 'quotient', stepNumber, position: position - 1 };
-                } else if (stepNumber > 0) {
-                    // Previous step's bring down
-                    prevPosition = { fieldType: 'bringDown', stepNumber: stepNumber - 1, position: 0 };
-                } else {
-                    // Stay at first position
-                    return;
-                }
-                break;
-
-            case 'multiply':
-                // Back to quotient
-                prevPosition = { fieldType: 'quotient', stepNumber, position: quotientLength - 1 };
-                break;
-
-            case 'subtract':
-                // Back to multiply
-                prevPosition = { fieldType: 'multiply', stepNumber, position };
-                break;
-
-            case 'bringDown':
-                // Back to subtract
-                prevPosition = { fieldType: 'subtract', stepNumber, position };
-                break;
-
-            default:
-                return;
+        if (currentIndex > 0) {
+            const prevPosition = allFields[currentIndex - 1];
+            setCurrentFocus(prevPosition);
+            focusField(prevPosition);
         }
-
-        setCurrentFocus(prevPosition);
-        focusField(prevPosition);
-    }, [currentFocus, quotientLength, focusField]);
+        // If at the first field, stay there (do nothing)
+    }, [currentFocus, getAllFieldsInOrder, focusField]);
 
     // Jump directly to a specific field
     const jumpToField = useCallback((position: FocusPosition) => {
@@ -139,7 +108,7 @@ export function useKeyboardNavigation(
 
     // Handle keyboard events - FIXED: Allow numeric input
     const handleKeyDown = useCallback((event: KeyboardEvent): boolean => {
-        const { key, ctrlKey, shiftKey } = event;
+        const { key, shiftKey } = event;
 
         // Allow numeric input - DON'T prevent default for numbers
         if (/^[0-9]$/.test(key)) {

@@ -73,7 +73,7 @@ export function validateUserStepInput(input: UserInput, state: DivisionState): S
             message: isCorrect
                 ? VALIDATION_MESSAGES.SUCCESS.STEP_CORRECT
                 : VALIDATION_MESSAGES.ERRORS.INCORRECT_STEP,
-            hint: isCorrect ? undefined : generateHintForStep(input, state),
+            hint: isCorrect ? undefined : generateHintForStep(input),
         };
     } catch (error) {
         return {
@@ -89,8 +89,8 @@ export function validateUserStepInput(input: UserInput, state: DivisionState): S
 /**
  * Generates contextual hints for a specific step
  */
-export function generateHintForStep(input: UserInput, state: DivisionState): string {
-    const { fieldType, stepNumber } = input;
+export function generateHintForStep(_input: UserInput): string {
+    const { fieldType } = _input;
 
     switch (fieldType) {
         case 'quotient':
@@ -229,7 +229,7 @@ export function formatValidationMessage(validation: StepValidation): string {
  * Determines if input should trigger automatic focus advancement
  */
 export function shouldAutoAdvanceFocus(
-    input: UserInput,
+    _input: UserInput,
     validation: StepValidation,
     settings: { autoAdvance: boolean }
 ): boolean {
