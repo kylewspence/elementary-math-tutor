@@ -30,13 +30,15 @@ export interface DivisionStep {
 
 export interface GameState {
     currentLevel: number;
-    currentProblem: number; // 1-10 within the level
-    totalProblems: number;  // Always 10 per level
-    isComplete: boolean;
+    completedLevels: number[];
+    availableLevels: number[];
+    currentProblemIndex: number;
+    levelProblems: DivisionProblem[];
     problem: DivisionProblem | null;
     userAnswers: UserAnswer[];
-    errors: string[];
-    isSubmitted?: boolean; // New flag to track if problem has been submitted
+    isSubmitted: boolean;
+    isComplete: boolean;
+    score: number;
 }
 
 export interface UserAnswer {
