@@ -8,7 +8,7 @@ export interface CurrentFocus {
     fieldPosition: number;
 }
 
-export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: UserAnswer[] = [], _isSubmitted: boolean = false) {
+export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: UserAnswer[] = [], isSubmitted: boolean = false) {
     const [currentFocus, setCurrentFocus] = useState<CurrentFocus>({
         stepNumber: 0,
         fieldType: 'quotient',
@@ -63,6 +63,22 @@ export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: Us
         );
     }, [currentFocus, getAllFieldsInOrder]);
 
+    // Check if all fields have answers
+    const areAllFieldsFilled = useCallback(() => {
+        if (!problem) return false;
+
+        const allFields = getAllFieldsInOrder();
+
+        // Check if we have an answer for each field
+        return allFields.every(field => {
+            return userAnswers.some(answer =>
+                answer.stepNumber === field.stepNumber &&
+                answer.fieldType === field.fieldType &&
+                answer.fieldPosition === field.fieldPosition
+            );
+        });
+    }, [problem, userAnswers, getAllFieldsInOrder]);
+
     // Move to next field
     const moveNext = useCallback(() => {
         const allFields = getAllFieldsInOrder();
@@ -102,8 +118,18 @@ export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: Us
         });
     }, [problem]);
 
+    // Check if we're at the last field
+    const isLastField = useCallback(() => {
+        if (!problem) return false;
+
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = getCurrentFieldIndex();
+
+        return currentIndex === allFields.length - 1;
+    }, [problem, getAllFieldsInOrder, getCurrentFieldIndex]);
+
     // Handle keyboard events
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => {
         switch (e.key) {
             case KEYBOARD_KEYS.TAB:
                 e.preventDefault();
@@ -115,7 +141,16 @@ export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: Us
                 break;
             case KEYBOARD_KEYS.ENTER:
                 e.preventDefault();
-                moveNext();
+                if (isSubmitted && onNextProblem) {
+                    // If problem is already submitted, go to next problem
+                    onNextProblem();
+                } else if (onProblemSubmit && (isLastField() || areAllFieldsFilled())) {
+                    // Submit the problem if we're at the last field or all fields are filled
+                    onProblemSubmit();
+                } else {
+                    // Otherwise just move to next field
+                    moveNext();
+                }
                 break;
             case KEYBOARD_KEYS.ARROW_RIGHT:
             case KEYBOARD_KEYS.ARROW_DOWN:
@@ -128,7 +163,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, _userAnswers: Us
                 movePrevious();
                 break;
         }
-    }, [moveNext, movePrevious]);
+    }, [moveNext, movePrevious, isLastField, areAllFieldsFilled, isSubmitted]);
 
     // Check if a field is currently focused
     const isFieldFocused = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {
