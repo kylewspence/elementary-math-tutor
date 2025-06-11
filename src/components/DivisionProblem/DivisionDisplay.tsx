@@ -131,7 +131,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
-
         // Small delay to ensure current input is processed
         setTimeout(() => {
             if (currentFocus.fieldType === 'quotient') {
@@ -161,21 +160,11 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     // Move to next step quotient
                     onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
                 }
-            } else if (currentFocus.fieldType === 'bringDown') {
-
+            } else if (currentFocus.fieldType === 'bringDown' && currentFocus.stepNumber + 1 < problem.steps.length) {
                 // Move to next step quotient
                 onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
             }
-        } else if (currentFocus.fieldType === 'quotient') {
-            // Move to multiply
-            const step = problem.steps[currentFocus.stepNumber];
-            onFieldClick(currentFocus.stepNumber, 'multiply', getDigitCount(step.multiply) - 1);
-        } else if (currentFocus.fieldType === 'bringDown') {
-            // Move to next step quotient
-            if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-            }
-        }
+        }, 100);
     };
 
     // Handle problem editing
