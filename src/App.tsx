@@ -4,6 +4,7 @@ import LevelSelector from './components/LevelSelector/LevelSelector';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
+import type { UserAnswer } from './types/game';
 
 function App() {
   const {
@@ -48,7 +49,7 @@ function App() {
   }, [gameState.problem, gameState.userAnswers.length, jumpToField]);
 
   // Handle answer submission (no immediate validation)
-  const handleAnswerSubmit = (answer: any) => {
+  const handleAnswerSubmit = (answer: UserAnswer) => {
     submitAnswer(answer);
   };
 
