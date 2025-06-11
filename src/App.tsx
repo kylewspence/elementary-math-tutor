@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import Header from './components/Header/Header';
 import LevelSelector from './components/LevelSelector/LevelSelector';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
@@ -25,7 +25,6 @@ function App() {
     currentFocus,
     handleKeyDown,
     jumpToField,
-    isFieldFocused,
   } = useKeyboardNav(gameState.problem, gameState.userAnswers, gameState.isSubmitted);
 
   // Initialize the game on mount
@@ -133,6 +132,7 @@ function App() {
                 isSubmitted={gameState.isSubmitted}
                 onKeyDown={handleKeyDown}
                 onFieldClick={handleFieldClick}
+                gameState={gameState}
               />
             ) : (
               <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
