@@ -50,10 +50,33 @@ export function useGameState() {
             const answerWithoutValidation = { ...userAnswer, isCorrect: false };
             const updatedAnswers = [...filteredAnswers, answerWithoutValidation];
 
+            // If the problem was already submitted, maintain that state and validate the new answer immediately
+            if (prev.isSubmitted) {
+                const newAnswerWithValidation = {
+                    ...answerWithoutValidation,
+                    isCorrect: validateAnswer(prev.problem!, answerWithoutValidation)
+                };
+
+                // Replace the unvalidated answer with the validated one
+                const validatedAnswers = [...filteredAnswers, newAnswerWithValidation];
+
+                // We should maintain the submitted state, but do NOT update isComplete
+                // This way, only explicit submissions (submitProblem) will show the completion message
+                return {
+                    ...prev,
+                    userAnswers: validatedAnswers,
+                    isSubmitted: true, // Keep submitted state
+                    errors: validatedAnswers
+                        .filter(ans => !ans.isCorrect)
+                        .map(ans => `Incorrect answer for step ${ans.stepNumber} ${ans.fieldType}`)
+                };
+            }
+
+            // Normal behavior for pre-submission edits
             return {
                 ...prev,
                 userAnswers: updatedAnswers,
-                isSubmitted: false, // Reset submitted state when new answers are added
+                isSubmitted: false,
                 isComplete: false,
             };
         });
@@ -99,10 +122,12 @@ export function useGameState() {
 
             const problemComplete = prev.problem ? isProblemComplete(prev.problem, filteredAnswers) : false;
 
+            // Maintain the submitted state if it was already submitted
             return {
                 ...prev,
                 userAnswers: filteredAnswers,
                 isComplete: problemComplete,
+                isSubmitted: prev.isSubmitted, // Preserve submission state
             };
         });
     }, [gameState.problem]);
@@ -167,6 +192,7 @@ export function useGameState() {
             userAnswers: [],
             errors: [],
             isComplete: false,
+            isSubmitted: false, // Explicitly reset the submission state
         }));
     }, []);
 
