@@ -411,7 +411,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     left: '0',
                                     zIndex: 10 // Ensure quotient is above everything
                                 }}>
-                                    {problem.steps.map((step, stepIndex) => {
+                                    {problem.steps.map((_, stepIndex) => {
                                         // Position quotient digit correctly based on the steps
                                         const digitPosition = dividendStr.length - problem.steps.length + stepIndex;
 
