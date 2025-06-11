@@ -56,6 +56,13 @@ function App() {
   // Handle problem submission for validation
   const handleProblemSubmit = () => {
     submitProblem();
+
+    // Clear focus by setting it to a non-existent field after submission
+    // This ensures no field has the blue outline, letting validation colors show
+    if (gameState.problem) {
+      // Use a field position that's guaranteed not to exist
+      jumpToField(-1, 'quotient', -1);
+    }
   };
 
   // Handle field clicks
@@ -72,35 +79,6 @@ function App() {
   const handleLevelSelect = (levelId: number) => {
     jumpToLevel(levelId);
   };
-
-  // Show completion message
-  if (gameState.isComplete && gameState.problem) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-8 text-center">
-              <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
-                Problem Complete!
-              </h2>
-              <p className="text-green-700 mb-6">
-                Great job! You solved {gameState.problem.dividend} ÷ {gameState.problem.divisor} = {gameState.problem.quotient}
-                {gameState.problem.remainder > 0 && ` remainder ${gameState.problem.remainder}`}
-              </p>
-              <button
-                onClick={handleNextProblem}
-                className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
-              >
-                Next Problem →
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -134,6 +112,9 @@ function App() {
                 onKeyDown={handleKeyDown}
                 onFieldClick={handleFieldClick}
                 gameState={gameState}
+                onNextProblem={handleNextProblem}
+                onResetProblem={resetProblem}
+                onNewProblem={generateNewProblem}
               />
             ) : (
               <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
@@ -145,27 +126,6 @@ function App() {
             )}
           </div>
         </div>
-
-        {/* Problem controls */}
-        {gameState.problem && (
-          <div className="max-w-7xl mx-auto mt-6 text-center">
-            <div className="space-x-4">
-              <button
-                onClick={() => resetProblem()}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                🔄 Reset Problem
-              </button>
-              <button
-                onClick={() => generateNewProblem()}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                🎲 New Problem
-              </button>
-
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

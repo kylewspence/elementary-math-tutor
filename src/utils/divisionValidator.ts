@@ -7,6 +7,22 @@ function getDigitAtPosition(value: number, position: number): number {
     return index >= 0 ? parseInt(str[index]) : 0;
 }
 
+// Helper to find answers that match specific criteria - refactored to avoid repetition
+function findMatchingAnswer(
+    userAnswers: UserAnswer[],
+    stepNumber: number,
+    fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown',
+    fieldPosition: number,
+    requireCorrect: boolean = true
+): UserAnswer | undefined {
+    return userAnswers.find(
+        a => a.stepNumber === stepNumber &&
+            a.fieldType === fieldType &&
+            a.fieldPosition === fieldPosition &&
+            (requireCorrect ? a.isCorrect : true)
+    );
+}
+
 export function validateAnswer(
     problem: DivisionProblem,
     userAnswer: UserAnswer
@@ -68,46 +84,26 @@ export function isProblemComplete(
         const step = problem.steps[stepIndex];
 
         // Check quotient
-        const quotientAnswer = userAnswers.find(
-            a => a.stepNumber === stepIndex &&
-                a.fieldType === 'quotient' &&
-                a.fieldPosition === 0 &&
-                a.isCorrect
-        );
+        const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', 0);
         if (!quotientAnswer) return false;
 
         // Check multiply digits
         const multiplyDigits = step.multiply.toString().length;
         for (let pos = 0; pos < multiplyDigits; pos++) {
-            const multiplyAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'multiply' &&
-                    a.fieldPosition === pos &&
-                    a.isCorrect
-            );
+            const multiplyAnswer = findMatchingAnswer(userAnswers, stepIndex, 'multiply', pos);
             if (!multiplyAnswer) return false;
         }
 
         // Check subtract digits
         const subtractDigits = Math.max(1, step.subtract.toString().length);
         for (let pos = 0; pos < subtractDigits; pos++) {
-            const subtractAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'subtract' &&
-                    a.fieldPosition === pos &&
-                    a.isCorrect
-            );
+            const subtractAnswer = findMatchingAnswer(userAnswers, stepIndex, 'subtract', pos);
             if (!subtractAnswer) return false;
         }
 
         // Check bringDown if it exists
         if (step.bringDown !== undefined) {
-            const bringDownAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'bringDown' &&
-                    a.fieldPosition === 0 &&
-                    a.isCorrect
-            );
+            const bringDownAnswer = findMatchingAnswer(userAnswers, stepIndex, 'bringDown', 0);
             if (!bringDownAnswer) return false;
         }
     }
@@ -124,12 +120,7 @@ export function getNextRequiredField(
         const step = problem.steps[stepIndex];
 
         // Check quotient
-        const quotientAnswer = userAnswers.find(
-            a => a.stepNumber === stepIndex &&
-                a.fieldType === 'quotient' &&
-                a.fieldPosition === 0 &&
-                a.isCorrect
-        );
+        const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', 0);
         if (!quotientAnswer) {
             return { stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 };
         }
@@ -137,12 +128,7 @@ export function getNextRequiredField(
         // Check multiply digits
         const multiplyDigits = step.multiply.toString().length;
         for (let pos = 0; pos < multiplyDigits; pos++) {
-            const multiplyAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'multiply' &&
-                    a.fieldPosition === pos &&
-                    a.isCorrect
-            );
+            const multiplyAnswer = findMatchingAnswer(userAnswers, stepIndex, 'multiply', pos);
             if (!multiplyAnswer) {
                 return { stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos };
             }
@@ -151,12 +137,7 @@ export function getNextRequiredField(
         // Check subtract digits
         const subtractDigits = Math.max(1, step.subtract.toString().length);
         for (let pos = 0; pos < subtractDigits; pos++) {
-            const subtractAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'subtract' &&
-                    a.fieldPosition === pos &&
-                    a.isCorrect
-            );
+            const subtractAnswer = findMatchingAnswer(userAnswers, stepIndex, 'subtract', pos);
             if (!subtractAnswer) {
                 return { stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos };
             }
@@ -164,12 +145,7 @@ export function getNextRequiredField(
 
         // Check bringDown if it exists
         if (step.bringDown !== undefined) {
-            const bringDownAnswer = userAnswers.find(
-                a => a.stepNumber === stepIndex &&
-                    a.fieldType === 'bringDown' &&
-                    a.fieldPosition === 0 &&
-                    a.isCorrect
-            );
+            const bringDownAnswer = findMatchingAnswer(userAnswers, stepIndex, 'bringDown', 0);
             if (!bringDownAnswer) {
                 return { stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 };
             }
