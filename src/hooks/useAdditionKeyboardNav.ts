@@ -206,8 +206,6 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         movePrevious,
         jumpToField,
         handleKeyDown,
-        isFieldFocused,
-        needsExtraBox,
-        needsCarry,
+        isFieldFocused
     };
 } 
