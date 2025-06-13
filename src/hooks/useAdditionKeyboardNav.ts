@@ -72,7 +72,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         }
 
         return allFields;
-    }, [problem, needsExtraBox, needsCarry]);
+    }, [problem, needsExtraBox]);
 
     // Helper to find index of current field in the ordered list
     const getCurrentFieldIndex = useCallback(() => {

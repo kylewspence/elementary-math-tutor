@@ -40,6 +40,7 @@ export function useGameState() {
         isSubmitted: false,
         isComplete: false,
         score: 0,
+        gameMode: 'division',
     });
 
     // Loading state for API calls
