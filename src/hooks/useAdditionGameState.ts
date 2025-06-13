@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../types/addition';
+import type { AdditionProblem, AdditionUserAnswer, AdditionGameState, AdditionStep } from '../types/addition';
 import { ADDITION_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
 import { generateAdditionProblem } from '../utils/additionGenerator';
 import { validateAdditionAnswer, isAdditionProblemComplete } from '../utils/additionValidator';
@@ -64,7 +64,7 @@ export function useAdditionGameState() {
                 currentProblemIndex: 0,
                 problem: shuffledProblems.length > 0 ? shuffledProblems[0] : null,
             }));
-        } catch (error) {
+        } catch {
             setFetchError('Failed to generate problems. Please try again.');
 
             // Generate a fallback problem
@@ -351,7 +351,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // Helper function to calculate addition steps
-function calculateAdditionSteps(addend1: number, addend2: number): any[] {
+function calculateAdditionSteps(addend1: number, addend2: number): AdditionStep[] {
     const addend1Str = addend1.toString();
     const addend2Str = addend2.toString();
 
@@ -359,7 +359,7 @@ function calculateAdditionSteps(addend1: number, addend2: number): any[] {
     const maxLength = Math.max(addend1Str.length, addend2Str.length);
 
     let carryValue = 0; // Initialize carry
-    const steps = [];
+    const steps: AdditionStep[] = [];
 
     // Process each column from right to left (ones, tens, hundreds, etc.)
     for (let i = 0; i < maxLength; i++) {

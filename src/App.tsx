@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Header from './components/Header/Header';
-import LevelSelector from './components/LevelSelector/LevelSelector';
+import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
 import AdditionDisplay from './components/AdditionProblem/AdditionDisplay';
 import { useGameState } from './hooks/useGameState';
@@ -179,56 +179,45 @@ function App() {
     setGameMode(prev => prev === 'division' ? 'addition' : 'division');
   };
 
+  // Get current level and problem info for header
+  const getCurrentLevelInfo = () => {
+    if (gameMode === 'division') {
+      return {
+        currentLevel: gameState.currentLevel,
+        currentProblem: gameState.currentProblemIndex + 1,
+        totalProblems: gameState.levelProblems.length
+      };
+    } else {
+      return {
+        currentLevel: additionGameState.currentLevel,
+        currentProblem: additionGameState.currentProblemIndex + 1,
+        totalProblems: additionGameState.levelProblems.length
+      };
+    }
+  };
+
+  const levelInfo = getCurrentLevelInfo();
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header
+        gameMode={gameMode}
+        toggleGameMode={toggleGameMode}
+        currentLevel={levelInfo.currentLevel}
+        currentProblem={levelInfo.currentProblem}
+        totalProblems={levelInfo.totalProblems}
+      />
 
-      {/* Game Mode Toggle */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-center mb-4">
-          <div className="bg-white rounded-lg shadow-md p-1 flex">
-            <button
-              onClick={() => setGameMode('division')}
-              className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'division'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Division
-            </button>
-            <button
-              onClick={() => setGameMode('addition')}
-              className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'addition'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Addition
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Level Selector Drawer - Used for all screen sizes */}
+      <LevelSelectorDrawer
+        gameState={gameMode === 'division' ? gameState : additionGameState}
+        onLevelSelect={gameMode === 'division' ? handleLevelSelect : handleAdditionLevelSelect}
+      />
 
       <main className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-
-          {/* Level Selector Sidebar */}
-          <div className="lg:col-span-1">
-            {gameMode === 'division' ? (
-              <LevelSelector
-                gameState={gameState}
-                onLevelSelect={handleLevelSelect}
-              />
-            ) : (
-              <LevelSelector
-                gameState={additionGameState}
-                onLevelSelect={handleAdditionLevelSelect}
-              />
-            )}
-          </div>
-
+        <div className="max-w-4xl mx-auto">
           {/* Problem Area */}
-          <div className="lg:col-span-3">
+          <div className="w-full">
             {/* Division Mode */}
             {gameMode === 'division' && (
               <>
@@ -255,12 +244,9 @@ function App() {
                   </div>
                 )}
 
-                {isLoading && !gameState.problem ? (
-                  <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
-                    <div className="text-gray-500">
-                      <div className="animate-spin text-4xl mb-4">🔄</div>
-                      <p>Loading division problems...</p>
-                    </div>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                   </div>
                 ) : gameState.problem ? (
                   <DivisionDisplay
@@ -269,26 +255,19 @@ function App() {
                     currentFocus={currentFocus}
                     onAnswerSubmit={handleAnswerSubmit}
                     onAnswerClear={clearAnswer}
-                    onProblemChange={updateProblem}
                     onProblemSubmit={handleProblemSubmit}
-                    onEnableEditing={enableEditing}
-                    onDisableEditing={disableEditing}
-                    isSubmitted={gameState.isSubmitted}
                     onKeyDown={handleKeyboardNav}
                     onFieldClick={handleFieldClick}
+                    isSubmitted={gameState.isSubmitted}
                     gameState={gameState}
                     onNextProblem={handleNextProblem}
+                    onProblemChange={updateProblem}
+                    onEnableEditing={enableEditing}
+                    onDisableEditing={disableEditing}
                     onResetProblem={resetProblem}
                     onNewProblem={generateNewProblem}
                   />
-                ) : (
-                  <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
-                    <div className="text-gray-500">
-                      <div className="text-4xl mb-4">🔄</div>
-                      <p>Loading problem...</p>
-                    </div>
-                  </div>
-                )}
+                ) : null}
               </>
             )}
 
@@ -318,12 +297,9 @@ function App() {
                   </div>
                 )}
 
-                {isAdditionLoading && !additionGameState.problem ? (
-                  <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
-                    <div className="text-gray-500">
-                      <div className="animate-spin text-4xl mb-4">🔄</div>
-                      <p>Loading addition problems...</p>
-                    </div>
+                {isAdditionLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                   </div>
                 ) : additionGameState.problem ? (
                   <AdditionDisplay
@@ -332,26 +308,19 @@ function App() {
                     currentFocus={additionCurrentFocus}
                     onAnswerSubmit={handleAdditionAnswerSubmit}
                     onAnswerClear={clearAdditionAnswer}
-                    onProblemChange={updateAdditionProblem}
                     onProblemSubmit={handleAdditionProblemSubmit}
-                    onEnableEditing={enableAdditionEditing}
-                    onDisableEditing={disableAdditionEditing}
-                    isSubmitted={additionGameState.isSubmitted}
                     onKeyDown={handleAdditionKeyboardNav}
                     onFieldClick={handleAdditionFieldClick}
+                    isSubmitted={additionGameState.isSubmitted}
                     gameState={additionGameState}
                     onNextProblem={handleNextAdditionProblem}
+                    onProblemChange={updateAdditionProblem}
+                    onEnableEditing={enableAdditionEditing}
+                    onDisableEditing={disableAdditionEditing}
                     onResetProblem={resetAdditionProblem}
                     onNewProblem={generateNewAdditionProblem}
                   />
-                ) : (
-                  <div className="bg-white p-8 rounded-xl border-2 border-gray-200 text-center">
-                    <div className="text-gray-500">
-                      <div className="text-4xl mb-4">🔄</div>
-                      <p>Loading problem...</p>
-                    </div>
-                  </div>
-                )}
+                ) : null}
               </>
             )}
           </div>

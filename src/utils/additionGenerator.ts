@@ -8,7 +8,7 @@ export function generateAdditionProblem(level: AdditionLevel): AdditionProblem {
     const maxValue = level.maxValue;
     const minValue = Math.pow(10, level.maxDigits - 1); // Ensure minimum digits
 
-    let addend1 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+    const addend1 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
     let addend2 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
 
     // If carry is required for this level, ensure at least one column needs carrying

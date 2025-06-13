@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../../types/addition';
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
-import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+import Input from '../UI/Input';
 
 interface AdditionDisplayProps {
     problem: AdditionProblem;
@@ -23,6 +23,9 @@ interface AdditionDisplayProps {
     onNewProblem?: () => void;
 }
 
+/**
+ * Component for displaying and interacting with addition problems
+ */
 const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     problem,
     userAnswers,
@@ -36,7 +39,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     isSubmitted,
     onKeyDown,
     onFieldClick,
-    gameState,
     onNextProblem,
     onResetProblem,
     onNewProblem,
@@ -84,27 +86,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         };
     }, [problem.isEditable, onDisableEditing]);
 
-    // Check if all input fields have answers
-    useEffect(() => {
-        if (!problem || !userAnswers.length) {
-            setAllFieldsFilled(false);
-            return;
-        }
-
-        // Get all required fields
-        const requiredFields = getAllRequiredFields();
-
-        // Check if we have an answer for each required field
-        const allFilled = requiredFields.every(field =>
-            userAnswers.some(answer =>
-                answer.columnPosition === field.columnPosition &&
-                answer.fieldType === field.fieldType
-            )
-        );
-
-        setAllFieldsFilled(allFilled);
-    }, [problem, userAnswers]);
-
     // Helper to get all required fields for this problem
     const getAllRequiredFields = () => {
         const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
@@ -151,6 +132,27 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
         return fields;
     };
+
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // Get all required fields
+        const requiredFields = getAllRequiredFields();
+
+        // Check if we have an answer for each required field
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.columnPosition === field.columnPosition &&
+                answer.fieldType === field.fieldType
+            )
+        );
+
+        setAllFieldsFilled(allFilled);
+    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
@@ -327,12 +329,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     // This happens when the sum has more digits than either addend
     const needsExtraBox = problem.sum > Math.pow(10, displaySteps.length) - 1;
 
-    // Helper to determine if a column needs a carry
-    const needsCarry = (columnPosition: number) => {
-        const step = problem.steps.find(s => s.columnPosition === columnPosition - 1);
-        return step && step.carry > 0;
-    };
-
     // Helper to determine if a column receives a carry
     const receivesCarry = (columnPosition: number) => {
         const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
@@ -345,8 +341,27 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         return userAnswers.every(answer => answer.isCorrect);
     };
 
-    // Determine if the problem is complete
-    const isProblemComplete = isSubmitted && gameState?.isComplete;
+    // Fix the useEffect dependency array (around line 106)
+    useEffect(() => {
+        // If the problem is submitted and complete, focus on the next button
+        if (isSubmitted && areAllAnswersCorrect()) {
+            // Focus will be handled by the Next Problem button having autoFocus
+            return;
+        }
+
+        // Otherwise, focus on the first empty or incorrect field
+        const fields = getAllRequiredFields();
+        if (fields.length > 0) {
+            const firstEmptyField = fields.find(field => {
+                const answer = getUserAnswer(field.columnPosition, field.fieldType);
+                return !answer || !answer.isCorrect;
+            });
+
+            if (firstEmptyField) {
+                onFieldClick(firstEmptyField.columnPosition, firstEmptyField.fieldType);
+            }
+        }
+    }, [isSubmitted, userAnswers, problem, onFieldClick, getAllRequiredFields]);
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
@@ -523,66 +538,36 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 )}
             </div>
 
-            {/* Legend for input fields */}
-            <div className="mt-4 text-center">
-                <div className="inline-flex items-center text-sm text-gray-600 mb-2">
-                    <span className="mr-2">💡</span>
-                    <span>Fill in the <span className="font-bold">sum</span> in the bottom row and <span className="font-bold">carry values</span> above the numbers</span>
-                </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="mt-4 text-center">
-                <button
-                    onClick={() => onProblemSubmit?.()}
-                    disabled={!userAnswers.length}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : isSubmitted
-                            ? 'bg-blue-500 text-white'
-                            : allFieldsFilled
-                                ? 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 animate-pulse'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        }`}
-                >
-                    {isSubmitted ? '✓ Submitted' : allFieldsFilled ? '📝 Submit Answers (Enter)' : '📝 Submit Answers'}
-                </button>
-            </div>
-
-            {/* Instructions and Control Buttons */}
-            <div className="mt-8">
-                <div className="text-center text-sm text-gray-500 mb-4">
-                    💡 Use Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
-                </div>
-
-                <div className="flex justify-center gap-4">
+            {/* Action buttons */}
+            <div className="flex justify-center mt-8 space-x-4">
+                {!isSubmitted ? (
                     <button
-                        onClick={onResetProblem}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        onClick={onProblemSubmit}
+                        className={`px-6 py-2 rounded-lg font-semibold ${allFieldsFilled
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            } transition-colors`}
+                        disabled={!allFieldsFilled}
                     >
-                        🔄 Reset Problem
+                        Submit Answers
                     </button>
-                    <button
-                        onClick={onNewProblem}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                        🎲 New Problem
-                    </button>
-                </div>
+                ) : (
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={onResetProblem}
+                            className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                        <button
+                            onClick={onNewProblem}
+                            className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                        >
+                            New Problem
+                        </button>
+                    </div>
+                )}
             </div>
-
-            {/* Add CSS for carry inputs */}
-            <style>
-                {`
-                .carry-input {
-                    font-size: 0.8em;
-                    width: 2rem;
-                    height: 2rem;
-                    background-color: #f0f8ff;
-                    border-color: #b3d9ff;
-                }
-                `}
-            </style>
         </div>
     );
 };

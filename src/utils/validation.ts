@@ -4,6 +4,10 @@ import type { UserInput, DivisionState, StepValidation, ValidationError } from '
 import { DIVISION_CONSTANTS, VALIDATION_MESSAGES } from './constants';
 import { validateStepInput, calculateLongDivision } from './divisionCalculator';
 
+// Define type aliases for the navigation and numpad keys
+type NavigationKey = typeof DIVISION_CONSTANTS.NAVIGATION_KEYS[number];
+type NumpadKey = typeof DIVISION_CONSTANTS.NUMPAD_KEYS[number];
+
 /**
  * Validates numeric input within allowed ranges
  */
@@ -75,7 +79,7 @@ export function validateUserStepInput(input: UserInput, state: DivisionState): S
                 : VALIDATION_MESSAGES.ERRORS.INCORRECT_STEP,
             hint: isCorrect ? undefined : generateHintForStep(input),
         };
-    } catch (error) {
+    } catch {
         return {
             isValid: false,
             correctValue: 0,
@@ -141,12 +145,12 @@ export function validateKeyboardInput(
     maxLength: number = 4
 ): { isAllowed: boolean; shouldPreventDefault?: boolean } {
     // Allow navigation keys
-    if (DIVISION_CONSTANTS.NAVIGATION_KEYS.includes(key as any)) {
+    if (DIVISION_CONSTANTS.NAVIGATION_KEYS.includes(key as NavigationKey)) {
         return { isAllowed: true };
     }
 
     // Allow numeric keys
-    if (DIVISION_CONSTANTS.NUMPAD_KEYS.includes(key as any)) {
+    if (DIVISION_CONSTANTS.NUMPAD_KEYS.includes(key as NumpadKey)) {
         // Prevent input if at max length
         if (currentValue.length >= maxLength) {
             return { isAllowed: false, shouldPreventDefault: true };

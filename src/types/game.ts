@@ -39,6 +39,7 @@ export interface GameState {
     isSubmitted: boolean;
     isComplete: boolean;
     score: number;
+    gameMode: 'division' | 'addition';
 }
 
 export interface UserAnswer {
