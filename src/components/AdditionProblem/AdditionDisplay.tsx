@@ -91,19 +91,66 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             return;
         }
 
-        // Count total required fields
-        let totalFields = 0;
+        // Get all required fields
+        const requiredFields = getAllRequiredFields();
 
-        // Sum fields for each column
-        totalFields += problem.steps.length;
+        // Check if we have an answer for each required field
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.columnPosition === field.columnPosition &&
+                answer.fieldType === field.fieldType
+            )
+        );
 
-        // Carry fields for columns that need them
-        const stepsWithCarry = problem.steps.filter(step => step.carry > 0).length;
-        totalFields += stepsWithCarry;
-
-        // Check if we have answers for all fields
-        setAllFieldsFilled(userAnswers.length >= totalFields);
+        setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);
+
+    // Helper to get all required fields for this problem
+    const getAllRequiredFields = () => {
+        const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
+
+        // Sort steps by column position (right to left, starting with ones place)
+        const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
+
+        // Process each column from right to left (ones, tens, hundreds)
+        for (const step of orderedSteps) {
+            // Add sum field for this column
+            fields.push({
+                columnPosition: step.columnPosition,
+                fieldType: 'sum'
+            });
+
+            // Add carry field for the NEXT column if this column generates a carry
+            if (step.carry > 0) {
+                const nextColumnPosition = step.columnPosition + 1;
+
+                // If this is the rightmost column with a carry and we need an extra box
+                if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && needsExtraBox) {
+                    fields.push({
+                        columnPosition: nextColumnPosition,
+                        fieldType: 'carry'
+                    });
+                }
+                // For other columns, add carry to the next column
+                else {
+                    fields.push({
+                        columnPosition: nextColumnPosition,
+                        fieldType: 'carry'
+                    });
+                }
+            }
+        }
+
+        // Add extra sum box if needed (leftmost position)
+        if (needsExtraBox) {
+            fields.push({
+                columnPosition: problem.steps.length,
+                fieldType: 'sum'
+            });
+        }
+
+        return fields;
+    };
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
@@ -166,23 +213,38 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         }, 0); // Reduced to 0ms for instant response
     };
 
-    // Get all fields in order for navigation
+    // Get all fields in order for navigation - following natural addition flow
     const getAllFieldsInOrder = (): AdditionCurrentFocus[] => {
         const allFields: AdditionCurrentFocus[] = [];
 
-        // Get the steps in right-to-left order (ones, tens, hundreds)
+        // Sort steps by column position (right to left, starting with ones place)
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-        // First add all carry fields (from right to left)
+        // Process each column from right to left (ones, tens, hundreds)
         for (const step of orderedSteps) {
+            // First add the sum field for this column
+            allFields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
+
+            // Then add the carry field for the NEXT column to the left if needed
+            // This is because when you add a column and get a sum ≥ 10, you carry to the next column
+            const nextColumnPosition = step.columnPosition + 1;
+
+            // Only add carry if this column generates a carry
             if (step.carry > 0) {
-                allFields.push({ columnPosition: step.columnPosition, fieldType: 'carry' });
+                // If this is the leftmost column and we need an extra box
+                if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && needsExtraBox) {
+                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                }
+                // For other columns, add carry to the next column
+                else if (nextColumnPosition < orderedSteps.length) {
+                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                }
             }
         }
 
-        // Then add all sum fields (from right to left)
-        for (const step of orderedSteps) {
-            allFields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
+        // Add extra sum box if needed (leftmost position)
+        if (needsExtraBox) {
+            allFields.push({ columnPosition: orderedSteps.length, fieldType: 'sum' });
         }
 
         return allFields;
@@ -220,7 +282,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 onClick={() => onFieldClick(columnPosition, fieldType)}
                 onAutoAdvance={handleAutoAdvance}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
-                placeholder={fieldType === 'carry' ? "1" : "?"}
+                placeholder="?"
                 aria-label={fieldType === 'carry' ? `Carry for column ${columnPosition + 1}` : `Sum for column ${columnPosition + 1}`}
                 className={fieldType === 'carry' ? 'carry-input' : ''}
             />
@@ -267,9 +329,24 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Helper to determine if a column needs a carry
     const needsCarry = (columnPosition: number) => {
-        const step = problem.steps.find(s => s.columnPosition === columnPosition);
+        const step = problem.steps.find(s => s.columnPosition === columnPosition - 1);
         return step && step.carry > 0;
     };
+
+    // Helper to determine if a column receives a carry
+    const receivesCarry = (columnPosition: number) => {
+        const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
+        return prevStep && prevStep.carry > 0;
+    };
+
+    // Check if all answers are correct
+    const areAllAnswersCorrect = () => {
+        if (!isSubmitted || userAnswers.length === 0) return false;
+        return userAnswers.every(answer => answer.isCorrect);
+    };
+
+    // Determine if the problem is complete
+    const isProblemComplete = isSubmitted && gameState?.isComplete;
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
@@ -325,7 +402,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         <div className="addition-grid relative">
                             {/* Carry row - now above the addends */}
                             <div className="flex justify-end mb-1">
-                                {/* Extra box for final carry if needed */}
+                                {/* Carry boxes for each column that receives a carry */}
                                 {needsExtraBox && (
                                     <div
                                         className="flex items-center justify-center"
@@ -337,14 +414,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                     </div>
                                 )}
 
-                                {/* Carry boxes for each column */}
                                 {displaySteps.map((step) => (
                                     <div
                                         key={`carry-input-${step.columnPosition}`}
                                         className="flex items-center justify-center"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${CARRY_HEIGHT}px` }}
                                     >
-                                        {needsCarry(step.columnPosition) && (
+                                        {receivesCarry(step.columnPosition) && (
                                             <div className="scale-70 transform origin-center">
                                                 {createInput(step.columnPosition, 'carry')}
                                             </div>
@@ -427,7 +503,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 </div>
 
                 {/* Completion card - positioned to the right without affecting problem layout */}
-                {isSubmitted && gameState?.isComplete && (
+                {isSubmitted && areAllAnswersCorrect() && (
                     <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
                         <div className="text-2xl mb-2">🎉</div>
                         <h3 className="text-lg font-bold text-green-800 mb-1">

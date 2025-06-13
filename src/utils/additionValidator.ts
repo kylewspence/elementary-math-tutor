@@ -21,13 +21,28 @@ export function validateAdditionAnswer(problem: AdditionProblem, answer: Additio
     // Find the step for this column position
     const step = problem.steps.find(s => s.columnPosition === columnPosition);
 
-    if (!step) return false;
+    if (!step) {
+        // If this is a carry field for a column that exists
+        if (fieldType === 'carry') {
+            // Find the previous step (the one that would generate this carry)
+            const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
+            if (prevStep) {
+                return value === prevStep.carry;
+            }
+        }
+        return false;
+    }
 
     // Validate based on field type
     if (fieldType === 'sum') {
         return value === step.sum;
     } else if (fieldType === 'carry') {
-        return value === step.carry;
+        // For carry, we need to find the previous column (the one that generated this carry)
+        const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
+        if (prevStep) {
+            return value === prevStep.carry;
+        }
+        return false;
     }
 
     return false;
@@ -43,13 +58,20 @@ export function isAdditionProblemComplete(problem: AdditionProblem, answers: Add
     const requiredFields = getRequiredAdditionFields(problem);
 
     // Check if we have correct answers for all required fields
-    return requiredFields.every(field =>
+    const allFieldsCorrect = requiredFields.every(field =>
         answers.some(answer =>
             answer.columnPosition === field.columnPosition &&
             answer.fieldType === field.fieldType &&
             answer.isCorrect
         )
     );
+
+    // Debug log
+    console.log('Required fields:', requiredFields);
+    console.log('User answers:', answers);
+    console.log('All fields correct:', allFieldsCorrect);
+
+    return allFieldsCorrect;
 }
 
 /**
@@ -67,32 +89,44 @@ export function getRequiredAdditionFields(problem: AdditionProblem): { columnPos
 
     const needsExtraBox = problem.sum > Math.pow(10, maxAddendDigits) - 1;
 
-    // Add carry fields for columns that have carries
-    for (const step of problem.steps) {
-        if (step.carry > 0) {
-            fields.push({
-                columnPosition: step.columnPosition,
-                fieldType: 'carry'
-            });
-        }
-    }
+    // Sort steps by column position (right to left, starting with ones place)
+    const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-    // Add sum fields for each column
-    for (const step of problem.steps) {
+    // Process each column from right to left (ones, tens, hundreds)
+    for (const step of orderedSteps) {
+        // Add sum field for this column
         fields.push({
             columnPosition: step.columnPosition,
             fieldType: 'sum'
         });
+
+        // Add carry field for the NEXT column if this column generates a carry
+        if (step.carry > 0) {
+            const nextColumnPosition = step.columnPosition + 1;
+
+            // If this is the rightmost column with a carry and we need an extra box
+            if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && needsExtraBox) {
+                fields.push({
+                    columnPosition: nextColumnPosition,
+                    fieldType: 'carry'
+                });
+            }
+            // For other columns, add carry to the next column
+            else {
+                fields.push({
+                    columnPosition: nextColumnPosition,
+                    fieldType: 'carry'
+                });
+            }
+        }
     }
 
+    // Add extra sum box if needed (leftmost position)
     if (needsExtraBox) {
-        // Add the extra sum field (leftmost position)
         fields.push({
             columnPosition: problem.steps.length,
             fieldType: 'sum'
         });
-
-        // We don't need a carry for the extra digit
     }
 
     return fields;

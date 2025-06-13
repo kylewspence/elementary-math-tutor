@@ -27,7 +27,14 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         return problem.sum > Math.pow(10, maxAddendDigits) - 1;
     }, [problem]);
 
-    // Get all fields in order for navigation - from right to left (ones, tens, hundreds, etc.)
+    // Helper to determine if a column needs a carry
+    const needsCarry = useCallback((columnPosition: number) => {
+        if (!problem) return false;
+        const step = problem.steps.find(s => s.columnPosition === columnPosition);
+        return step && step.carry > 0;
+    }, [problem]);
+
+    // Get all fields in order for navigation - following natural addition flow
     const getAllFieldsInOrder = useCallback((): AdditionCurrentFocus[] => {
         if (!problem) return [];
 
@@ -37,21 +44,26 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         // Sort steps by column position (right to left, starting with ones place)
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-        // First add all carry fields (from right to left)
+        // Process each column from right to left (ones, tens, hundreds)
         for (const step of orderedSteps) {
-            if (step.carry > 0) {
-                allFields.push({ columnPosition: step.columnPosition, fieldType: 'carry' });
-            }
-        }
-
-        // Add extra carry box if needed
-        if (hasExtraBox) {
-            allFields.push({ columnPosition: orderedSteps.length, fieldType: 'carry' });
-        }
-
-        // Then add all sum fields (from right to left)
-        for (const step of orderedSteps) {
+            // First add the sum field for this column
             allFields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
+
+            // Then add the carry field for the NEXT column to the left if needed
+            // This is because when you add a column and get a sum ≥ 10, you carry to the next column
+            const nextColumnPosition = step.columnPosition + 1;
+
+            // Only add carry if this column generates a carry
+            if (step.carry > 0) {
+                // If this is the leftmost column and we need an extra box
+                if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && hasExtraBox) {
+                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                }
+                // For other columns, add carry to the next column
+                else if (nextColumnPosition < orderedSteps.length) {
+                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                }
+            }
         }
 
         // Add extra sum box if needed (leftmost position)
@@ -60,7 +72,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         }
 
         return allFields;
-    }, [problem, needsExtraBox]);
+    }, [problem, needsExtraBox, needsCarry]);
 
     // Helper to find index of current field in the ordered list
     const getCurrentFieldIndex = useCallback(() => {
@@ -196,5 +208,6 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         handleKeyDown,
         isFieldFocused,
         needsExtraBox,
+        needsCarry,
     };
 } 
