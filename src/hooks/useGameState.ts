@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
 import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
