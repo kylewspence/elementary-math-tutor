@@ -9,7 +9,7 @@ const Header: React.FC = () => {
                         Math Tutor
                     </h1>
                     <p className="text-gray-600 text-sm mt-1">
-                        Long Division Practice
+                        Step-by-Step Math Practice
                     </p>
                 </div>
             </div>

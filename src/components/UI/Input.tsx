@@ -32,6 +32,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     text-center text-lg font-mono border-2 rounded-lg
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
     transition-all duration-200
+    min-w-[40px] min-h-[40px]
   `.trim();
 
     const combinedClasses = [
@@ -129,6 +130,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             style={{
                 width: `${BOX_WIDTH}px`,
                 height: `${BOX_HEIGHT}px`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
             }}
             value={value}
             onChange={handleChange}

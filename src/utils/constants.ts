@@ -1,6 +1,7 @@
 // Application constants and configuration values
 
 import type { GameLevel } from '../types/game';
+import type { AdditionLevel } from '../types/addition';
 
 export const DIVISION_CONSTANTS = {
     // Input validation
@@ -263,7 +264,7 @@ export const GAME_LEVELS: GameLevel[] = [
     },
 ];
 
-export const PROBLEMS_PER_LEVEL = 10;
+export const PROBLEMS_PER_LEVEL = 5;
 
 export const UI_COLORS = {
     CORRECT: 'bg-green-100 border-green-400 text-green-800',
@@ -284,6 +285,7 @@ export const KEYBOARD_KEYS = {
     ENTER: 'Enter',
     ESCAPE: 'Escape',
     BACKSPACE: 'Backspace',
+    DELETE: 'Delete',
     ARROW_UP: 'ArrowUp',
     ARROW_DOWN: 'ArrowDown',
     ARROW_LEFT: 'ArrowLeft',
@@ -294,4 +296,88 @@ export const FIELD_TYPES = {
     QUOTIENT: 'quotient',
     MULTIPLY: 'multiply',
     SUBTRACT: 'subtract',
-} as const; 
+} as const;
+
+// Addition levels
+export const ADDITION_LEVELS: AdditionLevel[] = [
+    {
+        id: 1,
+        name: 'Level 1',
+        description: 'Single digit addition, no carrying',
+        maxDigits: 1,
+        maxValue: 9,
+        carryRequired: false,
+    },
+    {
+        id: 2,
+        name: 'Level 2',
+        description: 'Single digit addition with carrying',
+        maxDigits: 1,
+        maxValue: 9,
+        carryRequired: true,
+    },
+    {
+        id: 3,
+        name: 'Level 3',
+        description: 'Two-digit addition, no carrying',
+        maxDigits: 2,
+        maxValue: 99,
+        carryRequired: false,
+    },
+    {
+        id: 4,
+        name: 'Level 4',
+        description: 'Two-digit addition with carrying',
+        maxDigits: 2,
+        maxValue: 99,
+        carryRequired: true,
+    },
+    {
+        id: 5,
+        name: 'Level 5',
+        description: 'Three-digit addition, no carrying',
+        maxDigits: 3,
+        maxValue: 999,
+        carryRequired: false,
+    },
+    {
+        id: 6,
+        name: 'Level 6',
+        description: 'Three-digit addition with carrying',
+        maxDigits: 3,
+        maxValue: 999,
+        carryRequired: true,
+    },
+    {
+        id: 7,
+        name: 'Level 7',
+        description: 'Four-digit addition, no carrying',
+        maxDigits: 4,
+        maxValue: 9999,
+        carryRequired: false,
+    },
+    {
+        id: 8,
+        name: 'Level 8',
+        description: 'Four-digit addition with carrying',
+        maxDigits: 4,
+        maxValue: 9999,
+        carryRequired: true,
+    },
+    {
+        id: 9,
+        name: 'Level 9',
+        description: 'Five-digit addition, no carrying',
+        maxDigits: 5,
+        maxValue: 99999,
+        carryRequired: false,
+    },
+    {
+        id: 10,
+        name: 'Level 10',
+        description: 'Five-digit addition with carrying',
+        maxDigits: 5,
+        maxValue: 99999,
+        carryRequired: true,
+    },
+]; 
