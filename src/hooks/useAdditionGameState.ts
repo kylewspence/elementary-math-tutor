@@ -1,36 +1,31 @@
-
 import { useState, useCallback } from 'react';
-import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
-import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
-import { generateProblem } from '../utils/problemGenerator';
-import { validateAnswer, isProblemComplete } from '../utils/divisionValidator';
-import { fetchDivisionProblems } from '../utils/apiService';
+import type { AdditionProblem, AdditionUserAnswer, AdditionGameState, AdditionStep } from '../types/addition';
+import { ADDITION_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
+import { generateAdditionProblem } from '../utils/additionGenerator';
+import { validateAdditionAnswer, isAdditionProblemComplete } from '../utils/additionValidator';
 import { FEATURES } from '../utils/config';
-
-// Minimum number of problems needed per level before falling back to local generation
-const MIN_PROBLEMS_PER_LEVEL = 8;
 
 /**
  * Generates a problem specifically for the given level ID
  */
-function generateLevelSpecificProblem(levelId: number): DivisionProblem {
-    const level = GAME_LEVELS.find(l => l.id === levelId);
+function generateLevelSpecificAdditionProblem(levelId: number): AdditionProblem {
+    const level = ADDITION_LEVELS.find(l => l.id === levelId);
     if (!level) {
-        throw new Error(`Level ${levelId} not found`);
+        throw new Error(`Addition level ${levelId} not found`);
     }
 
     // Generate the problem with full computation using the level object
-    const problem = generateProblem(level);
+    const problem = generateAdditionProblem(level);
 
     return problem;
 }
 
 /**
- * Custom hook to manage the game state
+ * Custom hook to manage the addition game state
  */
-export function useGameState() {
+export function useAdditionGameState() {
     // Complete game state
-    const [gameState, setGameState] = useState<GameState>({
+    const [gameState, setGameState] = useState<AdditionGameState>({
         currentLevel: 1,
         completedLevels: [],
         availableLevels: [1],
@@ -41,10 +36,10 @@ export function useGameState() {
         isSubmitted: false,
         isComplete: false,
         score: 0,
-        gameMode: 'division',
+        gameMode: 'addition',
     });
 
-    // Loading state for API calls
+    // Loading state
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -54,47 +49,32 @@ export function useGameState() {
         setFetchError(null);
 
         try {
-            let problems: DivisionProblem[] = [];
-
-            // Only fetch from API if feature is enabled
-            if (FEATURES.USE_API_PROBLEMS) {
-                // Pass the actual level ID to the API service for proper filtering
-                // The API service will handle mapping to appropriate API difficulty levels internally
-                problems = await fetchDivisionProblems(levelId);
+            // Generate problems for this level
+            const problems: AdditionProblem[] = [];
+            for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
+                problems.push(generateLevelSpecificAdditionProblem(levelId));
             }
 
-            // If we didn't get enough problems from API, generate locally
-            if (problems.length < MIN_PROBLEMS_PER_LEVEL) {
-                // Generate enough additional problems
-                const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
-                for (let i = 0; i < neededProblems; i++) {
-                    problems.push(generateLevelSpecificProblem(levelId));
-                }
-            }
-
-            // Limit to maximum problems per level and shuffle
-            problems = problems.slice(0, PROBLEMS_PER_LEVEL);
-            problems = shuffleArray(problems);
+            // Shuffle the problems
+            const shuffledProblems = shuffleArray(problems);
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: problems,
+                levelProblems: shuffledProblems,
                 currentProblemIndex: 0,
-                problem: problems.length > 0 ? problems[0] : null,
+                problem: shuffledProblems.length > 0 ? shuffledProblems[0] : null,
             }));
-
         } catch {
-            setFetchError('Failed to load problems. Please try again.');
+            setFetchError('Failed to generate problems. Please try again.');
 
-            // Fallback to locally generated problems
-            const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
-                () => generateLevelSpecificProblem(levelId));
+            // Generate a fallback problem
+            const fallbackProblem = generateLevelSpecificAdditionProblem(levelId);
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: fallbackProblems,
+                levelProblems: [fallbackProblem],
                 currentProblemIndex: 0,
-                problem: fallbackProblems.length > 0 ? fallbackProblems[0] : null,
+                problem: fallbackProblem,
             }));
         } finally {
             setIsLoading(false);
@@ -109,7 +89,7 @@ export function useGameState() {
         // Initialize available levels based on feature flags
         let initialLevels = [1];
         if (FEATURES.ALLOW_LEVEL_SKIPPING) {
-            initialLevels = GAME_LEVELS.map(l => l.id);
+            initialLevels = ADDITION_LEVELS.map(l => l.id);
         }
 
         setGameState(prev => ({
@@ -118,13 +98,14 @@ export function useGameState() {
             completedLevels: [],
             currentLevel: 1,
             score: 0,
+            gameMode: 'addition',
         }));
     }, [loadProblemsForLevel]);
 
     // Jump to a specific level
     const jumpToLevel = useCallback((levelId: number) => {
         // Check if the level exists
-        if (!GAME_LEVELS.some(l => l.id === levelId)) {
+        if (!ADDITION_LEVELS.some(l => l.id === levelId)) {
             return;
         }
 
@@ -157,7 +138,7 @@ export function useGameState() {
             }
 
             // If we've run out of problems, generate a new one
-            const newProblem = generateLevelSpecificProblem(prev.currentLevel);
+            const newProblem = generateLevelSpecificAdditionProblem(prev.currentLevel);
             return {
                 ...prev,
                 problem: newProblem,
@@ -169,17 +150,28 @@ export function useGameState() {
     }, []);
 
     // Update current problem (for editing)
-    const updateProblem = useCallback((dividend: number, divisor: number) => {
-        if (dividend < divisor) {
-            // Ensure dividend is larger than divisor
+    const updateProblem = useCallback((addend1: number, addend2: number) => {
+        if (addend1 <= 0 || addend2 <= 0) {
+            // Ensure positive numbers
             return;
         }
 
         // Find the current level object
-        const currentLevel = GAME_LEVELS.find(l => l.id === gameState.currentLevel);
+        const currentLevel = ADDITION_LEVELS.find(l => l.id === gameState.currentLevel);
         if (!currentLevel) return;
 
-        const updatedProblem = generateProblem(currentLevel);
+        // Create a custom problem
+        const sum = addend1 + addend2;
+        const steps = calculateAdditionSteps(addend1, addend2);
+
+        const updatedProblem: AdditionProblem = {
+            addend1,
+            addend2,
+            sum,
+            steps,
+            isEditable: false,
+        };
+
         setGameState(prev => ({
             ...prev,
             problem: updatedProblem,
@@ -190,13 +182,12 @@ export function useGameState() {
     }, [gameState.currentLevel]);
 
     // Submit an answer for a specific field
-    const submitAnswer = useCallback((answer: UserAnswer) => {
+    const submitAnswer = useCallback((answer: AdditionUserAnswer) => {
         setGameState(prev => {
             // First remove any existing answer for the same field
             const filteredAnswers = prev.userAnswers.filter(a =>
-                !(a.stepNumber === answer.stepNumber &&
-                    a.fieldType === answer.fieldType &&
-                    a.fieldPosition === answer.fieldPosition)
+                !(a.columnPosition === answer.columnPosition &&
+                    a.fieldType === answer.fieldType)
             );
 
             // Add the new answer
@@ -208,12 +199,11 @@ export function useGameState() {
     }, []);
 
     // Clear an answer for a specific field
-    const clearAnswer = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+    const clearAnswer = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
         setGameState(prev => {
             const filteredAnswers = prev.userAnswers.filter(a =>
-                !(a.stepNumber === stepNumber &&
-                    a.fieldType === fieldType &&
-                    a.fieldPosition === position)
+                !(a.columnPosition === columnPosition &&
+                    a.fieldType === fieldType)
             );
 
             return {
@@ -230,12 +220,12 @@ export function useGameState() {
 
             // Validate each answer
             const validatedAnswers = prev.userAnswers.map(answer => {
-                const isCorrect = validateAnswer(prev.problem!, answer);
+                const isCorrect = validateAdditionAnswer(prev.problem!, answer);
                 return { ...answer, isCorrect };
             });
 
             // Check if the problem is complete and all answers are correct
-            const complete = isProblemComplete(prev.problem, validatedAnswers);
+            const complete = isAdditionProblemComplete(prev.problem, validatedAnswers);
 
             // If complete and not previously submitted, update score and completed levels
             let updatedScore = prev.score;
@@ -250,10 +240,10 @@ export function useGameState() {
                     completedLevels.push(prev.currentLevel);
                 }
 
-                // Unlock next level if appropriate
-                const nextLevel = prev.currentLevel + 1;
-                if (nextLevel <= GAME_LEVELS.length && !availableLevels.includes(nextLevel)) {
-                    availableLevels.push(nextLevel);
+                // Unlock next level if not already available
+                const nextLevelId = prev.currentLevel + 1;
+                if (nextLevelId <= ADDITION_LEVELS.length && !availableLevels.includes(nextLevelId)) {
+                    availableLevels.push(nextLevelId);
                 }
             }
 
@@ -269,14 +259,12 @@ export function useGameState() {
         });
     }, []);
 
-    // Move to next problem
+    // Move to the next problem
     const nextProblem = useCallback(() => {
         setGameState(prev => {
-            // Move to next problem index
-            const nextIndex = prev.currentProblemIndex + 1;
-
-            // If we have more problems available for this level, load the next one
-            if (nextIndex < prev.levelProblems.length) {
+            // If we have more problems in this level, move to the next one
+            if (prev.currentProblemIndex < prev.levelProblems.length - 1) {
+                const nextIndex = prev.currentProblemIndex + 1;
                 return {
                     ...prev,
                     currentProblemIndex: nextIndex,
@@ -287,8 +275,8 @@ export function useGameState() {
                 };
             }
 
-            // If we've completed all problems, generate a new one
-            const newProblem = generateLevelSpecificProblem(prev.currentLevel);
+            // Otherwise, generate a new problem
+            const newProblem = generateLevelSpecificAdditionProblem(prev.currentLevel);
             return {
                 ...prev,
                 problem: newProblem,
@@ -313,6 +301,7 @@ export function useGameState() {
     const enableEditing = useCallback(() => {
         setGameState(prev => {
             if (!prev.problem) return prev;
+
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: true },
@@ -324,6 +313,7 @@ export function useGameState() {
     const disableEditing = useCallback(() => {
         setGameState(prev => {
             if (!prev.problem) return prev;
+
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: false },
@@ -333,20 +323,20 @@ export function useGameState() {
 
     return {
         gameState,
+        generateNewProblem,
+        submitAnswer,
+        submitProblem,
+        clearAnswer,
+        nextProblem,
+        jumpToLevel,
+        resetProblem,
+        initializeGame,
+        updateProblem,
+        enableEditing,
+        disableEditing,
         isLoading,
         fetchError,
         loadProblemsForLevel,
-        initializeGame,
-        generateNewProblem,
-        updateProblem,
-        submitAnswer,
-        clearAnswer,
-        submitProblem,
-        nextProblem,
-        resetProblem,
-        jumpToLevel,
-        enableEditing,
-        disableEditing,
     };
 }
 
@@ -358,4 +348,63 @@ function shuffleArray<T>(array: T[]): T[] {
         [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
     return newArray;
+}
+
+// Helper function to calculate addition steps
+function calculateAdditionSteps(addend1: number, addend2: number): AdditionStep[] {
+    const addend1Str = addend1.toString();
+    const addend2Str = addend2.toString();
+
+    // Determine the maximum number of digits
+    const maxLength = Math.max(addend1Str.length, addend2Str.length);
+
+    let carryValue = 0; // Initialize carry
+    const steps: AdditionStep[] = [];
+
+    // Process each column from right to left (ones, tens, hundreds, etc.)
+    for (let i = 0; i < maxLength; i++) {
+        // Get digits from right to left (or 0 if position doesn't exist)
+        const digit1 = parseInt(addend1Str[addend1Str.length - 1 - i] || '0');
+        const digit2 = parseInt(addend2Str[addend2Str.length - 1 - i] || '0');
+
+        // Calculate column sum including any carry from previous column
+        const columnSum = digit1 + digit2 + carryValue;
+
+        // Determine if we need to carry to the next column
+        const nextCarry = columnSum >= 10 ? 1 : 0;
+
+        // The digit that goes in the sum (ones digit of columnSum)
+        const sumDigit = columnSum % 10;
+
+        // Create the step
+        const step = {
+            stepNumber: i,
+            columnPosition: i,
+            digit1,
+            digit2,
+            sum: sumDigit,
+            carry: nextCarry,
+            carryReceived: carryValue
+        };
+
+        steps.push(step);
+
+        // Update carry for next iteration
+        carryValue = nextCarry;
+    }
+
+    // If there's a final carry, add it as the most significant digit
+    if (carryValue > 0) {
+        steps.push({
+            stepNumber: maxLength,
+            columnPosition: maxLength,
+            digit1: 0,
+            digit2: 0,
+            sum: carryValue,
+            carry: 0,
+            carryReceived: 0
+        });
+    }
+
+    return steps;
 } 

@@ -411,7 +411,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 )}
             </div>
 
-            {/* Main content with problem work and completion card side by side */}
+            {/* Main content with problem work */}
             <div className="relative">
                 {/* Division layout - centered */}
                 <div className="flex justify-center">
@@ -500,9 +500,9 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     </div>
                 </div>
 
-                {/* Completion card - positioned to the right without affecting problem layout */}
+                {/* Completion card - positioned in the center of the workspace */}
                 {isSubmitted && gameState?.isComplete && (
-                    <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
+                    <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center shadow-lg">
                         <div className="text-2xl mb-2">🎉</div>
                         <h3 className="text-lg font-bold text-green-800 mb-1">
                             Problem Complete!
@@ -522,44 +522,44 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 )}
             </div>
 
-            {/* Submit Button */}
-            <div className="mt-8 text-center">
-                <button
-                    onClick={() => onProblemSubmit?.()}
-                    disabled={!userAnswers.length}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${!userAnswers.length
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : isSubmitted
-                            ? 'bg-blue-500 text-white'
+            {/* Button layout in triangle formation */}
+            <div className="flex flex-col items-center mt-6">
+                {/* Submit button */}
+                {!isSubmitted && (
+                    <button
+                        onClick={() => onProblemSubmit?.()}
+                        disabled={!userAnswers.length}
+                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!userAnswers.length
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                             : allFieldsFilled
-                                ? 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 animate-pulse'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        }`}
-                >
-                    {isSubmitted ? '✓ Submitted' : allFieldsFilled ? '📝 Submit Answers (Enter)' : '📝 Submit Answers'}
-                </button>
-            </div>
+                                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                            } transition-colors`}
+                    >
+                        Submit Answers
+                    </button>
+                )}
 
-            {/* Instructions and Control Buttons */}
-            <div className="mt-8">
-                <div className="text-center text-sm text-gray-500 mb-4">
-                    💡 Use Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
-                </div>
-
-                <div className="flex justify-center gap-4">
+                {/* Reset and New Problem buttons */}
+                <div className="flex justify-center space-x-4">
                     <button
                         onClick={onResetProblem}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
                     >
-                        🔄 Reset Problem
+                        Reset Problem
                     </button>
                     <button
                         onClick={onNewProblem}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                     >
-                        🎲 New Problem
+                        New Problem
                     </button>
                 </div>
+            </div>
+
+            {/* Help text as footnote outside the main container */}
+            <div className="text-center text-xs text-gray-500 mt-4">
+                Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
             </div>
         </div>
     );

@@ -5,22 +5,19 @@ import InputField from './InputField';
 
 const DivisionLayout: React.FC<DivisionLayoutProps> = ({
     state,
-    onStepComplete: _onStepComplete,
     onInputChange: _onInputChange,
     onFocusChange: _onFocusChange,
 }) => {
     const { problem } = state;
     const { divisor, dividend } = problem;
-    const { workingArea: _workingArea, currentStep: _currentStep } = state;
 
     const dividendStr = dividend.toString();
-    const quotientLength = Math.ceil(Math.log10(dividend / divisor + 1));
 
     const {
         currentFocus,
         handleKeyDown,
         focusField
-    } = useKeyboardNavigation(state.totalSteps, quotientLength);
+    } = useKeyboardNavigation(state.totalSteps);
 
     // Helper function to check if a field has an error
     const hasError = (position: FocusPosition): boolean => {

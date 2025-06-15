@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Adapt Level Selector for Both Operations
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Modify the level selector to support both division and multiplication operations.
+# Details:
+Ensure the level selector dynamically updates based on the selected operation and maintains consistency in UX.
+
+# Test Strategy:
+Test the level selector for correct operation-specific behavior.
