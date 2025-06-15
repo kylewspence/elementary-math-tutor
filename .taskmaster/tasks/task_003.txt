@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Create Operation Selector Component
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Develop a new component for switching between division and multiplication operations.
+# Details:
+Implement the OperationSelector component in the header or sidebar to allow users to switch between operations. Ensure it follows the same styling and UX patterns as existing components.
+
+# Test Strategy:
+Test the operation selector for correct rendering and functionality.

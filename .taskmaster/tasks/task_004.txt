@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Implement Routing for Operations
+# Status: pending
+# Dependencies: 3
+# Priority: medium
+# Description: Set up routing to switch between division and multiplication modes.
+# Details:
+Use React Router to create routes for division and multiplication. Ensure the default route is set to division and that navigation is seamless.
+
+# Test Strategy:
+Verify that navigation between routes works correctly and the correct components are rendered.

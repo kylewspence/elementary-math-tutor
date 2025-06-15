@@ -1,0 +1,269 @@
+# Long Division Tutor - Integration Project PRD
+
+## 🎯 Project Overview
+
+The Long Division Tutor is an interactive educational web application built with React, TypeScript, Vite, and Tailwind CSS. It provides a step-by-step guided experience for learning long division through a clean, keyboard-optimized interface with progressive difficulty levels. The application currently features a robust division component with 10 difficulty levels, advanced keyboard navigation, and real-time validation.
+
+This PRD outlines the plan to integrate a separately developed multiplication component into the existing Long Division Tutor, creating a comprehensive Math Tutor application that maintains consistency in user experience, code quality, and educational approach.
+
+## 🌟 Integration Goals
+
+1. **Seamless User Experience**: Integrate the multiplication component while maintaining the look, feel, and UX patterns of the existing division tutor.
+2. **Code Consistency**: Ensure the integrated multiplication code follows the same architectural patterns, naming conventions, and code quality standards as the division component.
+3. **Unified Navigation**: Maintain the advanced keyboard navigation system (Tab/Shift+Tab, Enter key workflow) across both components.
+4. **Visual Cohesion**: Create a unified visual design that treats both components as part of a single application.
+5. **Minimal Disruption**: Preserve all existing division functionality without regression.
+
+## 📊 Current Application Structure
+
+The current Long Division Tutor features:
+
+- **10-Level Progressive Difficulty**: From simple single-digit division to complex multi-digit problems
+- **Traditional Visual Layout**: Familiar long division format matching classroom teaching
+- **Advanced Keyboard Navigation**: Complete Tab/Shift+Tab navigation with Enter key workflow
+- **Real-Time Validation**: Immediate feedback with color-coded visual indicators
+- **Problem Editing**: Click-to-edit functionality for custom problems
+
+## 🔄 Integration Requirements
+
+### 1. Application Structure
+
+- **New Navigation System**: Create a top-level operation selector (Division/Multiplication) in the header or sidebar
+- **Shared Components**: Identify and refactor UI components that can be shared between both operations
+- **Route-Based Navigation**: Implement routing to switch between division and multiplication modes
+- **State Separation**: Ensure each operation maintains its own state while sharing common UI elements
+
+### 2. Component Integration
+
+- **Multiplication Component**: Integrate the external multiplication component while:
+  - Maintaining the same folder structure and naming conventions
+  - Adapting its styling to match the division component
+  - Ensuring it follows the same keyboard navigation patterns
+  - Preserving its core functionality
+
+- **Required Modifications to Multiplication Component**:
+  - Rename components and files to match division naming conventions
+  - Refactor styling to use the same Tailwind patterns
+  - Update keyboard navigation to match division's Tab/Shift+Tab behavior
+  - Ensure cursor positioning and auto-focus behavior is consistent
+  - Adapt validation and feedback mechanisms to match division component
+
+### 3. UI/UX Requirements
+
+- **Consistent Header**: Maintain the current "Math Tutor" header with added operation selection
+- **Level Selector**: Adapt the level selector to work with both operations
+- **Keyboard Navigation**: Ensure Tab/Shift+Tab and Enter key behaviors work identically in both components
+- **Input Behavior**: Maintain consistent auto-select, auto-advance, and validation feedback
+- **Visual Styling**: Use the same color scheme, input styles, and layout patterns
+
+### 4. Technical Requirements
+
+- **TypeScript Consistency**: Ensure all integrated code maintains strict TypeScript typing
+- **State Management**: Adapt the multiplication component to use the same state management pattern
+- **Hook Structure**: Refactor multiplication hooks to match division hook patterns
+- **Error Handling**: Implement consistent error handling across both components
+- **Performance**: Maintain the zero-delay response time for all interactions
+
+## 🔍 Specific Integration Tasks
+
+### 1. Code Analysis and Preparation
+
+- **Component Analysis**: Compare division and multiplication components to identify structural differences
+- **Hook Analysis**: Compare state management and keyboard navigation hooks
+- **Type Definition Analysis**: Compare type systems and identify consolidation opportunities
+- **Utility Function Analysis**: Identify shared and operation-specific utility functions
+
+### 2. Structural Changes
+
+- **Create Operation Selector**: Add UI element to switch between division and multiplication
+- **Implement Routing**: Set up routes for division and multiplication modes
+- **Refactor Shared Components**: Extract and standardize shared UI components
+- **Update Layout Component**: Modify layout to accommodate both operations
+
+### 3. Multiplication Component Adaptation
+
+- **File Structure Alignment**: Reorganize multiplication files to match division structure
+- **Component Renaming**: Update component names to follow division naming conventions
+- **Style Refactoring**: Update styling to match division component
+- **Keyboard Navigation Update**: Modify keyboard handling to match division behavior
+- **Validation Alignment**: Ensure validation provides consistent feedback
+
+### 4. State Management Integration
+
+- **Hook Refactoring**: Adapt multiplication hooks to match division hook patterns
+- **State Structure Alignment**: Ensure state objects follow consistent patterns
+- **Type Definition Consolidation**: Create shared types where appropriate
+- **Event Handler Standardization**: Ensure event handlers follow consistent patterns
+
+### 5. Testing and Validation
+
+- **Cross-Component Testing**: Verify consistent behavior between division and multiplication
+- **Keyboard Navigation Testing**: Ensure Tab/Shift+Tab works identically in both components
+- **Responsive Testing**: Verify layout consistency across screen sizes
+- **Edge Case Testing**: Test boundary conditions in both components
+
+## 🎮 User Experience Flow
+
+### 1. App Launch
+
+- User sees the "Math Tutor" header with operation selector (Division/Multiplication)
+- Default operation is set to Division (maintaining current behavior)
+- Level selector shows appropriate levels for the selected operation
+- Clean, distraction-free interface is maintained
+
+### 2. Operation Selection
+
+- User can switch between Division and Multiplication operations
+- Level selection is preserved when possible or reset to appropriate default
+- UI smoothly transitions between operations
+- Current operation is clearly indicated
+
+### 3. Problem Solving Experience
+
+- Consistent keyboard-first navigation across both operations
+- Tab/Shift+Tab behavior works identically
+- Enter key functionality maintains context-awareness
+- Auto-advance and auto-select behaviors are consistent
+
+### 4. Validation & Feedback
+
+- Both operations provide consistent visual feedback
+- Color-coding for correct/incorrect answers is standardized
+- Submit button behavior is identical
+- Completion messages follow the same format
+
+## 📱 Technical Implementation Details
+
+### 1. Component Structure Updates
+
+```
+src/
+├── components/
+│   ├── Header/
+│   │   └── Header.tsx                 # Updated with operation selector
+│   ├── LevelSelector/
+│   │   └── LevelSelector.tsx          # Modified to support both operations
+│   ├── OperationSelector/
+│   │   └── OperationSelector.tsx      # New component for switching operations
+│   ├── DivisionProblem/               # Existing division components
+│   │   ├── DivisionDisplay.tsx
+│   │   ├── InputField.tsx
+│   │   └── ProblemInput.tsx
+│   ├── MultiplicationProblem/         # New multiplication components
+│   │   ├── MultiplicationDisplay.tsx
+│   │   ├── InputField.tsx
+│   │   └── ProblemInput.tsx
+│   └── UI/                           # Shared UI components
+│       ├── Input.tsx
+│       └── Button.tsx
+├── hooks/
+│   ├── useDivisionGameState.ts        # Renamed from useGameState.ts
+│   ├── useMultiplicationGameState.ts  # New hook for multiplication
+│   ├── useDivisionKeyboardNav.ts      # Renamed from useKeyboardNav.ts
+│   ├── useMultiplicationKeyboardNav.ts # New hook for multiplication
+│   └── useAppState.ts                 # New hook for managing operation selection
+├── utils/
+│   ├── divisionProblemGenerator.ts    # Renamed from problemGenerator.ts
+│   ├── multiplicationProblemGenerator.ts # New utility for multiplication
+│   ├── divisionAlgorithms.ts
+│   ├── multiplicationAlgorithms.ts
+│   └── constants.ts                   # Expanded with multiplication constants
+└── types/
+    ├── division.ts                    # Renamed from game.ts
+    ├── multiplication.ts              # New types for multiplication
+    └── app.ts                         # Shared application types
+```
+
+### 2. Routing Implementation
+
+```typescript
+// Example App.tsx with routing
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout/Layout';
+import DivisionGame from './pages/DivisionGame';
+import MultiplicationGame from './pages/MultiplicationGame';
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/division" replace />} />
+          <Route path="division" element={<DivisionGame />} />
+          <Route path="multiplication" element={<MultiplicationGame />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+};
+```
+
+### 3. State Management Approach
+
+- Create separate state hooks for division and multiplication
+- Implement a parent app state for operation selection
+- Ensure consistent state structure between operations
+- Maintain separate problem generators for each operation
+
+### 4. Keyboard Navigation Integration
+
+- Ensure both operations use the same keyboard navigation patterns
+- Standardize focus management across components
+- Maintain consistent auto-advance behavior
+- Preserve Enter key workflow in both operations
+
+## 🚀 Implementation Plan
+
+### Phase 1: Analysis and Preparation
+
+1. **Code Analysis**: Compare both codebases to identify integration points
+2. **Component Extraction**: Identify shared components to be refactored
+3. **Architecture Planning**: Design the updated application structure
+4. **Test Plan Creation**: Develop a comprehensive test plan for the integration
+
+### Phase 2: Core Structure Updates
+
+1. **Project Restructuring**: Update folder structure and file naming
+2. **Routing Implementation**: Add routes for different operations
+3. **Header Update**: Modify header to include operation selector
+4. **Level Selector Adaptation**: Update level selector to support both operations
+
+### Phase 3: Multiplication Integration
+
+1. **Component Migration**: Integrate multiplication components
+2. **Style Alignment**: Update styling to match division components
+3. **State Hook Creation**: Implement multiplication state hooks
+4. **Keyboard Navigation**: Adapt keyboard navigation for multiplication
+
+### Phase 4: Testing and Refinement
+
+1. **Component Testing**: Verify each component functions correctly
+2. **Integration Testing**: Test the interaction between components
+3. **Keyboard Navigation Testing**: Ensure consistent navigation experience
+4. **Visual Consistency Check**: Verify styling consistency across the application
+
+### Phase 5: Finalization
+
+1. **Performance Optimization**: Ensure the application maintains performance standards
+2. **Documentation Update**: Update technical documentation
+3. **Final Testing**: Comprehensive testing of the entire application
+4. **Deployment**: Deploy the updated application
+
+## 📋 Success Criteria
+
+1. **Functional Integration**: Both division and multiplication components function correctly
+2. **Visual Consistency**: UI elements maintain consistent styling and behavior
+3. **Keyboard Navigation**: Tab/Shift+Tab and Enter key workflows function identically in both components
+4. **Performance**: Application maintains sub-second response times for all interactions
+5. **Type Safety**: Zero TypeScript errors across the integrated codebase
+6. **Code Quality**: Consistent patterns and conventions across all components
+
+## 🔮 Future Enhancements
+
+1. **Additional Operations**: Framework for adding subtraction and other operations
+2. **Progress Tracking**: Cross-operation progress tracking and analytics
+3. **User Accounts**: Save progress across browser sessions
+4. **Teacher Dashboard**: Monitoring student progress across operations
+5. **Customizable Difficulty**: Allow teachers to customize problem parameters
+
+This PRD outlines the comprehensive plan for integrating the multiplication component into the existing Long Division Tutor, creating a unified Math Tutor application while maintaining the high standards of code quality, user experience, and educational value established in the original application. 

@@ -91,7 +91,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             // Wrap around to the first field if we're at the end
             setCurrentFocus(allFields[0]);
         }
-    }, [currentFocus, getAllFieldsInOrder, getCurrentFieldIndex]);
+    }, [getAllFieldsInOrder, getCurrentFieldIndex]);
 
     // Move to previous field
     const movePrevious = useCallback(() => {
@@ -105,7 +105,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             // Wrap around to the last field if we're at the beginning
             setCurrentFocus(allFields[allFields.length - 1]);
         }
-    }, [currentFocus, getAllFieldsInOrder, getCurrentFieldIndex]);
+    }, [getAllFieldsInOrder, getCurrentFieldIndex]);
 
     // Jump to specific field
     const jumpToField = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {

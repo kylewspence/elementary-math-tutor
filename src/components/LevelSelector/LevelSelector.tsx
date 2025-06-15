@@ -1,16 +1,20 @@
 import React from 'react';
-import { GAME_LEVELS } from '../../utils/constants';
+import { GAME_LEVELS, ADDITION_LEVELS } from '../../utils/constants';
 import type { GameState } from '../../types/game';
+import type { AdditionGameState } from '../../types/addition';
 
 interface LevelSelectorProps {
-    gameState: GameState;
+    gameState: GameState | AdditionGameState;
     onLevelSelect: (levelId: number) => void;
 }
 
 const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect }) => {
-    const { currentLevel, currentProblemIndex, levelProblems } = gameState;
+    const { currentLevel, currentProblemIndex, levelProblems, gameMode } = gameState as (GameState & { gameMode?: 'division' | 'addition' });
     const currentProblem = currentProblemIndex + 1; // Convert to 1-based
     const totalProblems = levelProblems.length;
+
+    // Determine which levels to use based on game mode
+    const levels = gameMode === 'addition' ? ADDITION_LEVELS : GAME_LEVELS;
 
     return (
         <div className="bg-blue-100 p-4 rounded-lg border-2 border-blue-200">
@@ -41,7 +45,7 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect 
             {/* Level Selection */}
             <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-blue-800 mb-2">Levels:</h3>
-                {GAME_LEVELS.map((level) => {
+                {levels.map((level) => {
                     const isCurrentLevel = level.id === currentLevel;
                     const isUnlocked = level.id <= currentLevel;
 

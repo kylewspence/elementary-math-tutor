@@ -6,8 +6,7 @@ import type {
 } from '../types/division';
 
 export function useKeyboardNavigation(
-    totalSteps: number,
-    _quotientLength: number
+    totalSteps: number
 ): UseKeyboardNavigationReturn {
     const [currentFocus, setCurrentFocus] = useState<FocusPosition>({
         stepNumber: 0,

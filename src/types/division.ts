@@ -93,7 +93,7 @@ export type DivisionEventType =
 export interface DivisionEvent {
     type: DivisionEventType;
     timestamp: Date;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
 }
 
 export interface ProblemGenerator {
