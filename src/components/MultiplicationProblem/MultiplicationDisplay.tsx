@@ -4,14 +4,15 @@ import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
 
 // Use the same constants as division for grid layout
-const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
-const ROW_HEIGHT = 40; // Height of each row in pixels
+// const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
+// const ROW_HEIGHT = 40; // Height of each row in pixels
 
 interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
     currentFocus: MultiplicationCurrentFocus;
     onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
     onDisableEditing?: () => void;
@@ -33,7 +34,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     problem,
     userAnswers,
     currentFocus,
-    onAnswerSubmit: onSubmitAnswer,
+    onAnswerSubmit,
+    onAnswerClear,
     onProblemSubmit,
     onEnableEditing,
     onDisableEditing,
@@ -229,25 +231,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         return position > 0 && position < problem.multiplicand.toString().length - 1;
     };
 
-    // Helper to calculate the correct carry value
-    const getCorrectCarryValue = (position: number): number => {
-        if (!problem) return 0;
-
-        // For single-digit multiplier
-        if (problem.multiplier < 10) {
-            const multiplicandStr = problem.multiplicand.toString();
-            if (position >= multiplicandStr.length) return 0;
-
-            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
-            const product = digit * problem.multiplier;
-            return Math.floor(product / 10); // The carry is the tens digit
-        }
-
-        // For multi-digit multipliers, this would be more complex
-        // For simplicity, we'll just return 1 for now
-        return 1;
-    };
-
     // Handle problem editing
     const handleMultiplicandChange = (value: string) => {
         const newMultiplicand = parseInt(value, 10);
@@ -273,7 +256,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
 
         // Vertical spacing constants for use throughout the component
-        const ROW_HEIGHT = BOX_TOTAL_WIDTH;
+        // const ROW_HEIGHT = BOX_TOTAL_WIDTH;
 
         // Total grid width based on product length (which should be the longest)
         const gridWidth = Math.max(
@@ -302,7 +285,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                             <div
                                 key={`carry-product-${position}`}
                                 className="flex items-center justify-center"
-                                style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT * 0.6}px` }}
+                                style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH * 0.6}px` }}
                             >
                                 <div className="scale-70 transform origin-center">
                                     {createInput('carry', position, 0)}
@@ -318,7 +301,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         <div
                             key={`multiplicand-${index}`}
                             className="flex items-center justify-center text-xl"
-                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
+                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
                         >
                             {digit}
                         </div>
@@ -332,7 +315,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         <div
                             key={`multiplier-${index}`}
                             className="flex items-center justify-center text-xl"
-                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
+                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
                         >
                             {digit}
                         </div>

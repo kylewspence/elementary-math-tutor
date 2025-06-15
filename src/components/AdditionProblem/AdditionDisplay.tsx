@@ -5,7 +5,7 @@ import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
 
 interface AdditionDisplayProps {
-    problem: AdditionProblem;
+    problem: AdditionProblem | null;
     userAnswers: AdditionUserAnswer[];
     currentFocus: AdditionCurrentFocus;
     onAnswerSubmit: (answer: AdditionUserAnswer) => void;

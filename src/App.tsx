@@ -7,8 +7,8 @@ import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useAdditionGameState } from './hooks/useAdditionGameState';
 import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
-import type { UserAnswer } from './types/game';
-import type { AdditionUserAnswer } from './types/addition';
+import type { UserAnswer, DivisionProblem } from './types/game';
+import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
@@ -39,7 +39,7 @@ function App() {
     currentFocus,
     handleKeyDown,
     jumpToField,
-  } = useKeyboardNav(gameState.problem, gameState.userAnswers, gameState.isSubmitted);
+  } = useKeyboardNav(gameState.problem as DivisionProblem | null, gameState.userAnswers, gameState.isSubmitted);
 
   // Addition game state
   const {
@@ -113,13 +113,19 @@ function App() {
     submitAnswer(answer);
   };
 
+  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+    // Implement the clear functionality if needed
+    // This is a placeholder since the clearAnswer function is commented out
+    console.log('Clear answer:', stepNumber, fieldType, position);
+  };
+
   const handleProblemSubmit = () => {
     submitProblem();
 
     // Clear focus by setting it to a non-existent field after submission
     if (gameState.problem) {
-      // Use a field position that's guaranteed not to exist
-      jumpToField(-1, 'quotient', -1);
+      // Use a step number that's guaranteed not to exist
+      jumpToField(-1, 'quotient', 0);
     }
   };
 
@@ -219,14 +225,15 @@ function App() {
       <main className="container mx-auto px-4 py-8">
         {gameMode === 'division' && (
           <DivisionDisplay
-            problem={gameState.problem}
+            problem={gameState.problem as DivisionProblem | null}
             userAnswers={gameState.userAnswers}
             currentFocus={currentFocus}
             isSubmitted={gameState.isSubmitted}
             isComplete={gameState.isComplete}
             isLoading={isLoading}
-            fetchError={fetchError}
+            fetchError={typeof fetchError === 'string' ? new Error(fetchError) : fetchError}
             onAnswerSubmit={handleAnswerSubmit}
+            onAnswerClear={handleAnswerClear}
             onProblemSubmit={handleProblemSubmit}
             onNextProblem={handleNextProblem}
             onFieldClick={handleFieldClick}
@@ -241,7 +248,7 @@ function App() {
 
         {gameMode === 'addition' && (
           <AdditionDisplay
-            problem={additionGameState.problem}
+            problem={additionGameState.problem as AdditionProblem}
             userAnswers={additionGameState.userAnswers}
             currentFocus={additionCurrentFocus}
             isSubmitted={additionGameState.isSubmitted}

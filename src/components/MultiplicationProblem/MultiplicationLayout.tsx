@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import type { MultiplicationProblem, MultiplicationUserAnswer, MultiplicationCurrentFocus } from '../../types/multiplication';
+import React from 'react';
+import type { MultiplicationProblem, MultiplicationUserAnswer } from '../../types/multiplication';
 import MultiplicationDisplay from './MultiplicationDisplay';
 import { useMultiplicationKeyboardNav } from '../../hooks/useMultiplicationKeyboardNav';
+import { useMultiplicationGameState } from '../../hooks/useMultiplicationGameState';
 
 interface MultiplicationLayoutProps {
     problem: MultiplicationProblem | null;
