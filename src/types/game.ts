@@ -1,5 +1,6 @@
-
 // Core game types for the Math Tutor app
+import type { MultiplicationProblem } from './multiplication';
+import type { AdditionProblem } from './addition';
 
 export interface GameLevel {
     id: number;
@@ -9,6 +10,8 @@ export interface GameLevel {
     dividendDigits: number;
     maxDivisor: number;
     maxDividend: number;
+    minDigits?: number;  // Minimum number of digits for multiplication problems
+    maxDigits?: number;  // Maximum number of digits for multiplication problems
 }
 
 export interface DivisionProblem {
@@ -29,7 +32,7 @@ export interface DivisionStep {
     bringDown?: number;    // Next digit brought down (if any)
 }
 
-export interface GameState {
+export interface DivisionGameState {
     currentLevel: number;
     completedLevels: number[];
     availableLevels: number[];
@@ -40,8 +43,39 @@ export interface GameState {
     isSubmitted: boolean;
     isComplete: boolean;
     score: number;
-    gameMode: 'division' | 'addition';
+    gameMode: 'division';
 }
+
+export interface AdditionGameState {
+    currentLevel: number;
+    completedLevels: number[];
+    availableLevels: number[];
+    currentProblemIndex: number;
+    levelProblems: AdditionProblem[];
+    problem: AdditionProblem | null;
+    userAnswers: UserAnswer[];
+    isSubmitted: boolean;
+    isComplete: boolean;
+    score: number;
+    gameMode: 'addition';
+}
+
+export interface MultiplicationGameState {
+    currentLevel: number;
+    completedLevels: number[];
+    availableLevels: number[];
+    currentProblemIndex: number;
+    levelProblems: MultiplicationProblem[];
+    problem: MultiplicationProblem | null;
+    userAnswers: any[]; // Using any for now, should be MultiplicationUserAnswer[]
+    isSubmitted: boolean;
+    isComplete: boolean;
+    score: number;
+    gameMode: 'multiplication';
+}
+
+// Union type for all game states
+export type GameState = DivisionGameState | AdditionGameState | MultiplicationGameState;
 
 export interface UserAnswer {
     stepNumber: number;

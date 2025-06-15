@@ -28,7 +28,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
     }, [problem]);
 
     // Helper to determine if a column needs a carry
-    const needsCarry = useCallback((columnPosition: number) => {
+    const _needsCarry = useCallback((columnPosition: number) => {
         if (!problem) return false;
         const step = problem.steps.find(s => s.columnPosition === columnPosition);
         return step && step.carry > 0;

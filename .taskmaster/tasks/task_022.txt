@@ -1,0 +1,13 @@
+# Task 22: Standardize Instruction Placement
+
+**Status:** pending
+**Priority:** medium
+**Dependencies:** 17
+
+## Description
+Place instructions in the same location as other tabs with consistent styling.
+
+## Details
+Ensure help text appears in the same position as in other tabs. Use consistent instruction styling and wording.
+
+## Test Strategy 

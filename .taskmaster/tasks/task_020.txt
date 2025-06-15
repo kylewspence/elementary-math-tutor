@@ -1,0 +1,13 @@
+# Task 20: Standardize Button Layout and Icons
+
+**Status:** in-progress
+**Priority:** high
+**Dependencies:** 17
+
+## Description
+Match button placement and styling with other tabs and add relevant icons.
+
+## Details
+Implement the same button set (Submit/Check, Next, Reset, New Problem) with consistent styling (colors, sizes, hover effects). Add relevant icons to buttons for visual appeal. Ensure buttons are placed in the same location as in other tabs.
+
+## Test Strategy 

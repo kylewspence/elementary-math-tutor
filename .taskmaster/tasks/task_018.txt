@@ -1,0 +1,13 @@
+# Task 18: Implement Tab/Shift+Tab Navigation
+
+**Status:** done
+**Priority:** high
+**Dependencies:** 17
+
+## Description
+Ensure keyboard navigation works consistently in the multiplication tab.
+
+## Details
+Implement tab/shift+tab navigation between input fields in the multiplication component, matching the behavior in the division and addition tabs. Ensure keyboard shortcuts work identically across all tabs.
+
+## Test Strategy 

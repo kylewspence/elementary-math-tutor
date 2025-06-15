@@ -1,8 +1,10 @@
 import React from 'react';
 
+type GameMode = 'division' | 'addition' | 'multiplication';
+
 interface HeaderProps {
-    gameMode: 'division' | 'addition';
-    toggleGameMode: () => void;
+    gameMode: GameMode;
+    onToggleGameMode: (mode: GameMode) => void;
     currentLevel?: number;
     currentProblem?: number;
     totalProblems?: number;
@@ -10,7 +12,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
     gameMode,
-    toggleGameMode,
+    onToggleGameMode,
     currentLevel = 1,
     currentProblem = 1,
     totalProblems = 1
@@ -30,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="flex justify-center mb-2">
                         <div className="bg-white rounded-lg shadow-md p-1 flex">
                             <button
-                                onClick={() => gameMode !== 'division' && toggleGameMode()}
+                                onClick={() => onToggleGameMode('division')}
                                 className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'division'
                                     ? 'bg-blue-500 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -39,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
                                 Division
                             </button>
                             <button
-                                onClick={() => gameMode !== 'addition' && toggleGameMode()}
+                                onClick={() => onToggleGameMode('addition')}
                                 className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'addition'
                                     ? 'bg-blue-500 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -47,14 +49,27 @@ const Header: React.FC<HeaderProps> = ({
                             >
                                 Addition
                             </button>
+                            <button
+                                onClick={() => onToggleGameMode('multiplication')}
+                                className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'multiplication'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Multiplication
+                            </button>
                         </div>
                     </div>
 
                     {/* Current Level & Problem Info */}
                     <div className="flex items-center justify-center text-sm text-blue-700 bg-blue-50 px-4 py-2 rounded-lg">
                         <div className="font-semibold mr-2">Level {currentLevel}</div>
-                        <div className="text-blue-600">•</div>
-                        <div className="ml-2">Problem {currentProblem}/{totalProblems}</div>
+                        {currentProblem && totalProblems && (
+                            <>
+                                <div className="text-blue-600">•</div>
+                                <div className="ml-2">Problem {currentProblem}/{totalProblems}</div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
