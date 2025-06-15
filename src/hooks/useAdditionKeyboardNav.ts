@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { AdditionProblem, AdditionUserAnswer } from '../types/addition';
 import { KEYBOARD_KEYS } from '../utils/constants';
 
@@ -8,6 +8,7 @@ export interface AdditionCurrentFocus {
 }
 
 export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnswers: AdditionUserAnswer[] = [], isSubmitted: boolean = false) {
+    // Initialize with focus on the rightmost sum digit (position 0)
     const [currentFocus, setCurrentFocus] = useState<AdditionCurrentFocus>({
         columnPosition: 0,
         fieldType: 'sum',
@@ -28,17 +29,24 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
     }, [problem]);
 
     // Helper to determine if a column needs a carry
+    // This function is currently unused but may be needed in the future
+    /*
     const _needsCarry = useCallback((columnPosition: number) => {
         if (!problem) return false;
+        
         const step = problem.steps.find(s => s.columnPosition === columnPosition);
-        return step && step.carry > 0;
+        if (!step) return false;
+        
+        const sum = step.digit1 + step.digit2;
+        return sum >= 10;
     }, [problem]);
+    */
 
     // Get all fields in order for navigation - following natural addition flow
-    const getAllFieldsInOrder = useCallback((): AdditionCurrentFocus[] => {
+    const allFields = useMemo((): AdditionCurrentFocus[] => {
         if (!problem) return [];
 
-        const allFields: AdditionCurrentFocus[] = [];
+        const fields: AdditionCurrentFocus[] = [];
         const hasExtraBox = needsExtraBox();
 
         // Sort steps by column position (right to left, starting with ones place)
@@ -47,7 +55,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         // Process each column from right to left (ones, tens, hundreds)
         for (const step of orderedSteps) {
             // First add the sum field for this column
-            allFields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
+            fields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
 
             // Then add the carry field for the NEXT column to the left if needed
             // This is because when you add a column and get a sum ≥ 10, you carry to the next column
@@ -57,37 +65,34 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
             if (step.carry > 0) {
                 // If this is the leftmost column and we need an extra box
                 if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && hasExtraBox) {
-                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                    fields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
                 }
                 // For other columns, add carry to the next column
                 else if (nextColumnPosition < orderedSteps.length) {
-                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
+                    fields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
                 }
             }
         }
 
         // Add extra sum box if needed (leftmost position)
         if (hasExtraBox) {
-            allFields.push({ columnPosition: orderedSteps.length, fieldType: 'sum' });
+            fields.push({ columnPosition: orderedSteps.length, fieldType: 'sum' });
         }
 
-        return allFields;
+        return fields;
     }, [problem, needsExtraBox]);
 
     // Helper to find index of current field in the ordered list
     const getCurrentFieldIndex = useCallback(() => {
-        const allFields = getAllFieldsInOrder();
         return allFields.findIndex(field =>
             field.columnPosition === currentFocus.columnPosition &&
             field.fieldType === currentFocus.fieldType
         );
-    }, [currentFocus, getAllFieldsInOrder]);
+    }, [currentFocus, allFields]);
 
     // Check if all fields have answers
     const areAllFieldsFilled = useCallback(() => {
-        if (!problem) return false;
-
-        const allFields = getAllFieldsInOrder();
+        if (!problem || !allFields.length) return false;
 
         // Check if we have an answer for each field
         return allFields.every(field => {
@@ -96,11 +101,10 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
                 answer.fieldType === field.fieldType
             );
         });
-    }, [problem, userAnswers, getAllFieldsInOrder]);
+    }, [problem, userAnswers, allFields]);
 
     // Move to next field
     const moveNext = useCallback(() => {
-        const allFields = getAllFieldsInOrder();
         const currentIndex = getCurrentFieldIndex();
 
         // Move to next field regardless of whether it's empty or filled
@@ -110,11 +114,10 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
             // Wrap around to the first field if we're at the end
             setCurrentFocus(allFields[0]);
         }
-    }, [getAllFieldsInOrder, getCurrentFieldIndex]);
+    }, [getCurrentFieldIndex, allFields]);
 
     // Move to previous field
     const movePrevious = useCallback(() => {
-        const allFields = getAllFieldsInOrder();
         const currentIndex = getCurrentFieldIndex();
 
         // Move to previous field regardless of whether it's empty or filled
@@ -124,14 +127,13 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
             // Wrap around to the last field if we're at the beginning
             setCurrentFocus(allFields[allFields.length - 1]);
         }
-    }, [getAllFieldsInOrder, getCurrentFieldIndex]);
+    }, [getCurrentFieldIndex, allFields]);
 
     // Jump to specific field
     const jumpToField = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
         if (!problem) return;
 
         // Verify that the field exists in our problem
-        const allFields = getAllFieldsInOrder();
         const fieldExists = allFields.some(
             field => field.columnPosition === columnPosition && field.fieldType === fieldType
         );
@@ -145,17 +147,16 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
             // Default to the first field if the requested field doesn't exist
             setCurrentFocus(allFields[0]);
         }
-    }, [problem, getAllFieldsInOrder]);
+    }, [problem, allFields]);
 
     // Check if we're at the last field
     const isLastField = useCallback(() => {
         if (!problem) return false;
 
-        const allFields = getAllFieldsInOrder();
         const currentIndex = getCurrentFieldIndex();
 
         return currentIndex === allFields.length - 1;
-    }, [problem, getAllFieldsInOrder, getCurrentFieldIndex]);
+    }, [problem, getCurrentFieldIndex, allFields]);
 
     // Handle keyboard events
     const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => {
@@ -206,6 +207,6 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnsw
         movePrevious,
         jumpToField,
         handleKeyDown,
-        isFieldFocused
+        isFieldFocused,
     };
 } 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+import ProblemComplete from '../UI/ProblemComplete';
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -191,19 +192,35 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             currentFocus.fieldPosition === position &&
             currentFocus.partialIndex === partialIndex;
 
+        // Get user answer for this field
+        const userAnswer = getUserAnswer(fieldType, position, partialIndex);
+
+        // Handle input change
+        const handleChange = (value: string) => {
+            if (value === '') {
+                // Clear the answer
+                onAnswerClear(fieldType, position, partialIndex);
+                return;
+            }
+
+            const numValue = parseInt(value, 10);
+            if (!isNaN(numValue)) {
+                onAnswerSubmit(numValue, fieldType, position, partialIndex);
+            }
+        };
+
         return (
             <Input
                 ref={isActive ? activeInputRef : undefined}
-                value={getUserAnswer(fieldType, position, partialIndex)?.value?.toString() || ''}
+                value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(fieldType, position, partialIndex)}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onKeyDown={onKeyDown}
-                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
-                onAutoAdvance={handleAutoAdvance}
+                onChange={handleChange}
                 readOnly={isSubmitted}
                 placeholder="?"
+                maxLength={1}
                 className={fieldType === 'carry' ? 'carry-input' : ''}
-                aria-label={fieldType === 'carry' ? `Carry for position ${position}` : `${fieldType} for position ${position}`}
             />
         );
     };
@@ -215,20 +232,35 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         // For single-digit multiplier
         if (problem.multiplier < 10) {
             const multiplicandStr = problem.multiplicand.toString();
+
             // Position is from right to left, so we need to adjust the index
-            if (position >= multiplicandStr.length) return false;
+            if (position >= multiplicandStr.length + 1) return false; // +1 to allow for leftmost carry
 
-            // For the leftmost digit, we don't need a carry box since there's no digit to the left
-            if (position === multiplicandStr.length - 1) return false;
+            // Special case for leftmost position
+            if (position === multiplicandStr.length) {
+                // Check if the leftmost digit multiplication generates a carry
+                const leftmostDigit = parseInt(multiplicandStr[0], 10);
+                const product = leftmostDigit * problem.multiplier;
+                // If the product is 10 or greater, we need an extra carry box
+                return product >= 10;
+            }
 
-            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
-            const product = digit * problem.multiplier;
-            return product >= 10; // If product is 10 or more, it would have a carry
+            // For the rightmost digit, we don't need a carry box
+            if (position === 0) return false;
+
+            // Check if the digit to the right generates a carry
+            const rightPosition = position - 1;
+            if (rightPosition < 0) return false;
+
+            const rightDigit = parseInt(multiplicandStr[multiplicandStr.length - 1 - rightPosition], 10);
+            const product = rightDigit * problem.multiplier;
+
+            // If the product is 10 or greater, it generates a carry
+            return product >= 10;
         }
 
-        // For multi-digit multipliers, this would be more complex
-        // For simplicity, we'll just assume carries for positions > 0
-        return position > 0 && position < problem.multiplicand.toString().length - 1;
+        // For multi-digit multipliers (not implemented yet)
+        return false;
     };
 
     // Handle problem editing
@@ -255,8 +287,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         const productStr = problem.product.toString();
         const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
 
-        // Vertical spacing constants for use throughout the component
-        // const ROW_HEIGHT = BOX_TOTAL_WIDTH;
+        // Check if we need a leftmost carry box
+        const needsLeftmostCarry = shouldShowCarry(multiplicandStr.length);
 
         // Total grid width based on product length (which should be the longest)
         const gridWidth = Math.max(
@@ -268,6 +300,20 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             <div className="multiplication-grid relative" style={{ width: `${gridWidth}px` }}>
                 {/* Carry boxes - positioned ABOVE the multiplicand */}
                 <div className="carry-row flex justify-end mb-1">
+                    {/* Leftmost carry box if needed */}
+                    {needsLeftmostCarry && (
+                        <div
+                            key="carry-leftmost"
+                            className="flex items-center justify-center"
+                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH * 0.6}px` }}
+                        >
+                            <div className="scale-70 transform origin-center carry-input">
+                                {createInput('carry', multiplicandStr.length, 0)}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Regular carry boxes for each position */}
                     {multiplicandStr.split('').map((_, index) => {
                         // Calculate the position from right to left (0 = rightmost)
                         const position = multiplicandStr.length - 1 - index;
@@ -287,7 +333,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                                 className="flex items-center justify-center"
                                 style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH * 0.6}px` }}
                             >
-                                <div className="scale-70 transform origin-center">
+                                <div className="scale-70 transform origin-center carry-input">
                                     {createInput('carry', position, 0)}
                                 </div>
                             </div>
@@ -297,6 +343,15 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
                 {/* Multiplicand row */}
                 <div className="multiplicand-row flex justify-end">
+                    {/* Leftmost space for alignment if we have a leftmost carry */}
+                    {needsLeftmostCarry && (
+                        <div
+                            key="multiplicand-leftmost-space"
+                            className="flex items-center justify-center text-xl"
+                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
+                        >
+                        </div>
+                    )}
                     {multiplicandStr.split('').map((digit, index) => (
                         <div
                             key={`multiplicand-${index}`}
@@ -311,6 +366,14 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 {/* Multiplier row with multiplication symbol */}
                 <div className="multiplier-row flex justify-end items-center">
                     <div className="mr-2 font-bold">×</div>
+                    {needsLeftmostCarry && (
+                        <div
+                            key="multiplier-leftmost-space"
+                            className="flex items-center justify-center text-xl"
+                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
+                        >
+                        </div>
+                    )}
                     {multiplierStr.split('').map((digit, index) => (
                         <div
                             key={`multiplier-${index}`}
@@ -439,6 +502,21 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         {renderMultiplicationGrid()}
                     </div>
                 </div>
+
+                {/* Problem complete notification using the new component */}
+                {/* Debug info: isSubmitted={isSubmitted.toString()}, isComplete={isComplete.toString()} */}
+                {isSubmitted && isComplete && (
+                    <ProblemComplete
+                        type="multiplication"
+                        problem={{
+                            multiplicand: problem?.multiplicand,
+                            multiplier: problem?.multiplier,
+                            product: problem?.product
+                        }}
+                        onNextProblem={onNextProblem || (() => { })}
+                        variant="card"
+                    />
+                )}
             </div>
 
             {/* Tab to move forward help text - now as a footnote */}
@@ -446,63 +524,42 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 Press Tab to move to the next field
             </div>
 
-            {/* Problem complete notification */}
-            {isSubmitted && isComplete && (
-                <div className="problem-complete-notification mt-8 p-4 bg-green-50 border-l-4 border-green-500 rounded-md shadow-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm leading-5 text-green-700">
-                                Great job! You've completed this problem correctly.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Button layout in triangle formation */}
+            <div className="flex flex-col items-center mt-6">
+                {/* Submit button */}
+                {!isSubmitted && (
+                    <button
+                        onClick={() => onProblemSubmit?.()}
+                        disabled={!userAnswers.length}
+                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!userAnswers.length
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                            } transition-colors`}
+                    >
+                        Submit Answers
+                    </button>
+                )}
 
-            {/* Action buttons */}
-            <div className="flex justify-center mt-8 gap-4">
-                {/* Button layout in a triangle formation */}
-                <div className="flex flex-col items-center gap-4">
-                    {/* Top button */}
-                    {isSubmitted ? (
-                        <button
-                            onClick={onNextProblem}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                            autoFocus
-                        >
-                            Next Problem →
-                        </button>
-                    ) : (
-                        <button
-                            onClick={onProblemSubmit}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                            disabled={!allFieldsFilled}
-                        >
-                            Submit
-                        </button>
-                    )}
-
-                    {/* Bottom row buttons */}
-                    <div className="flex gap-4">
-                        <button
-                            onClick={onResetProblem}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-                        >
-                            Reset
-                        </button>
-                        <button
-                            onClick={onNewProblem}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-                        >
-                            New Problem
-                        </button>
-                    </div>
+                {/* Reset and New Problem buttons */}
+                <div className="flex justify-center space-x-4">
+                    <button
+                        onClick={onResetProblem}
+                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                    >
+                        Reset Problem
+                    </button>
+                    <button
+                        onClick={onNewProblem}
+                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                    >
+                        New Problem
+                    </button>
                 </div>
+            </div>
+
+            {/* Help text as footnote outside the main container */}
+            <div className="text-center text-xs text-gray-500 mt-4">
+                Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
             </div>
         </div>
     );

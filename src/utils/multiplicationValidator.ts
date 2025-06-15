@@ -60,13 +60,29 @@ export function validateMultiplicationAnswer(
             const position = answer.fieldPosition;
 
             // Check if position is valid
-            if (position >= multiplicandStr.length) return false;
+            if (position > multiplicandStr.length) return false;
 
-            // Get the digit at this position
-            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+            // Special case for leftmost position (beyond the multiplicand)
+            if (position === multiplicandStr.length) {
+                // The leftmost carry is from the product of the leftmost digit
+                const leftmostDigit = parseInt(multiplicandStr[0], 10);
+                const product = leftmostDigit * problem.multiplier;
+                const expectedCarry = Math.floor(product / 10);
+                return answer.value === expectedCarry;
+            }
+
+            // For other positions, the carry comes from the digit to the RIGHT
+            // (since we're working right-to-left)
+            const rightPosition = position - 1;
+
+            // If this is position 0 (rightmost), there's no carry
+            if (rightPosition < 0) return false;
+
+            // Get the digit to the right
+            const rightDigit = parseInt(multiplicandStr[multiplicandStr.length - 1 - rightPosition], 10);
 
             // Calculate the product and expected carry
-            const product = digit * problem.multiplier;
+            const product = rightDigit * problem.multiplier;
             const expectedCarry = Math.floor(product / 10); // The carry is the tens digit
 
             // Compare with user's answer
@@ -105,41 +121,46 @@ export function isMultiplicationProblemComplete(
         if (!answer || !answer.isCorrect) return false;
     }
 
-    // Check if we need to validate carry answers
-    const multiplicandStr = problem.multiplicand.toString();
-    for (let i = 0; i < multiplicandStr.length; i++) {
-        const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - i], 10);
-        const product = digit * problem.multiplier;
+    // For single-digit multiplier, check carry values
+    if (problem.multiplier < 10) {
+        const multiplicandStr = problem.multiplicand.toString();
 
-        // If this position needs a carry
-        if (product >= 10) {
-            const answer = answers.find(
+        // Check for leftmost carry if needed
+        const leftmostDigit = parseInt(multiplicandStr[0], 10);
+        const leftmostProduct = leftmostDigit * problem.multiplier;
+        if (leftmostProduct >= 10) {
+            // Check if we have a carry for the leftmost position
+            const leftmostCarryAnswer = answers.find(
                 a => a.fieldType === 'carry' &&
-                    a.fieldPosition === i &&
-                    a.partialIndex === 0
+                    a.fieldPosition === multiplicandStr.length
             );
 
-            if (!answer || !answer.isCorrect) return false;
+            if (!leftmostCarryAnswer || !leftmostCarryAnswer.isCorrect) {
+                return false;
+            }
+        }
+
+        // Check carries for other positions
+        for (let i = 0; i < multiplicandStr.length - 1; i++) {
+            // The digit at position i generates a carry for position i+1
+            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - i], 10);
+            const product = digit * problem.multiplier;
+
+            // If this position generates a carry
+            if (product >= 10) {
+                // Look for a carry answer at the next position
+                const carryAnswer = answers.find(
+                    a => a.fieldType === 'carry' &&
+                        a.fieldPosition === i + 1
+                );
+
+                if (!carryAnswer || !carryAnswer.isCorrect) {
+                    return false;
+                }
+            }
         }
     }
 
-    // Check if we have all the partial product digits
-    for (let i = 0; i < problem.partialProducts.length; i++) {
-        const partial = problem.partialProducts[i];
-        const partialDigits = partial.value.toString().length;
-
-        // Check each digit position
-        for (let j = 0; j < partialDigits; j++) {
-            const answer = answers.find(
-                a => a.fieldType === 'partial' &&
-                    a.fieldPosition === j &&
-                    a.partialIndex === i
-            );
-
-            if (!answer || !answer.isCorrect) return false;
-        }
-    }
-
-    // If we got here, all fields are filled correctly
+    // If we got here, all required fields are filled correctly
     return true;
 } 

@@ -3,6 +3,7 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
+import ProblemComplete from '../UI/ProblemComplete';
 
 interface AdditionDisplayProps {
     problem: AdditionProblem | null;
@@ -10,7 +11,6 @@ interface AdditionDisplayProps {
     currentFocus: AdditionCurrentFocus;
     onAnswerSubmit: (answer: AdditionUserAnswer) => void;
     onAnswerClear: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
-    onProblemChange?: (addend1: number, addend2: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
     onDisableEditing?: () => void;
@@ -37,21 +37,19 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     currentFocus,
     onAnswerSubmit,
     onAnswerClear,
-    onProblemChange,
     onProblemSubmit,
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
-    isComplete,
-    isLoading,
-    fetchError,
     onKeyDown,
     onFieldClick,
     onNextProblem,
     onResetProblem,
     onNewProblem,
+    isLoading,
+    fetchError,
     onRetryFetch,
-    onUpdateProblem,
+    onUpdateProblem
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -229,7 +227,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         // Small delay to ensure current input is processed
         setTimeout(() => {
             // Find the next field to focus
-            const allFields = getAllFieldsInOrder();
+            const allFields = getAllRequiredFields();
             const currentIndex = allFields.findIndex(
                 field => field.columnPosition === currentFocus.columnPosition && field.fieldType === currentFocus.fieldType
             );
@@ -239,45 +237,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 onFieldClick(nextField.columnPosition, nextField.fieldType);
             }
         }, 0); // Reduced to 0ms for instant response
-    };
-
-    // Get all fields in order for navigation - following natural addition flow
-    const getAllFieldsInOrder = (): AdditionCurrentFocus[] => {
-        if (!problem) return [];
-
-        const allFields: AdditionCurrentFocus[] = [];
-
-        // Sort steps by column position (right to left, starting with ones place)
-        const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
-
-        // Process each column from right to left (ones, tens, hundreds)
-        for (const step of orderedSteps) {
-            // First add the sum field for this column
-            allFields.push({ columnPosition: step.columnPosition, fieldType: 'sum' });
-
-            // Then add the carry field for the NEXT column to the left if needed
-            // This is because when you add a column and get a sum ≥ 10, you carry to the next column
-            const nextColumnPosition = step.columnPosition + 1;
-
-            // Only add carry if this column generates a carry
-            if (step.carry > 0) {
-                // If this is the leftmost column and we need an extra box
-                if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && needsExtraBox()) {
-                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
-                }
-                // For other columns, add carry to the next column
-                else if (nextColumnPosition < orderedSteps.length) {
-                    allFields.push({ columnPosition: nextColumnPosition, fieldType: 'carry' });
-                }
-            }
-        }
-
-        // Add extra sum box if needed (leftmost position)
-        if (needsExtraBox()) {
-            allFields.push({ columnPosition: orderedSteps.length, fieldType: 'sum' });
-        }
-
-        return allFields;
     };
 
     // Handle problem editing
@@ -382,23 +341,22 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             return;
         }
 
-        // Only set focus if we're not already focused on a field
-        // This prevents the infinite loop
-        if (currentFocus.columnPosition === -1) {
-            // Otherwise, focus on the first empty or incorrect field
-            const fields = getAllRequiredFields();
-            if (fields.length > 0) {
-                const firstEmptyField = fields.find(field => {
-                    const answer = getUserAnswer(field.columnPosition, field.fieldType);
-                    return !answer || !answer.isCorrect;
-                });
+        // Focus on the first empty or incorrect field
+        const fields = getAllRequiredFields();
+        if (fields.length > 0) {
+            const firstEmptyField = fields.find(field => {
+                const answer = getUserAnswer(field.columnPosition, field.fieldType);
+                return !answer || !answer.isCorrect;
+            });
 
-                if (firstEmptyField) {
-                    onFieldClick(firstEmptyField.columnPosition, firstEmptyField.fieldType);
-                }
+            if (firstEmptyField) {
+                onFieldClick(firstEmptyField.columnPosition, firstEmptyField.fieldType);
+            } else if (fields.length > 0) {
+                // If all fields have answers, focus on the first one
+                onFieldClick(fields[0].columnPosition, fields[0].fieldType);
             }
         }
-    }, [isSubmitted, userAnswers, problem, onFieldClick, currentFocus, areAllAnswersCorrect, getAllRequiredFields, getUserAnswer]);
+    }, [isSubmitted, userAnswers, problem, onFieldClick, areAllAnswersCorrect, getAllRequiredFields, getUserAnswer]);
 
     // Loading state
     if (isLoading) {
@@ -597,30 +555,26 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         </div>
                     </div>
                 </div>
+
+                {/* Problem complete notification */}
+                {isSubmitted && areAllAnswersCorrect() && (
+                    <ProblemComplete
+                        type="addition"
+                        problem={{
+                            addend1: problem?.addend1,
+                            addend2: problem?.addend2,
+                            sum: problem?.sum
+                        }}
+                        onNextProblem={onNextProblem || (() => { })}
+                        variant="card"
+                    />
+                )}
             </div>
 
             {/* Tab to move forward help text - now as a footnote */}
             <div className="text-center text-sm text-gray-500 mt-8">
                 Press Tab to move to the next field
             </div>
-
-            {/* Problem complete notification */}
-            {isSubmitted && areAllAnswersCorrect() && (
-                <div className="problem-complete-notification mt-8 p-4 bg-green-50 border-l-4 border-green-500 rounded-md shadow-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm leading-5 text-green-700">
-                                Great job! You've completed this problem correctly.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Action buttons */}
             <div className="flex justify-center mt-8 gap-4">

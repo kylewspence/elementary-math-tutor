@@ -68,6 +68,13 @@ const MultiplicationTutorPage: React.FC = () => {
         updateProblem(multiplicand, multiplier);
     };
 
+    // Handle answer clear
+    const handleAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        // For now, we'll just log this as it's not fully implemented in the game state
+        console.log('Clearing answer:', fieldType, position, partialIndex);
+        // In a full implementation, we would call a clearAnswer function from the game state
+    };
+
     return (
         <MultiplicationDisplay
             problem={gameState.problem}
@@ -78,6 +85,7 @@ const MultiplicationTutorPage: React.FC = () => {
             isLoading={isLoading}
             fetchError={fetchError ? new Error(fetchError) : null}
             onAnswerSubmit={submitAnswer}
+            onAnswerClear={handleAnswerClear}
             onProblemSubmit={submitProblem}
             onNextProblem={nextProblem}
             onFieldClick={handleFieldClick}

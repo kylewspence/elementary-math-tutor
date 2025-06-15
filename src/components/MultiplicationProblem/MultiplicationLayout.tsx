@@ -2,7 +2,6 @@ import React from 'react';
 import type { MultiplicationProblem, MultiplicationUserAnswer } from '../../types/multiplication';
 import MultiplicationDisplay from './MultiplicationDisplay';
 import { useMultiplicationKeyboardNav } from '../../hooks/useMultiplicationKeyboardNav';
-import { useMultiplicationGameState } from '../../hooks/useMultiplicationGameState';
 
 interface MultiplicationLayoutProps {
     problem: MultiplicationProblem | null;
@@ -17,6 +16,7 @@ interface MultiplicationLayoutProps {
     onEnableEditing: () => void;
     onDisableEditing: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
+    onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
 }
 
 const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
@@ -56,6 +56,7 @@ const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
             isSubmitted={props.isSubmitted}
             isComplete={props.isComplete}
             onAnswerSubmit={props.onSubmitAnswer}
+            onAnswerClear={props.onAnswerClear}
             onProblemSubmit={props.onSubmitProblem}
             onNextProblem={props.onNextProblem}
             onResetProblem={props.onResetProblem}

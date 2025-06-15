@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
 import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
@@ -199,10 +198,44 @@ export function useGameState() {
                     a.fieldPosition === answer.fieldPosition)
             );
 
-            // Add the new answer
+            // Validate the answer
+            const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
+
+            // Add validated answer to the list
+            const validatedAnswer = { ...answer, isCorrect };
+            const validatedAnswers = [...filteredAnswers, validatedAnswer];
+
+            // Check if all required fields are filled and correct
+            const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
+
+            // If complete and not previously submitted, update score and completed levels
+            let updatedScore = prev.score;
+            const completedLevels = [...prev.completedLevels];
+            const availableLevels = [...prev.availableLevels];
+
+            if (complete && !prev.isSubmitted) {
+                updatedScore += 10; // Award points for completion
+
+                // Mark level as completed if not already
+                if (!completedLevels.includes(prev.currentLevel)) {
+                    completedLevels.push(prev.currentLevel);
+                }
+
+                // Unlock next level if appropriate
+                const nextLevel = prev.currentLevel + 1;
+                if (nextLevel <= GAME_LEVELS.length && !availableLevels.includes(nextLevel)) {
+                    availableLevels.push(nextLevel);
+                }
+            }
+
             return {
                 ...prev,
-                userAnswers: [...filteredAnswers, answer],
+                userAnswers: validatedAnswers,
+                isSubmitted: true,
+                isComplete: complete,
+                score: updatedScore,
+                completedLevels,
+                availableLevels,
             };
         });
     }, []);
@@ -230,12 +263,12 @@ export function useGameState() {
 
             // Validate each answer
             const validatedAnswers = prev.userAnswers.map(answer => {
-                const isCorrect = validateAnswer(prev.problem!, answer);
+                const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
                 return { ...answer, isCorrect };
             });
 
             // Check if the problem is complete and all answers are correct
-            const complete = isProblemComplete(prev.problem, validatedAnswers);
+            const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
 
             // If complete and not previously submitted, update score and completed levels
             let updatedScore = prev.score;

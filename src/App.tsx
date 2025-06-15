@@ -100,13 +100,10 @@ function App() {
   // Always set initial focus to the first input field when a new addition problem is generated
   useEffect(() => {
     if (gameMode === 'addition' && additionGameState.problem && additionGameState.userAnswers.length === 0) {
-      // Only set initial focus if we're not already focused on a valid field
-      if (additionCurrentFocus.columnPosition === -1 || additionCurrentFocus.columnPosition === undefined) {
-        // Reset focus to the first sum input - use column 0 which should always exist
-        jumpToAdditionField(0, 'sum');
-      }
+      // Reset focus to the first sum input - use column 0 which should always exist
+      jumpToAdditionField(0, 'sum');
     }
-  }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField, additionCurrentFocus]);
+  }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
 
   // Division handlers
   const handleAnswerSubmit = (answer: UserAnswer) => {

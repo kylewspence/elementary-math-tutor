@@ -95,16 +95,35 @@ export function useMultiplicationKeyboardNav(
         // For single-digit multiplier
         if (problem.multiplier < 10) {
             const multiplicandStr = problem.multiplicand.toString();
-            if (position >= multiplicandStr.length) return false;
 
-            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
-            const product = digit * problem.multiplier;
-            return product >= 10; // If product is 10 or more, it would have a carry
+            // Position is from right to left, so we need to adjust the index
+            if (position >= multiplicandStr.length + 1) return false; // +1 to allow for leftmost carry
+
+            // Special case for leftmost position
+            if (position === multiplicandStr.length) {
+                // Check if the leftmost digit multiplication generates a carry
+                const leftmostDigit = parseInt(multiplicandStr[0], 10);
+                const product = leftmostDigit * problem.multiplier;
+                // If the product is 10 or greater, we need an extra carry box
+                return product >= 10;
+            }
+
+            // For the rightmost digit, we don't need a carry box
+            if (position === 0) return false;
+
+            // Check if the digit to the right generates a carry
+            const rightPosition = position - 1;
+            if (rightPosition < 0) return false;
+
+            const rightDigit = parseInt(multiplicandStr[multiplicandStr.length - 1 - rightPosition], 10);
+            const product = rightDigit * problem.multiplier;
+
+            // If the product is 10 or greater, it generates a carry
+            return product >= 10;
         }
 
-        // For multi-digit multipliers, this is more complex
-        // For simplicity, we'll just assume carries for positions > 0
-        return position > 0;
+        // For multi-digit multipliers (not implemented yet)
+        return false;
     }, [problem]);
 
     // Move to the next field in the tab order
@@ -128,7 +147,7 @@ export function useMultiplicationKeyboardNav(
                 const nextPosition = fieldPosition + 1;
 
                 // Check if there's a carry needed for the next position
-                if (nextPosition < multiplicandDigits && shouldShowCarry(nextPosition)) {
+                if (shouldShowCarry(nextPosition)) {
                     // Move to the carry box above the next position
                     newFocus = {
                         fieldType: 'carry',
@@ -144,12 +163,22 @@ export function useMultiplicationKeyboardNav(
                     };
                 }
             } else {
-                // We're at the leftmost product digit, wrap around to the first product digit
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition: 0,
-                    partialIndex: undefined
-                };
+                // We're at the leftmost product digit
+                // Check if we need a leftmost carry box
+                if (shouldShowCarry(multiplicandDigits)) {
+                    newFocus = {
+                        fieldType: 'carry',
+                        fieldPosition: multiplicandDigits,
+                        partialIndex: 0
+                    };
+                } else {
+                    // Wrap around to the first product digit
+                    newFocus = {
+                        fieldType: 'product',
+                        fieldPosition: 0,
+                        partialIndex: undefined
+                    };
+                }
             }
         } else if (fieldType === 'carry') {
             // After filling in a carry, move to the product digit below it
@@ -180,33 +209,55 @@ export function useMultiplicationKeyboardNav(
         // Reverse navigation logic
         if (fieldType === 'product') {
             if (fieldPosition > 0) {
-                // Check if the previous position has a carry
-                const prevPosition = fieldPosition - 1;
-
-                // Move to the previous product digit
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition: prevPosition,
-                    partialIndex: undefined
-                };
-            } else {
-                // We're at the rightmost product digit
-                // Check if the last position in the multiplicand has a carry
-                const lastPosition = multiplicandDigits - 1;
-                if (lastPosition >= 0 && shouldShowCarry(lastPosition)) {
-                    // Go to the carry for the last position
+                // Check if the current position has a carry
+                if (shouldShowCarry(fieldPosition)) {
+                    // Move to the carry box above this position
                     newFocus = {
                         fieldType: 'carry',
-                        fieldPosition: lastPosition,
+                        fieldPosition: fieldPosition,
                         partialIndex: 0
                     };
                 } else {
-                    // Wrap around to the leftmost product digit
+                    // Move to the previous product digit
+                    const prevPosition = fieldPosition - 1;
                     newFocus = {
                         fieldType: 'product',
-                        fieldPosition: productDigits - 1,
+                        fieldPosition: prevPosition,
                         partialIndex: undefined
                     };
+                }
+            } else {
+                // We're at the rightmost product digit
+                // Check if there's a leftmost carry
+                if (shouldShowCarry(multiplicandDigits)) {
+                    newFocus = {
+                        fieldType: 'carry',
+                        fieldPosition: multiplicandDigits,
+                        partialIndex: 0
+                    };
+                } else {
+                    // Find the rightmost carry box
+                    let foundCarry = false;
+                    for (let pos = multiplicandDigits - 1; pos > 0; pos--) {
+                        if (shouldShowCarry(pos)) {
+                            newFocus = {
+                                fieldType: 'carry',
+                                fieldPosition: pos,
+                                partialIndex: 0
+                            };
+                            foundCarry = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundCarry) {
+                        // Wrap around to the leftmost product digit
+                        newFocus = {
+                            fieldType: 'product',
+                            fieldPosition: productDigits - 1,
+                            partialIndex: undefined
+                        };
+                    }
                 }
             }
         } else if (fieldType === 'carry') {
@@ -214,7 +265,7 @@ export function useMultiplicationKeyboardNav(
             let prevPosition = fieldPosition - 1;
 
             // Look for previous positions with carries
-            while (prevPosition >= 0) {
+            while (prevPosition > 0) {
                 if (shouldShowCarry(prevPosition)) {
                     // Found a previous position with a carry
                     newFocus = {
@@ -227,7 +278,7 @@ export function useMultiplicationKeyboardNav(
                 prevPosition--;
             }
 
-            if (prevPosition < 0) {
+            if (prevPosition <= 0) {
                 // No previous carry found, go to the rightmost product digit
                 newFocus = {
                     fieldType: 'product',

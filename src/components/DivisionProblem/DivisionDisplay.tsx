@@ -3,6 +3,7 @@ import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+import ProblemComplete from '../UI/ProblemComplete';
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
@@ -554,23 +555,17 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
                 {/* Completion card - positioned in the center of the workspace */}
                 {isSubmitted && isComplete && (
-                    <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center shadow-lg">
-                        <div className="text-2xl mb-2">🎉</div>
-                        <h3 className="text-lg font-bold text-green-800 mb-1">
-                            Problem Complete!
-                        </h3>
-                        <p className="text-sm text-green-700 mb-3">
-                            Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
-                            {problem.remainder > 0 && ` remainder ${problem.remainder}`}
-                        </p>
-                        <button
-                            onClick={onNextProblem}
-                            className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
-                            autoFocus
-                        >
-                            Next Problem →
-                        </button>
-                    </div>
+                    <ProblemComplete
+                        type="division"
+                        problem={{
+                            dividend: problem.dividend,
+                            divisor: problem.divisor,
+                            quotient: problem.quotient,
+                            remainder: problem.remainder
+                        }}
+                        onNextProblem={onNextProblem || (() => { })}
+                        variant="card"
+                    />
                 )}
             </div>
 
