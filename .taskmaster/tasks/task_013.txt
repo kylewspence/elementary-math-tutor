@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: Responsive Design Testing
+# Status: pending
+# Dependencies: 12
+# Priority: medium
+# Description: Ensure layout consistency across different screen sizes.
+# Details:
+Test the application on various devices to ensure responsive design and layout consistency.
+
+# Test Strategy:
+Verify that the application maintains a consistent layout on different screen sizes.
