@@ -229,9 +229,18 @@ export function useMultiplicationGameState() {
             isCorrect = value === partialDigits[position];
         }
         else if (fieldType === 'carry') {
-            // For carry fields, we'll accept any digit as correct for now
-            // In a real implementation, you would calculate the correct carry value
-            isCorrect = true;
+            // For carry fields, calculate the correct carry value
+            const multiplicandStr = gameState.problem.multiplicand.toString();
+            // Position is from right to left, so we need to adjust the index
+            if (position < multiplicandStr.length) {
+                const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+                const product = digit * gameState.problem.multiplier;
+                const correctCarry = Math.floor(product / 10); // The carry is the tens digit
+                isCorrect = value === correctCarry;
+            } else {
+                // If position is out of range, any value is incorrect
+                isCorrect = false;
+            }
         }
 
         // Create or update the answer

@@ -52,6 +52,32 @@ export function validateMultiplicationAnswer(
         return answer.value === expectedDigit;
     }
 
+    // Handle carry fields
+    else if (answer.fieldType === 'carry') {
+        // For single-digit multiplier
+        if (problem.multiplier < 10) {
+            const multiplicandStr = problem.multiplicand.toString();
+            const position = answer.fieldPosition;
+
+            // Check if position is valid
+            if (position >= multiplicandStr.length) return false;
+
+            // Get the digit at this position
+            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+
+            // Calculate the product and expected carry
+            const product = digit * problem.multiplier;
+            const expectedCarry = Math.floor(product / 10); // The carry is the tens digit
+
+            // Compare with user's answer
+            return answer.value === expectedCarry;
+        }
+
+        // For multi-digit multipliers (more complex)
+        // This is a simplified implementation
+        return true;
+    }
+
     // Unknown field type
     return false;
 }
@@ -77,6 +103,24 @@ export function isMultiplicationProblemComplete(
     for (let i = 0; i < productDigits; i++) {
         const answer = answers.find(a => a.fieldType === 'product' && a.fieldPosition === i);
         if (!answer || !answer.isCorrect) return false;
+    }
+
+    // Check if we need to validate carry answers
+    const multiplicandStr = problem.multiplicand.toString();
+    for (let i = 0; i < multiplicandStr.length; i++) {
+        const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - i], 10);
+        const product = digit * problem.multiplier;
+
+        // If this position needs a carry
+        if (product >= 10) {
+            const answer = answers.find(
+                a => a.fieldType === 'carry' &&
+                    a.fieldPosition === i &&
+                    a.partialIndex === 0
+            );
+
+            if (!answer || !answer.isCorrect) return false;
+        }
     }
 
     // Check if we have all the partial product digits

@@ -4,7 +4,7 @@ import { KEYBOARD_KEYS } from '../utils/constants';
 
 /**
  * Custom hook to manage keyboard navigation for multiplication problems
- * Matches the division tab's keyboard navigation pattern
+ * Follows the natural flow of solving multiplication problems
  */
 export function useMultiplicationKeyboardNav(
     problem: MultiplicationProblem | null,
@@ -22,13 +22,6 @@ export function useMultiplicationKeyboardNav(
     // Handle keyboard navigation
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!problem) return;
-
-        // Get product and partial product lengths for navigation
-        const productDigits = problem.product.toString().length;
-        const hasPartialProducts = problem.multiplier >= 10;
-
-        // We don't need to check productDigits and hasPartialProducts here
-        // They'll be used in the navigation functions
 
         // Handle number keys (0-9)
         if (/^[0-9]$/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -95,131 +88,91 @@ export function useMultiplicationKeyboardNav(
         }
     }, [problem, currentFocus, userAnswers.length]);
 
+    // Helper function to determine if a position needs a carry
+    const shouldShowCarry = useCallback((position: number): boolean => {
+        if (!problem) return false;
+
+        // For single-digit multiplier
+        if (problem.multiplier < 10) {
+            const multiplicandStr = problem.multiplicand.toString();
+            if (position >= multiplicandStr.length) return false;
+
+            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+            const product = digit * problem.multiplier;
+            return product >= 10; // If product is 10 or more, it would have a carry
+        }
+
+        // For multi-digit multipliers, this is more complex
+        // For simplicity, we'll just assume carries for positions > 0
+        return position > 0;
+    }, [problem]);
+
     // Move to the next field in the tab order
     const moveToNextField = useCallback(() => {
         if (!problem) return;
 
         const productDigits = problem.product.toString().length;
-        const hasPartialProducts = problem.multiplier >= 10;
-
-        // Define the navigation order based on the problem structure
-        // For multiplication, we generally work right-to-left and top-to-bottom
+        const multiplicandDigits = problem.multiplicand.toString().length;
 
         // Current position
-        const { fieldType, fieldPosition, partialIndex } = currentFocus;
+        const { fieldType, fieldPosition } = currentFocus;
 
         // New focus to be calculated
         let newFocus: MultiplicationCurrentFocus;
 
-        // Navigation logic - similar to division tab
+        // Navigation logic - following the natural flow of solving multiplication problems
         if (fieldType === 'product') {
             // If we're in the product row
             if (fieldPosition < productDigits - 1) {
                 // Move to the next product digit (left)
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition: fieldPosition + 1,
-                    partialIndex: undefined
-                };
-            } else if (hasPartialProducts) {
-                // Move to the first partial product's first digit
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: 0,
-                    partialIndex: 0
-                };
-            } else {
-                // No partial products, check if we need to go to carry
-                newFocus = {
-                    fieldType: 'carry',
-                    fieldPosition: 0,
-                    partialIndex: problem.partialProducts.length // Use last index for final product carries
-                };
-            }
-        } else if (fieldType === 'partial') {
-            // If we're in a partial product row
-            const partialIndex = currentFocus.partialIndex ?? 0;
-            const currentPartial = problem.partialProducts[partialIndex];
-            const partialDigits = currentPartial.value.toString().length;
+                const nextPosition = fieldPosition + 1;
 
-            if (fieldPosition < partialDigits - 1) {
-                // Move to next digit in same partial product
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: fieldPosition + 1,
-                    partialIndex
-                };
-            } else if (partialIndex < problem.partialProducts.length - 1) {
-                // Move to next partial product's first digit
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: 0,
-                    partialIndex: partialIndex + 1
-                };
-            } else {
-                // Move to carry row for final product
-                newFocus = {
-                    fieldType: 'carry',
-                    fieldPosition: 0,
-                    partialIndex: problem.partialProducts.length // Use last index for final product carries
-                };
-            }
-        } else if (fieldType === 'carry') {
-            // If we're in a carry row
-            const carryPartialIndex = currentFocus.partialIndex ?? problem.partialProducts.length;
-
-            if (carryPartialIndex === problem.partialProducts.length) {
-                // We're in the final product carry row
-                if (fieldPosition < productDigits - 1) {
-                    // Move to next carry position
+                // Check if there's a carry needed for the next position
+                if (nextPosition < multiplicandDigits && shouldShowCarry(nextPosition)) {
+                    // Move to the carry box above the next position
                     newFocus = {
                         fieldType: 'carry',
-                        fieldPosition: fieldPosition + 1,
-                        partialIndex: carryPartialIndex
+                        fieldPosition: nextPosition,
+                        partialIndex: 0 // Use 0 for all carries
                     };
                 } else {
-                    // Loop back to first product digit
+                    // Move to the next product digit (left)
                     newFocus = {
                         fieldType: 'product',
-                        fieldPosition: 0,
+                        fieldPosition: nextPosition,
                         partialIndex: undefined
                     };
                 }
             } else {
-                // We're in a partial product carry row
-                const partialDigits = problem.partialProducts[carryPartialIndex].value.toString().length;
-
-                if (fieldPosition < partialDigits - 1) {
-                    // Move to next carry in same row
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: fieldPosition + 1,
-                        partialIndex: carryPartialIndex
-                    };
-                } else {
-                    // Move to the partial product below this carry
-                    newFocus = {
-                        fieldType: 'partial',
-                        fieldPosition: 0,
-                        partialIndex: carryPartialIndex
-                    };
-                }
+                // We're at the leftmost product digit, wrap around to the first product digit
+                newFocus = {
+                    fieldType: 'product',
+                    fieldPosition: 0,
+                    partialIndex: undefined
+                };
             }
+        } else if (fieldType === 'carry') {
+            // After filling in a carry, move to the product digit below it
+            newFocus = {
+                fieldType: 'product',
+                fieldPosition: fieldPosition,
+                partialIndex: undefined
+            };
         }
 
         // Update the focus
         setCurrentFocus(newFocus!);
-    }, [problem, currentFocus]);
+    }, [problem, currentFocus, shouldShowCarry]);
 
     // Move to the previous field in the tab order
     const moveToPreviousField = useCallback(() => {
         if (!problem) return;
 
         const productDigits = problem.product.toString().length;
-        const hasPartialProducts = problem.multiplier >= 10;
+        const multiplicandDigits = problem.multiplicand.toString().length;
 
         // Current position
-        const { fieldType, fieldPosition, partialIndex } = currentFocus;
+        const { fieldType, fieldPosition } = currentFocus;
 
         // New focus to be calculated
         let newFocus: MultiplicationCurrentFocus;
@@ -227,180 +180,107 @@ export function useMultiplicationKeyboardNav(
         // Reverse navigation logic
         if (fieldType === 'product') {
             if (fieldPosition > 0) {
-                // Move to the previous product digit (right)
+                // Check if the previous position has a carry
+                const prevPosition = fieldPosition - 1;
+
+                // Move to the previous product digit
                 newFocus = {
                     fieldType: 'product',
-                    fieldPosition: fieldPosition - 1,
+                    fieldPosition: prevPosition,
                     partialIndex: undefined
                 };
-            } else if (hasPartialProducts) {
-                // Move to the last partial product's last digit
-                const lastPartialIndex = problem.partialProducts.length - 1;
-                const lastPartialDigits = problem.partialProducts[lastPartialIndex].value.toString().length;
-
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: lastPartialDigits - 1,
-                    partialIndex: lastPartialIndex
-                };
             } else {
-                // Loop to the last carry position
-                newFocus = {
-                    fieldType: 'carry',
-                    fieldPosition: productDigits - 1,
-                    partialIndex: problem.partialProducts.length
-                };
-            }
-        } else if (fieldType === 'partial') {
-            const currentPartialIndex = partialIndex ?? 0;
-
-            if (fieldPosition > 0) {
-                // Move to previous digit in same partial product
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: fieldPosition - 1,
-                    partialIndex: currentPartialIndex
-                };
-            } else if (currentPartialIndex > 0) {
-                // Move to previous partial product's last digit
-                const prevPartialIndex = currentPartialIndex - 1;
-                const prevPartialDigits = problem.partialProducts[prevPartialIndex].value.toString().length;
-
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition: prevPartialDigits - 1,
-                    partialIndex: prevPartialIndex
-                };
-            } else {
-                // Move to last product digit
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition: productDigits - 1,
-                    partialIndex: undefined
-                };
+                // We're at the rightmost product digit
+                // Check if the last position in the multiplicand has a carry
+                const lastPosition = multiplicandDigits - 1;
+                if (lastPosition >= 0 && shouldShowCarry(lastPosition)) {
+                    // Go to the carry for the last position
+                    newFocus = {
+                        fieldType: 'carry',
+                        fieldPosition: lastPosition,
+                        partialIndex: 0
+                    };
+                } else {
+                    // Wrap around to the leftmost product digit
+                    newFocus = {
+                        fieldType: 'product',
+                        fieldPosition: productDigits - 1,
+                        partialIndex: undefined
+                    };
+                }
             }
         } else if (fieldType === 'carry') {
-            const carryPartialIndex = partialIndex ?? problem.partialProducts.length;
+            // From carry, find the previous position that has a carry
+            let prevPosition = fieldPosition - 1;
 
-            if (fieldPosition > 0) {
-                // Move to previous carry position
+            // Look for previous positions with carries
+            while (prevPosition >= 0) {
+                if (shouldShowCarry(prevPosition)) {
+                    // Found a previous position with a carry
+                    newFocus = {
+                        fieldType: 'carry',
+                        fieldPosition: prevPosition,
+                        partialIndex: 0
+                    };
+                    break;
+                }
+                prevPosition--;
+            }
+
+            if (prevPosition < 0) {
+                // No previous carry found, go to the rightmost product digit
                 newFocus = {
-                    fieldType: 'carry',
-                    fieldPosition: fieldPosition - 1,
-                    partialIndex: carryPartialIndex
+                    fieldType: 'product',
+                    fieldPosition: 0,
+                    partialIndex: undefined
                 };
-            } else if (carryPartialIndex === problem.partialProducts.length) {
-                // We're in the final product carry row, move to last partial product
-                if (hasPartialProducts) {
-                    const lastPartialIndex = problem.partialProducts.length - 1;
-                    const lastPartialDigits = problem.partialProducts[lastPartialIndex].value.toString().length;
-
-                    newFocus = {
-                        fieldType: 'partial',
-                        fieldPosition: lastPartialDigits - 1,
-                        partialIndex: lastPartialIndex
-                    };
-                } else {
-                    // No partial products, go to last product digit
-                    newFocus = {
-                        fieldType: 'product',
-                        fieldPosition: productDigits - 1,
-                        partialIndex: undefined
-                    };
-                }
-            } else {
-                // We're in a partial product carry row
-                if (carryPartialIndex > 0) {
-                    // Move to previous partial product's last digit
-                    const prevPartialIndex = carryPartialIndex - 1;
-                    const prevPartialDigits = problem.partialProducts[prevPartialIndex].value.toString().length;
-
-                    newFocus = {
-                        fieldType: 'partial',
-                        fieldPosition: prevPartialDigits - 1,
-                        partialIndex: prevPartialIndex
-                    };
-                } else {
-                    // First partial product carry, go to last product digit
-                    newFocus = {
-                        fieldType: 'product',
-                        fieldPosition: productDigits - 1,
-                        partialIndex: undefined
-                    };
-                }
             }
         }
 
         // Update the focus
         setCurrentFocus(newFocus!);
-    }, [problem, currentFocus]);
+    }, [problem, currentFocus, shouldShowCarry]);
 
-    // Move up (to carry or previous row)
+    // Move up (to carry box)
     const moveUp = useCallback(() => {
         if (!problem) return;
 
-        const { fieldType, fieldPosition, partialIndex } = currentFocus;
+        const { fieldType, fieldPosition } = currentFocus;
 
         // New focus to be calculated
         let newFocus: MultiplicationCurrentFocus;
 
-        if (fieldType === 'product') {
-            // Move to carry above product
+        if (fieldType === 'product' && shouldShowCarry(fieldPosition)) {
+            // Move to carry above product - only if this position has a carry
             newFocus = {
                 fieldType: 'carry',
                 fieldPosition,
-                partialIndex: problem.partialProducts.length
+                partialIndex: 0
             };
-        } else if (fieldType === 'partial') {
-            // Move to carry above this partial product
-            newFocus = {
-                fieldType: 'carry',
-                fieldPosition,
-                partialIndex
-            };
-        } else if (fieldType === 'carry') {
-            // Already at top, do nothing or loop to bottom
-            return;
+            setCurrentFocus(newFocus);
         }
+        // If already at a carry or no carry needed, do nothing
+    }, [problem, currentFocus, shouldShowCarry]);
 
-        // Update the focus
-        setCurrentFocus(newFocus!);
-    }, [problem, currentFocus]);
-
-    // Move down (to product or next row)
+    // Move down (from carry to product)
     const moveDown = useCallback(() => {
         if (!problem) return;
 
-        const { fieldType, fieldPosition, partialIndex } = currentFocus;
+        const { fieldType, fieldPosition } = currentFocus;
 
         // New focus to be calculated
         let newFocus: MultiplicationCurrentFocus;
 
         if (fieldType === 'carry') {
-            const carryPartialIndex = partialIndex ?? problem.partialProducts.length;
-
-            if (carryPartialIndex === problem.partialProducts.length) {
-                // Move from final carry to product
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition,
-                    partialIndex: undefined
-                };
-            } else {
-                // Move from partial carry to partial product
-                newFocus = {
-                    fieldType: 'partial',
-                    fieldPosition,
-                    partialIndex: carryPartialIndex
-                };
-            }
-        } else {
-            // Already at bottom, do nothing or loop to top
-            return;
+            // Move from carry to product below
+            newFocus = {
+                fieldType: 'product',
+                fieldPosition,
+                partialIndex: undefined
+            };
+            setCurrentFocus(newFocus);
         }
-
-        // Update the focus
-        setCurrentFocus(newFocus!);
+        // If already at product, do nothing
     }, [problem, currentFocus]);
 
     // Add event listener for keyboard navigation

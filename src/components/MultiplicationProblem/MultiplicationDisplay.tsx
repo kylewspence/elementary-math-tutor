@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -26,6 +26,7 @@ interface MultiplicationDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
+    setCurrentFocus?: (focus: MultiplicationCurrentFocus) => void;
 }
 
 const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
@@ -46,10 +47,33 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     fetchError,
     onRetryFetch,
     onUpdateProblem,
-    isComplete = false
+    isComplete = false,
+    setCurrentFocus
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
+    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
+    const firstRenderRef = useRef(true);
+
+    // Set initial focus on first render
+    useEffect(() => {
+        if (firstRenderRef.current && problem && setCurrentFocus) {
+            // Set focus to the rightmost product digit (position 0)
+            setCurrentFocus({
+                fieldType: 'product',
+                fieldPosition: 0,
+                partialIndex: undefined
+            });
+            firstRenderRef.current = false;
+
+            // Ensure focus is set after a short delay to allow the input to render
+            setTimeout(() => {
+                if (activeInputRef.current) {
+                    activeInputRef.current.focus();
+                }
+            }, 100);
+        }
+    }, [problem, setCurrentFocus]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -91,87 +115,143 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Helper to get the answer for a specific field
-    const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        return userAnswers.find(
-            a => a.fieldType === fieldType &&
-                a.fieldPosition === position &&
-                a.partialIndex === partialIndex
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // Count total required fields
+        let totalFields = 0;
+
+        // Product digits
+        totalFields += problem.product.toString().length;
+
+        // Carry digits (estimate based on product and partial products)
+        // This is a simplified calculation - in a real app, you'd calculate exact carries needed
+        if (problem.multiplier >= 10) {
+            totalFields += Math.floor(problem.product.toString().length / 2); // Rough estimate for carries
+        } else {
+            // For single-digit multiplier, carry is needed when digit * multiplier >= 10
+            const multiplicandStr = problem.multiplicand.toString();
+            for (let i = 0; i < multiplicandStr.length; i++) {
+                const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - i], 10);
+                if (digit * problem.multiplier >= 10) {
+                    totalFields += 1; // Add a carry field
+                }
+            }
+        }
+
+        // Check if we have answers for all fields
+        setAllFieldsFilled(userAnswers.length >= totalFields);
+    }, [problem, userAnswers]);
+
+    // Helper to get user's answer for a specific field
+    const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
+        return userAnswers.find(a =>
+            a.fieldType === fieldType &&
+            a.fieldPosition === position &&
+            a.partialIndex === partialIndex
         );
     };
 
-    // Determine the input variant based on the answer and focus
+    // Helper to determine input variant (only show colors after submission)
     const getInputVariant = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        const answer = getUserAnswer(fieldType, position, partialIndex);
-        const isFocused =
+        const userAnswer = getUserAnswer(fieldType, position, partialIndex);
+        const isActive =
             currentFocus.fieldType === fieldType &&
             currentFocus.fieldPosition === position &&
             currentFocus.partialIndex === partialIndex;
 
         // After submission, prioritize validation colors over active state
-        if (isSubmitted && answer) {
-            return answer.isCorrect ? 'correct' : 'error';
+        if (isSubmitted && userAnswer) {
+            return userAnswer.isCorrect === true ? 'correct' : 'error';
         }
 
         // Only show active state if not submitted or when actively editing after submission
-        if (isFocused) return 'active';
+        if (isActive) return 'active';
 
         return 'default';
     };
 
-    // Get the value to display in an input field
-    const getInputValue = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        const answer = getUserAnswer(fieldType, position, partialIndex);
-        return answer ? answer.value.toString() : '';
-    };
-
-    // Helper to get number of digits in a number (kept for future use)
-    // const getDigitCount = (value: number): number => {
-    //     return value.toString().length;
-    // };
-
-    // Create input component
+    // Helper function to create an input with consistent keyboard event handling
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        const value = getInputValue(fieldType, position, partialIndex);
-        const variant = getInputVariant(fieldType, position, partialIndex);
-        const isFocused =
+        const isActive =
             currentFocus.fieldType === fieldType &&
             currentFocus.fieldPosition === position &&
             currentFocus.partialIndex === partialIndex;
 
         return (
             <Input
-                key={`${fieldType}-${position}-${partialIndex ?? 'none'}`}
-                ref={isFocused ? activeInputRef : undefined}
-                value={value}
-                variant={variant}
+                ref={isActive ? activeInputRef : undefined}
+                value={getUserAnswer(fieldType, position, partialIndex)?.value?.toString() || ''}
+                variant={getInputVariant(fieldType, position, partialIndex)}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onKeyDown={onKeyDown}
                 readOnly={isSubmitted}
                 placeholder="?"
-                className="w-12 h-12 text-center text-xl"
+                className={fieldType === 'carry' ? 'carry-input' : ''}
+                aria-label={fieldType === 'carry' ? `Carry for position ${position}` : `${fieldType} for position ${position}`}
             />
         );
     };
 
-    // Handle multiplicand change
-    const handleMultiplicandChange = (value: string) => {
-        if (!problem) return;
+    // Helper function to determine if a position needs a carry
+    const needsCarry = (position: number): boolean => {
+        if (!problem) return false;
 
-        const numValue = parseInt(value, 10);
-        if (isNaN(numValue) || numValue <= 0) return;
+        // For single-digit multiplier
+        if (problem.multiplier < 10) {
+            const multiplicandStr = problem.multiplicand.toString();
+            // Position is from right to left, so we need to adjust the index
+            if (position >= multiplicandStr.length) return false;
 
-        onUpdateProblem?.(numValue, problem.multiplier);
+            // For the leftmost digit, we don't need a carry box since there's no digit to the left
+            if (position === multiplicandStr.length - 1) return false;
+
+            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+            const product = digit * problem.multiplier;
+            return product >= 10; // If product is 10 or more, it would have a carry
+        }
+
+        // For multi-digit multipliers, this would be more complex
+        // For simplicity, we'll just assume carries for positions > 0
+        return position > 0 && position < problem.multiplicand.toString().length - 1;
     };
 
-    // Handle multiplier change
+    // Helper to calculate the correct carry value
+    const getCorrectCarryValue = (position: number): number => {
+        if (!problem) return 0;
+
+        // For single-digit multiplier
+        if (problem.multiplier < 10) {
+            const multiplicandStr = problem.multiplicand.toString();
+            if (position >= multiplicandStr.length) return 0;
+
+            const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+            const product = digit * problem.multiplier;
+            return Math.floor(product / 10); // The carry is the tens digit
+        }
+
+        // For multi-digit multipliers, this would be more complex
+        // For simplicity, we'll just return 1 for now
+        return 1;
+    };
+
+    // Handle problem editing
+    const handleMultiplicandChange = (value: string) => {
+        const newMultiplicand = parseInt(value, 10);
+        if (!isNaN(newMultiplicand) && newMultiplicand > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(newMultiplicand, problem.multiplier);
+        }
+    };
+
     const handleMultiplierChange = (value: string) => {
-        if (!problem) return;
-
-        const numValue = parseInt(value, 10);
-        if (isNaN(numValue) || numValue <= 0) return;
-
-        onUpdateProblem?.(problem.multiplicand, numValue);
+        const newMultiplier = parseInt(value, 10);
+        if (!isNaN(newMultiplier) && newMultiplier > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(problem.multiplicand, newMultiplier);
+        }
     };
 
     // Render the multiplication grid
@@ -181,6 +261,10 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         const multiplicandStr = problem.multiplicand.toString();
         const multiplierStr = problem.multiplier.toString();
         const productStr = problem.product.toString();
+        const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
+
+        // Vertical spacing constants for use throughout the component
+        const ROW_HEIGHT = BOX_TOTAL_WIDTH;
 
         // Total grid width based on product length (which should be the longest)
         const gridWidth = Math.max(
@@ -190,6 +274,35 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
         return (
             <div className="multiplication-grid relative" style={{ width: `${gridWidth}px` }}>
+                {/* Carry boxes - positioned ABOVE the multiplicand */}
+                <div className="carry-row flex justify-end mb-1">
+                    {multiplicandStr.split('').map((_, index) => {
+                        // Calculate the position from right to left (0 = rightmost)
+                        const position = multiplicandStr.length - 1 - index;
+
+                        // Only render carry boxes where needed
+                        const showCarry = needsCarry(position);
+                        if (!showCarry) return (
+                            <div
+                                key={`carry-space-${position}`}
+                                style={{ width: `${BOX_TOTAL_WIDTH}px`, height: '20px' }}
+                            ></div>
+                        );
+
+                        return (
+                            <div
+                                key={`carry-product-${position}`}
+                                className="flex items-center justify-center"
+                                style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT * 0.6}px` }}
+                            >
+                                <div className="scale-70 transform origin-center">
+                                    {createInput('carry', position, 0)}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
                 {/* Multiplicand row */}
                 <div className="multiplicand-row flex justify-end">
                     {multiplicandStr.split('').map((digit, index) => (
@@ -220,82 +333,22 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 {/* Line separator */}
                 <div className="border-b-2 border-gray-800 w-full my-2"></div>
 
-                {/* Partial products (if multiplier has multiple digits) */}
-                {problem.multiplier >= 10 && problem.partialProducts.map((partial, partialIndex) => {
-                    const partialStr = partial.value.toString();
-                    const position = partial.position;
+                {/* Product digits - in correct order (right to left) */}
+                <div className="flex justify-end">
+                    {Array.from({ length: productStr.length }).map((_, index) => {
+                        // We need to reverse the index for display purposes
+                        // since we're displaying right-to-left but the positions are 0-indexed from right
+                        const displayPosition = productStr.length - 1 - index;
 
-                    return (
-                        <div key={`partial-${partialIndex}`} className="partial-product-row flex justify-end">
-                            {/* Carry boxes for this partial product */}
-                            <div className="carry-row flex justify-end mb-1">
-                                {Array.from({ length: partialStr.length }).map((_, digitIndex) => (
-                                    <div
-                                        key={`carry-${partialIndex}-${digitIndex}`}
-                                        className="flex items-center justify-center"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: '20px' }}
-                                    >
-                                        {createInput('carry', digitIndex, partialIndex)}
-                                    </div>
-                                ))}
-
-                                {/* Add spacing for position */}
-                                {Array.from({ length: position }).map((_, i) => (
-                                    <div key={`spacer-${partialIndex}-${i}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}></div>
-                                ))}
-                            </div>
-
-                            {/* Partial product digits */}
-                            <div className="flex justify-end">
-                                {Array.from({ length: partialStr.length }).map((_, digitIndex) => (
-                                    <div
-                                        key={`partial-digit-${partialIndex}-${digitIndex}`}
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px` }}
-                                    >
-                                        {createInput('partial', digitIndex, partialIndex)}
-                                    </div>
-                                ))}
-
-                                {/* Add spacing for position */}
-                                {Array.from({ length: position }).map((_, i) => (
-                                    <div key={`spacer-digit-${partialIndex}-${i}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}></div>
-                                ))}
-                            </div>
-                        </div>
-                    );
-                })}
-
-                {/* Second line separator if there are partial products */}
-                {problem.multiplier >= 10 && (
-                    <div className="border-b-2 border-gray-800 w-full my-2"></div>
-                )}
-
-                {/* Final product row with carry boxes */}
-                <div className="product-row">
-                    {/* Carry boxes for final product */}
-                    <div className="carry-row flex justify-end mb-1">
-                        {Array.from({ length: productStr.length }).map((_, index) => (
+                        return (
                             <div
-                                key={`carry-product-${index}`}
-                                className="flex items-center justify-center"
-                                style={{ width: `${BOX_TOTAL_WIDTH}px`, height: '20px' }}
-                            >
-                                {createInput('carry', index, problem.partialProducts.length)}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Product digits */}
-                    <div className="flex justify-end">
-                        {Array.from({ length: productStr.length }).map((_, index) => (
-                            <div
-                                key={`product-${index}`}
+                                key={`product-${displayPosition}`}
                                 style={{ width: `${BOX_TOTAL_WIDTH}px` }}
                             >
-                                {createInput('product', index)}
+                                {createInput('product', displayPosition)}
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -304,9 +357,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Loading state
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl border-2 border-gray-200">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-                <div className="text-gray-600">Loading problem...</div>
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">Loading problem...</p>
             </div>
         );
     }
@@ -314,14 +366,14 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Error state
     if (fetchError) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl border-2 border-red-200">
-                <div className="text-red-500 text-xl mb-4">Error loading problem</div>
-                <div className="text-gray-600 mb-4">{fetchError.message}</div>
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg text-red-500 mb-4">Error loading problem</p>
+                <p className="mb-4">{fetchError.message}</p>
                 <button
                     onClick={onRetryFetch}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors"
                 >
-                    Retry
+                    Try Again
                 </button>
             </div>
         );
@@ -330,13 +382,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // No problem state
     if (!problem) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl border-2 border-gray-200">
-                <div className="text-gray-600 mb-4">No problem available</div>
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">No problem available</p>
                 <button
                     onClick={onNewProblem}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors mt-4"
                 >
-                    Generate Problem
+                    Generate New Problem
                 </button>
             </div>
         );
@@ -395,51 +447,70 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         {renderMultiplicationGrid()}
                     </div>
                 </div>
+            </div>
 
-                {/* Action buttons */}
-                <div className="mt-8 flex justify-center space-x-4">
-                    {!isSubmitted && (
-                        <button
-                            onClick={onProblemSubmit}
-                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                        >
-                            Submit Answers
-                        </button>
-                    )}
+            {/* Tab to move forward help text - now as a footnote */}
+            <div className="text-center text-sm text-gray-500 mt-8">
+                Press Tab to move to the next field
+            </div>
 
-                    <button
-                        onClick={onResetProblem}
-                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                        Reset Problem
-                    </button>
-
-                    <button
-                        onClick={onNewProblem}
-                        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                        New Problem
-                    </button>
+            {/* Problem complete notification */}
+            {isSubmitted && isComplete && (
+                <div className="problem-complete-notification mt-8 p-4 bg-green-50 border-l-4 border-green-500 rounded-md shadow-md">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm leading-5 text-green-700">
+                                Great job! You've completed this problem correctly.
+                            </p>
+                        </div>
+                    </div>
                 </div>
+            )}
 
-                {/* Completion message */}
-                {isComplete && isSubmitted && (
-                    <div className="mt-6 text-center">
-                        <div className="text-green-600 font-bold text-xl">✓ Correct!</div>
+            {/* Action buttons */}
+            <div className="flex justify-center mt-8 gap-4">
+                {/* Button layout in a triangle formation */}
+                <div className="flex flex-col items-center gap-4">
+                    {/* Top button */}
+                    {isSubmitted ? (
                         <button
                             onClick={onNextProblem}
-                            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                             autoFocus
                         >
                             Next Problem →
                         </button>
-                    </div>
-                )}
-            </div>
+                    ) : (
+                        <button
+                            onClick={onProblemSubmit}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            disabled={!allFieldsFilled}
+                        >
+                            Submit
+                        </button>
+                    )}
 
-            {/* Keyboard navigation help */}
-            <div className="mt-6 text-center text-sm text-gray-500">
-                Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
+                    {/* Bottom row buttons */}
+                    <div className="flex gap-4">
+                        <button
+                            onClick={onResetProblem}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+                        >
+                            Reset
+                        </button>
+                        <button
+                            onClick={onNewProblem}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+                        >
+                            New Problem
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

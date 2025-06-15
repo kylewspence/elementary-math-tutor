@@ -47,7 +47,7 @@ function App() {
     generateNewProblem: generateNewAdditionProblem,
     submitAnswer: submitAdditionAnswer,
     submitProblem: submitAdditionProblem,
-    // clearAnswer: clearAdditionAnswer, // Unused variable
+    clearAnswer: clearAdditionAnswer, // Uncommented
     nextProblem: nextAdditionProblem,
     jumpToLevel: jumpToAdditionLevel,
     resetProblem: resetAdditionProblem,
@@ -148,6 +148,10 @@ function App() {
     submitAdditionAnswer(answer);
   };
 
+  const handleAdditionAnswerClear = (columnPosition: number, fieldType: 'sum' | 'carry') => {
+    clearAdditionAnswer(columnPosition, fieldType);
+  };
+
   const handleAdditionProblemSubmit = () => {
     submitAdditionProblem();
 
@@ -245,6 +249,7 @@ function App() {
             isLoading={isAdditionLoading}
             fetchError={additionFetchError}
             onAnswerSubmit={handleAdditionAnswerSubmit}
+            onAnswerClear={handleAdditionAnswerClear}
             onProblemSubmit={handleAdditionProblemSubmit}
             onNextProblem={handleNextAdditionProblem}
             onFieldClick={handleAdditionFieldClick}

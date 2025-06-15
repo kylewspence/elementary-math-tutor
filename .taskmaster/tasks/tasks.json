@@ -524,88 +524,174 @@
         "id": 20,
         "title": "Standardize Button Layout and Icons",
         "description": "Match button placement and styling with other tabs and add relevant icons.",
-        "details": "Implement the same button set (Submit/Check, Next, Reset, New Problem) with consistent styling (colors, sizes, hover effects). Add relevant icons to buttons for visual appeal. Ensure buttons are placed in the same location as in other tabs.",
-        "testStrategy": "",
         "status": "in-progress",
         "dependencies": [
           17
         ],
         "priority": "high",
+        "details": "Implement the same button set (Submit/Check, Next, Reset, New Problem) with consistent styling (colors, sizes, hover effects). Specifically, update the multiplication tab to match the division tab's button layout, which is arranged in a triangle formation with Submit Answers at the top, and Reset Problem and New Problem side by side below it. Ensure all buttons have identical styling (colors, hover effects, font weights) and positioning. Add relevant icons to buttons for visual appeal.",
+        "testStrategy": "Verify that the button layout in the multiplication tab matches the division tab's triangle formation. Check that all buttons have consistent styling, including colors, hover effects, and font weights. Ensure icons are present and correctly aligned on each button. Test across different browsers and screen sizes to confirm responsiveness and visual consistency.",
         "subtasks": []
       },
       {
         "id": 21,
         "title": "Implement Editable Problem Feature",
-        "description": "Make the multiplication problem editable when clicked, similar to division and addition tabs.",
-        "details": "Implement click-to-edit functionality for the multiplication problem. Show edit mode with input fields for multiplicand and multiplier. Implement click-outside behavior to save changes. Add the same edit mode indicator text as other tabs.",
-        "testStrategy": "",
+        "description": "Ensure the multiplication problem's edit functionality matches the division tab's behavior.",
         "status": "pending",
         "dependencies": [
           17
         ],
         "priority": "high",
-        "subtasks": []
+        "details": "Focus on refining the existing implementation in the MultiplicationDisplay component to ensure it matches the division tab. Verify that the problem is clickable to enter edit mode, shows input fields for multiplicand and multiplier, implements click-outside behavior to save changes, and includes the same edit mode indicator text as the division tab. Ensure the styling and positioning of the editable problem header matches the division tab exactly.",
+        "testStrategy": "Conduct a side-by-side comparison of the multiplication and division tabs to ensure consistent behavior and appearance. Test the click-to-edit functionality, input field display, click-outside save behavior, and edit mode indicator text. Verify that the styling and positioning are identical to the division tab.",
+        "subtasks": [
+          {
+            "id": 211,
+            "title": "Verify click-to-edit functionality",
+            "description": "Ensure the multiplication problem is clickable to enter edit mode, similar to the division tab.",
+            "status": "pending"
+          },
+          {
+            "id": 212,
+            "title": "Check input fields display",
+            "description": "Verify that input fields for multiplicand and multiplier are displayed correctly in edit mode.",
+            "status": "pending"
+          },
+          {
+            "id": 213,
+            "title": "Implement click-outside behavior",
+            "description": "Ensure that clicking outside the input fields saves changes and exits edit mode.",
+            "status": "pending"
+          },
+          {
+            "id": 214,
+            "title": "Add edit mode indicator text",
+            "description": "Ensure the same edit mode indicator text as the division tab is displayed.",
+            "status": "pending"
+          },
+          {
+            "id": 215,
+            "title": "Match styling and positioning",
+            "description": "Ensure the styling and positioning of the editable problem header matches the division tab exactly.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 22,
         "title": "Standardize Instruction Placement",
-        "description": "Place instructions in the same location as other tabs with consistent styling.",
-        "details": "Ensure help text appears in the same position as in other tabs. Use consistent instruction styling and wording.",
-        "testStrategy": "",
+        "description": "Standardize the placement and styling of instruction text in the multiplication tab to match the division tab.",
         "status": "pending",
         "dependencies": [
           17
         ],
         "priority": "medium",
-        "subtasks": []
+        "details": "Ensure the keyboard navigation help text and any other instructions appear in the same position as in the division tab. Use consistent styling for font size, color, and spacing. Ensure wording is identical across tabs. Remove any instruction text that doesn't exist in the division tab.",
+        "testStrategy": "Verify that all instruction text in the multiplication tab matches the division tab in terms of position, styling, and wording. Check that any unnecessary instructions not present in the division tab have been removed.",
+        "subtasks": [
+          {
+            "id": 101,
+            "title": "Align Keyboard Navigation Help Text",
+            "description": "Ensure the keyboard navigation help text is positioned identically to the division tab.",
+            "status": "pending"
+          },
+          {
+            "id": 102,
+            "title": "Standardize Instruction Styling",
+            "description": "Apply consistent font size, color, and spacing to all instruction text to match the division tab.",
+            "status": "pending"
+          },
+          {
+            "id": 103,
+            "title": "Unify Instruction Wording",
+            "description": "Ensure all instruction wording is identical to that used in the division tab.",
+            "status": "pending"
+          },
+          {
+            "id": 104,
+            "title": "Remove Unnecessary Instructions",
+            "description": "Identify and remove any instruction text not present in the division tab.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 23,
         "title": "Fix Remaining TypeScript and Lint Errors",
         "description": "Fix all TypeScript and lint errors in the multiplication components and address critical UI issues.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           16
         ],
         "priority": "high",
-        "details": "Address all TypeScript and lint errors identified in the codebase, particularly in the multiplication-related files. Ensure all components use proper typing and follow the project's code style guidelines. Additionally, rewrite the MultiplicationDisplay component to match the division page's simple and clean layout. Resolve the following critical issues: reduce the number of boxes to avoid confusion, ensure the cursor starts at the correct position, add '?' placeholders in empty boxes, fix typing issues, and ensure the navigation order is logical and intuitive.",
-        "testStrategy": "Test the MultiplicationDisplay component to ensure it matches the division page layout. Verify that all TypeScript and lint errors are resolved. Conduct user testing to confirm that the cursor starts correctly, '?' placeholders are visible, typing functions properly, and navigation is intuitive.",
+        "details": "Address all TypeScript and lint errors identified in the codebase, particularly in the multiplication-related files. Ensure all components use proper typing and follow the project's code style guidelines. Additionally, standardize the MultiplicationDisplay component layout to be visually indistinguishable from the division page, except for the mathematical operation. This includes removing unnecessary text like 'multiplication tutor' and 'level 1' headings, eliminating any 'next step' box, ensuring the container/wrapper around the equation is identical, standardizing the position and styling of the problem header, positioning input boxes consistently, and ensuring the completion message appears in the same position and styling.",
+        "testStrategy": "Test the MultiplicationDisplay component to ensure it matches the division page layout exactly. Verify that all TypeScript and lint errors are resolved. Conduct user testing to confirm that the layout is standardized, unnecessary elements are removed, and the visual appearance is consistent with the division tab.",
         "subtasks": [
           {
             "id": 101,
             "title": "Reduce number of boxes in MultiplicationDisplay",
             "description": "Simplify the layout by reducing the number of carry boxes and partial products to match the division page.",
-            "status": "in-progress"
+            "status": "done"
           },
           {
             "id": 102,
             "title": "Ensure cursor starts at correct position",
             "description": "Modify the MultiplicationDisplay to ensure the cursor starts at the correct position for solving.",
-            "status": "in-progress"
+            "status": "done"
           },
           {
             "id": 103,
             "title": "Add '?' placeholders in empty boxes",
             "description": "Ensure all empty input boxes in the MultiplicationDisplay have a '?' placeholder.",
-            "status": "in-progress"
+            "status": "done"
           },
           {
             "id": 104,
             "title": "Fix typing issues in MultiplicationDisplay",
             "description": "Resolve issues with typing in the MultiplicationDisplay to ensure values enter correctly.",
-            "status": "in-progress"
+            "status": "done"
           },
           {
             "id": 105,
             "title": "Improve navigation order",
             "description": "Adjust the navigation order in the MultiplicationDisplay to be logical and intuitive.",
-            "status": "in-progress"
+            "status": "done"
           },
           {
             "id": 106,
             "title": "Align layout with division page",
             "description": "Rewrite the MultiplicationDisplay layout to match the clean and simple structure of the division page.",
-            "status": "in-progress"
+            "status": "done"
+          },
+          {
+            "id": 107,
+            "title": "Remove unnecessary text and elements",
+            "description": "Remove 'multiplication tutor', 'level 1' headings, and any 'next step' boxes that do not exist in the division tab.",
+            "status": "done"
+          },
+          {
+            "id": 108,
+            "title": "Standardize container and header styling",
+            "description": "Ensure the container/wrapper and problem header styling and positioning are identical to the division tab.",
+            "status": "done"
+          },
+          {
+            "id": 109,
+            "title": "Position input boxes consistently",
+            "description": "Adjust the position of input boxes to match the layout of the division tab.",
+            "status": "done"
+          },
+          {
+            "id": 110,
+            "title": "Ensure consistent completion message",
+            "description": "Make sure the completion message appears in the same position and with the same styling as in the division tab.",
+            "status": "done"
+          },
+          {
+            "id": 111,
+            "title": "Consider rewriting MultiplicationDisplay component",
+            "description": "If the existing MultiplicationDisplay component proves too difficult to modify, create a new component that mirrors the DivisionDisplay structure. Ensure the new component uses the same styling, layout, and component structure, adapting only the logic specific to multiplication operations. Maintain all features such as editable problems and keyboard navigation. Ensure the button layout and styling exactly matches the division tab, and remove any unnecessary elements that don't exist in the division tab.",
+            "status": "done"
           }
         ]
       },
@@ -627,9 +713,7 @@
       {
         "id": 25,
         "title": "Enhance Keyboard Navigation for Multiplication Tab",
-        "description": "Ensure keyboard navigation in the multiplication tab is intuitive and matches the division tab, focusing on natural problem-solving flow.",
-        "details": "Implement keyboard navigation such that when a user presses Tab, the focus moves to the first empty input box under the equation. If a 'carry' box is needed, the focus should shift there next. Otherwise, the focus should move to the next empty box under the equation. This should mimic the natural flow a user would follow when solving multiplication problems manually. Ensure Shift+Tab navigates in reverse order. This task requires understanding the logical sequence a user follows when solving multiplication problems and implementing it programmatically. Coordinate with the existing navigation logic to ensure consistency across tabs.",
-        "testStrategy": "1. Open the multiplication tab and press Tab to ensure the focus starts at the first empty input box under the equation.\n2. Enter a value and press Tab again to verify the focus moves to the 'carry' box if applicable, or the next empty input box.\n3. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order correctly.\n4. Compare the navigation flow with the division tab to ensure consistency.\n5. Test with various multiplication problems to ensure the navigation logic handles all cases correctly.",
+        "description": "Implement intuitive keyboard navigation for multiplication problems, ensuring the flow mimics natural problem-solving methods.",
         "status": "pending",
         "dependencies": [
           7,
@@ -637,27 +721,48 @@
           24
         ],
         "priority": "high",
-        "subtasks": []
+        "details": "Focus on creating a keyboard navigation system where the cursor starts in the first empty box under the equation under the single digit. The navigation should then jump up to a 'carry' box if needed, otherwise move to the second empty box under the equation. This should reflect the natural right-to-left flow a user follows when solving multiplication problems, including handling carries appropriately. Ensure Shift+Tab navigates in reverse order. Analyze the logical sequence a user follows when solving multiplication problems and implement it programmatically. Ensure consistency with existing navigation logic across tabs.",
+        "testStrategy": "1. Open the multiplication tab and press Tab to ensure the focus starts at the first empty input box under the equation under the single digit.\n2. Enter a value and press Tab again to verify the focus moves to the 'carry' box if applicable, or the next empty input box.\n3. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order correctly.\n4. Ensure the navigation order is consistent with how multiplication is taught (right-to-left, handling carries appropriately).\n5. Test with various multiplication problem sizes to ensure the navigation logic handles all cases correctly.",
+        "subtasks": [
+          {
+            "id": 101,
+            "title": "Analyze natural flow for solving multiplication problems",
+            "description": "Study how users naturally solve multiplication problems to inform the navigation logic.",
+            "status": "pending"
+          },
+          {
+            "id": 102,
+            "title": "Implement tab/shift+tab navigation",
+            "description": "Develop the navigation logic to follow the natural problem-solving flow, ensuring the cursor starts in the correct position and handles carries appropriately.",
+            "status": "pending"
+          },
+          {
+            "id": 103,
+            "title": "Test navigation with various problem sizes",
+            "description": "Verify that the navigation works correctly across different multiplication problem sizes, ensuring it feels intuitive and helpful.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 26,
         "title": "Implement Carry Number Functionality for Multiplication",
-        "description": "Add carry number functionality to the multiplication tab with '?' placeholders and integrate it with keyboard navigation.",
-        "details": "To implement the carry number functionality for multiplication, first, ensure that empty boxes are added above the multiplication problem where carrying is necessary. These boxes should initially contain '?' placeholders to indicate that they are for carry numbers. The layout should match the existing approach used in the division tab. Integrate these carry boxes into the existing keyboard navigation flow, ensuring that users can navigate to them using Tab and Shift+Tab keys. This requires updating the navigation logic to recognize these new input fields as part of the natural problem-solving sequence. Ensure that the carry boxes are visually consistent with the rest of the UI and that they are correctly positioned above the relevant digits in the multiplication problem.",
-        "testStrategy": "1. Open the multiplication tab and verify that empty boxes with '?' placeholders appear above the problem where carrying is needed.\n2. Use the Tab key to navigate through the input fields and ensure that the focus moves to the carry boxes in the correct sequence.\n3. Enter values in the carry boxes and verify that they can be edited and saved correctly.\n4. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order through the input fields, including the carry boxes.\n5. Check the visual alignment and styling of the carry boxes to ensure consistency with the rest of the UI.",
-        "status": "pending",
+        "description": "Focus on implementing the carry number functionality specifically for the multiplication tab, ensuring it is intuitive and visually consistent with the rest of the application.",
+        "status": "done",
         "dependencies": [
           18,
           19,
           25
         ],
         "priority": "high",
+        "details": "To implement the carry number functionality for multiplication, add empty boxes above the multiplication problem where carrying is necessary. These boxes should initially contain '?' placeholders to indicate that they are for carry numbers. The layout should match the existing approach used in the division tab. Integrate these carry boxes into the existing keyboard navigation flow, ensuring that users can navigate to them using Tab and Shift+Tab keys. Update the navigation logic to recognize these new input fields as part of the natural problem-solving sequence. Ensure that the carry boxes are visually distinct yet consistent with the overall design and are correctly positioned above the relevant digits in the multiplication problem.",
+        "testStrategy": "1. Open the multiplication tab and verify that empty boxes with '?' placeholders appear above the problem where carrying is needed.\n2. Use the Tab key to navigate through the input fields and ensure that the focus moves to the carry boxes in the correct sequence.\n3. Enter values in the carry boxes and verify that they can be edited and saved correctly.\n4. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order through the input fields, including the carry boxes.\n5. Check the visual alignment and styling of the carry boxes to ensure they are visually distinct yet consistent with the rest of the UI.",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-15T18:54:08.328Z",
-      "updated": "2025-06-15T21:26:37.016Z",
+      "updated": "2025-06-15T22:07:05.146Z",
       "description": "Tasks for master context"
     }
   }

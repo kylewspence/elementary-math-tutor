@@ -15,12 +15,17 @@ interface AdditionDisplayProps {
     onEnableEditing?: () => void;
     onDisableEditing?: () => void;
     isSubmitted?: boolean;
+    isComplete?: boolean;
+    isLoading?: boolean;
+    fetchError?: any;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
     onFieldClick: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     gameState?: AdditionGameState;
     onNextProblem?: () => void;
     onResetProblem?: () => void;
     onNewProblem?: () => void;
+    onRetryFetch?: () => void;
+    onUpdateProblem?: (addend1: number, addend2: number) => void;
 }
 
 /**
@@ -37,11 +42,16 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
+    isComplete,
+    isLoading,
+    fetchError,
     onKeyDown,
     onFieldClick,
     onNextProblem,
     onResetProblem,
     onNewProblem,
+    onRetryFetch,
+    onUpdateProblem,
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -56,7 +66,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Handle clicking outside the problem area to disable editing
     useEffect(() => {
-        if (!problem.isEditable) return;
+        if (!problem || !problem.isEditable) return;
 
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -84,7 +94,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing]);
 
     // Check if we need an extra box for the final carry
     // This happens when the sum has more digits than either addend
@@ -102,6 +112,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Helper to get all required fields for this problem
     const getAllRequiredFields = () => {
+        if (!problem) return [];
+
         const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
 
         // Sort steps by column position (right to left, starting with ones place)
@@ -231,6 +243,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Get all fields in order for navigation - following natural addition flow
     const getAllFieldsInOrder = (): AdditionCurrentFocus[] => {
+        if (!problem) return [];
+
         const allFields: AdditionCurrentFocus[] = [];
 
         // Sort steps by column position (right to left, starting with ones place)
@@ -268,16 +282,18 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Handle problem editing
     const handleAddend1Change = (value: string) => {
+        if (!problem) return;
         const newAddend1 = parseInt(value, 10);
-        if (!isNaN(newAddend1) && newAddend1 > 0 && onProblemChange) {
-            onProblemChange(newAddend1, problem.addend2);
+        if (!isNaN(newAddend1) && newAddend1 > 0 && onUpdateProblem) {
+            onUpdateProblem(newAddend1, problem.addend2);
         }
     };
 
     const handleAddend2Change = (value: string) => {
+        if (!problem) return;
         const newAddend2 = parseInt(value, 10);
-        if (!isNaN(newAddend2) && newAddend2 > 0 && onProblemChange) {
-            onProblemChange(problem.addend1, newAddend2);
+        if (!isNaN(newAddend2) && newAddend2 > 0 && onUpdateProblem) {
+            onUpdateProblem(problem.addend1, newAddend2);
         }
     };
 
@@ -307,6 +323,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Process steps for display, removing leading zeros and sorting right-to-left
     const processSteps = () => {
+        if (!problem) return [];
+
         // Sort steps by column position (most significant digit first)
         const sortedSteps = [...problem.steps].sort((a, b) => b.columnPosition - a.columnPosition);
 
@@ -345,6 +363,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     // Helper to determine if a column receives a carry
     const receivesCarry = (columnPosition: number) => {
+        if (!problem) return false;
         const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
         return prevStep && prevStep.carry > 0;
     };
@@ -380,6 +399,50 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             }
         }
     }, [isSubmitted, userAnswers, problem, onFieldClick, currentFocus, areAllAnswersCorrect, getAllRequiredFields, getUserAnswer]);
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">Loading problem...</p>
+            </div>
+        );
+    }
+
+    // Error state
+    if (fetchError) {
+        return (
+            <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg text-red-500 mb-4">Error loading problem</p>
+                <p className="mb-4">
+                    {typeof fetchError === 'string'
+                        ? fetchError
+                        : fetchError.message || 'An unknown error occurred'}
+                </p>
+                <button
+                    onClick={onRetryFetch}
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    // No problem state
+    if (!problem) {
+        return (
+            <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">No problem available</p>
+                <button
+                    onClick={onNewProblem}
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors mt-4"
+                >
+                    Generate New Problem
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">

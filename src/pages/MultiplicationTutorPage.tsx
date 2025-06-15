@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useMultiplicationGameState } from '../hooks/useMultiplicationGameState';
 import MultiplicationDisplay from '../components/MultiplicationProblem/MultiplicationDisplay';
 import { useMultiplicationKeyboardNav } from '../hooks/useMultiplicationKeyboardNav';
@@ -30,6 +30,18 @@ const MultiplicationTutorPage: React.FC = () => {
         submitAnswer,
         submitProblem
     );
+
+    // Ensure focus is set on initial page load
+    useEffect(() => {
+        if (gameState.problem && setCurrentFocus) {
+            // Set focus to the rightmost product digit (position 0)
+            setCurrentFocus({
+                fieldType: 'product',
+                fieldPosition: 0,
+                partialIndex: undefined
+            });
+        }
+    }, [gameState.problem, setCurrentFocus]);
 
     // Handle field click
     const handleFieldClick = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
@@ -76,6 +88,7 @@ const MultiplicationTutorPage: React.FC = () => {
             onEnableEditing={enableEditing}
             onDisableEditing={disableEditing}
             onUpdateProblem={handleUpdateProblem}
+            setCurrentFocus={setCurrentFocus}
         />
     );
 };

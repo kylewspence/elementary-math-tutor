@@ -1,6 +1,7 @@
-import React from 'react';
-import type { MultiplicationProblem, MultiplicationUserAnswer } from '../../types/multiplication';
+import React, { useState, useEffect } from 'react';
+import type { MultiplicationProblem, MultiplicationUserAnswer, MultiplicationCurrentFocus } from '../../types/multiplication';
 import MultiplicationDisplay from './MultiplicationDisplay';
+import { useMultiplicationKeyboardNav } from '../../hooks/useMultiplicationKeyboardNav';
 
 interface MultiplicationLayoutProps {
     problem: MultiplicationProblem | null;
@@ -17,26 +18,40 @@ interface MultiplicationLayoutProps {
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
 }
 
-// This is now just a pass-through component for backward compatibility
-// All functionality has been moved to MultiplicationDisplay
 const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
-    // Create a dummy currentFocus and onFieldClick since MultiplicationDisplay requires them
-    const dummyCurrentFocus = {
-        fieldType: 'product' as const,
-        fieldPosition: 0,
-        partialIndex: undefined
+    // Use the keyboard navigation hook
+    const {
+        currentFocus,
+        setCurrentFocus,
+        handleKeyDown
+    } = useMultiplicationKeyboardNav(
+        props.problem,
+        props.userAnswers,
+        props.onSubmitAnswer,
+        props.onSubmitProblem
+    );
+
+    // Handle field click to set focus
+    const handleFieldClick = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        setCurrentFocus({
+            fieldType,
+            fieldPosition: position,
+            partialIndex
+        });
     };
 
-    const dummyOnFieldClick = () => { };
-    const dummyOnKeyDown = () => { };
+    // Handle keyboard events
+    const handleKeyboardEvents = (e: React.KeyboardEvent) => {
+        handleKeyDown(e as unknown as KeyboardEvent);
+    };
 
     return (
         <MultiplicationDisplay
             problem={props.problem}
             userAnswers={props.userAnswers}
-            currentFocus={dummyCurrentFocus}
-            onFieldClick={dummyOnFieldClick}
-            onKeyDown={dummyOnKeyDown}
+            currentFocus={currentFocus}
+            onFieldClick={handleFieldClick}
+            onKeyDown={handleKeyboardEvents}
             isSubmitted={props.isSubmitted}
             isComplete={props.isComplete}
             onAnswerSubmit={props.onSubmitAnswer}
@@ -47,6 +62,7 @@ const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
             onEnableEditing={props.onEnableEditing}
             onDisableEditing={props.onDisableEditing}
             onUpdateProblem={props.onUpdateProblem}
+            setCurrentFocus={setCurrentFocus}
         />
     );
 };
