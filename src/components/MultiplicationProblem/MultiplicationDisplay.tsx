@@ -175,6 +175,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         return 'default';
     };
 
+    // Handle auto-advance to next field
+    const handleAutoAdvance = () => {
+        // We would need to implement the navigation logic here
+        // For now, we'll just use a placeholder implementation
+        console.log('Auto-advance triggered');
+    };
+
     // Helper function to create an input with consistent keyboard event handling
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
         const isActive =
@@ -189,6 +196,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 variant={getInputVariant(fieldType, position, partialIndex)}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onKeyDown={onKeyDown}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
+                onAutoAdvance={handleAutoAdvance}
                 readOnly={isSubmitted}
                 placeholder="?"
                 className={fieldType === 'carry' ? 'carry-input' : ''}
@@ -198,7 +207,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     };
 
     // Helper function to determine if a position needs a carry
-    const needsCarry = (position: number): boolean => {
+    const shouldShowCarry = (position: number): boolean => {
         if (!problem) return false;
 
         // For single-digit multiplier
@@ -281,7 +290,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         const position = multiplicandStr.length - 1 - index;
 
                         // Only render carry boxes where needed
-                        const showCarry = needsCarry(position);
+                        const showCarry = shouldShowCarry(position);
                         if (!showCarry) return (
                             <div
                                 key={`carry-space-${position}`}
