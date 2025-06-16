@@ -160,17 +160,8 @@ export function useAdditionGameState() {
         const currentLevel = ADDITION_LEVELS.find(l => l.id === gameState.currentLevel);
         if (!currentLevel) return;
 
-        // Create a custom problem
-        const sum = addend1 + addend2;
-        const steps = calculateAdditionSteps(addend1, addend2);
-
-        const updatedProblem: AdditionProblem = {
-            addend1,
-            addend2,
-            sum,
-            steps,
-            isEditable: false,
-        };
+        // Create a custom problem using the specific addends
+        const updatedProblem = generateAdditionProblem(currentLevel, addend1, addend2);
 
         setGameState(prev => ({
             ...prev,

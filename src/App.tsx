@@ -100,7 +100,7 @@ function App() {
   // Always set initial focus to the first input field when a new addition problem is generated
   useEffect(() => {
     if (gameMode === 'addition' && additionGameState.problem && additionGameState.userAnswers.length === 0) {
-      // Reset focus to the first sum input - use column 0 which should always exist
+      // Reset focus to the rightmost sum input (ones place) - column 0 is the rightmost
       jumpToAdditionField(0, 'sum');
     }
   }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
@@ -240,6 +240,7 @@ function App() {
             onEnableEditing={enableEditing}
             onDisableEditing={disableEditing}
             onUpdateProblem={updateProblem}
+            onNewProblem={generateNewProblem}
           />
         )}
 
@@ -263,6 +264,7 @@ function App() {
             onEnableEditing={enableAdditionEditing}
             onDisableEditing={disableAdditionEditing}
             onUpdateProblem={updateAdditionProblem}
+            onNewProblem={generateNewAdditionProblem}
           />
         )}
 

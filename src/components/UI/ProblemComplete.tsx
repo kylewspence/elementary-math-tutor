@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ProblemCompleteProps {
     type: 'division' | 'multiplication' | 'addition';
@@ -24,6 +24,27 @@ const ProblemComplete: React.FC<ProblemCompleteProps> = ({
     onNextProblem,
     variant = 'notification'
 }) => {
+    // Add keyboard event listener for Enter key with a delay to prevent immediate triggering
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                onNextProblem();
+            }
+        };
+
+        // Add a small delay before enabling the keyboard listener
+        // This prevents the Enter key that triggered submission from immediately advancing
+        const timeoutId = setTimeout(() => {
+            document.addEventListener('keydown', handleKeyDown);
+        }, 200);
+
+        // Clean up
+        return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onNextProblem]);
+
     // Generate the appropriate message based on problem type
     const getMessage = () => {
         switch (type) {

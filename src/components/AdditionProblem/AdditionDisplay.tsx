@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../../types/addition';
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -95,8 +95,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     }, [problem, problem?.isEditable, onDisableEditing]);
 
     // Check if we need an extra box for the final carry
-    // This happens when the sum has more digits than either addend
-    const needsExtraBox = () => {
+    const checkExtraBoxNeeded = useCallback(() => {
         if (!problem) return false;
 
         // If sum has more digits than the max number of digits in addends
@@ -106,56 +105,157 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         );
 
         return problem.sum > Math.pow(10, maxAddendDigits) - 1;
-    };
+    }, [problem]);
 
-    // Helper to get all required fields for this problem
-    const getAllRequiredFields = () => {
+    // Get all required fields for this problem
+    const getAllRequiredFields = useCallback(() => {
         if (!problem) return [];
 
         const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
+        const needsExtraBox = checkExtraBoxNeeded();
 
         // Sort steps by column position (right to left, starting with ones place)
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-        // Process each column from right to left (ones, tens, hundreds)
+        // First, add all sum fields from right to left (ones, tens, hundreds)
         for (const step of orderedSteps) {
-            // Add sum field for this column
             fields.push({
                 columnPosition: step.columnPosition,
                 fieldType: 'sum'
             });
-
-            // Add carry field for the NEXT column if this column generates a carry
-            if (step.carry > 0) {
-                const nextColumnPosition = step.columnPosition + 1;
-
-                // If this is the rightmost column with a carry and we need an extra box
-                if (step.columnPosition === orderedSteps[orderedSteps.length - 1].columnPosition && needsExtraBox()) {
-                    fields.push({
-                        columnPosition: nextColumnPosition,
-                        fieldType: 'carry'
-                    });
-                }
-                // For other columns, add carry to the next column
-                else {
-                    fields.push({
-                        columnPosition: nextColumnPosition,
-                        fieldType: 'carry'
-                    });
-                }
-            }
         }
 
         // Add extra sum box if needed (leftmost position)
-        if (needsExtraBox()) {
+        if (needsExtraBox) {
             fields.push({
                 columnPosition: problem.steps.length,
                 fieldType: 'sum'
             });
         }
 
+        // Then, add carry fields for columns that need them
+        for (const step of orderedSteps) {
+            if (step.carry > 0) {
+                const nextColumnPosition = step.columnPosition + 1;
+                fields.push({
+                    columnPosition: nextColumnPosition,
+                    fieldType: 'carry'
+                });
+            }
+        }
+
         return fields;
-    };
+    }, [problem, checkExtraBoxNeeded]);
+
+    // Helper to get user's answer for a specific field
+    const getUserAnswer = useCallback((columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
+        return userAnswers.find(a => a.columnPosition === columnPosition && a.fieldType === fieldType);
+    }, [userAnswers]);
+
+    // Handle auto-advance to next field
+    const handleAutoAdvance = useCallback(() => {
+        // Small delay to ensure current input is processed
+        setTimeout(() => {
+            // Use the getAllRequiredFields function to get the fields
+            const fields = getAllRequiredFields();
+
+            // Find the next field to focus
+            const currentIndex = fields.findIndex(
+                (field) =>
+                    field.columnPosition === currentFocus.columnPosition &&
+                    field.fieldType === currentFocus.fieldType
+            );
+
+            if (currentIndex < fields.length - 1) {
+                const nextField = fields[currentIndex + 1];
+                onFieldClick(nextField.columnPosition, nextField.fieldType);
+            }
+        }, 0);
+    }, [currentFocus, onFieldClick, getAllRequiredFields]);
+
+    // Helper to determine input variant (only show colors after submission)
+    const getInputVariant = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
+        const userAnswer = getUserAnswer(columnPosition, fieldType);
+        const isActive = currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType;
+
+        // After submission, prioritize validation colors over active state
+        if (isSubmitted && userAnswer) {
+            return userAnswer.isCorrect === true ? 'correct' : 'error';
+        }
+
+        // Only show active state if not submitted or when actively editing after submission
+        if (isActive) return 'active';
+
+        return 'default';
+    }, [currentFocus, getUserAnswer, isSubmitted]);
+
+    // Handle input change - allow empty values
+    const handleInputChange = useCallback((columnPosition: number, fieldType: 'sum' | 'carry', value: string) => {
+        if (value === '') {
+            // Clear the answer when value is empty
+            onAnswerClear(columnPosition, fieldType);
+            return;
+        }
+
+        const numericValue = parseInt(value, 10);
+        if (isNaN(numericValue)) return;
+
+        // Create answer object for non-empty values
+        const answer: AdditionUserAnswer = {
+            columnPosition,
+            fieldType,
+            value: numericValue,
+            isCorrect: false, // Will be validated in the parent
+            timestamp: new Date(),
+        };
+
+        onAnswerSubmit(answer);
+    }, [onAnswerClear, onAnswerSubmit]);
+
+    // Handle problem editing
+    const handleAddend1Change = useCallback((value: string) => {
+        const newAddend = parseInt(value, 10);
+        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(newAddend, problem.addend2);
+        }
+    }, [onUpdateProblem, problem]);
+
+    const handleAddend2Change = useCallback((value: string) => {
+        const newAddend = parseInt(value, 10);
+        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(problem.addend1, newAddend);
+        }
+    }, [onUpdateProblem, problem]);
+
+    // Helper function to create an input with consistent keyboard event handling
+    const createInput = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
+        return (
+            <Input
+                ref={currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType ? activeInputRef : undefined}
+                value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
+                variant={getInputVariant(columnPosition, fieldType)}
+                onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onClick={() => onFieldClick(columnPosition, fieldType)}
+                onAutoAdvance={handleAutoAdvance}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
+                placeholder="?"
+            />
+        );
+    }, [
+        activeInputRef,
+        allFieldsFilled,
+        currentFocus,
+        getInputVariant,
+        getUserAnswer,
+        handleAutoAdvance,
+        handleInputChange,
+        isSubmitted,
+        onFieldClick,
+        onKeyDown,
+        onNextProblem,
+        onProblemSubmit
+    ]);
 
     // Check if all input fields have answers
     useEffect(() => {
@@ -176,189 +276,34 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         );
 
         setAllFieldsFilled(allFilled);
-    }, [problem, userAnswers]);
+    }, [problem, userAnswers, getAllRequiredFields]);
 
-    // Helper to get user's answer for a specific field
-    const getUserAnswer = (columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
-        return userAnswers.find(a => a.columnPosition === columnPosition && a.fieldType === fieldType);
-    };
-
-    // Helper to determine input variant (only show colors after submission)
-    const getInputVariant = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-        const userAnswer = getUserAnswer(columnPosition, fieldType);
-        const isActive = currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType;
-
-        // After submission, prioritize validation colors over active state
-        if (isSubmitted && userAnswer) {
-            return userAnswer.isCorrect === true ? 'correct' : 'error';
-        }
-
-        // Only show active state if not submitted or when actively editing after submission
-        if (isActive) return 'active';
-
-        return 'default';
-    };
-
-    // Handle input change - allow empty values
-    const handleInputChange = (columnPosition: number, fieldType: 'sum' | 'carry', value: string) => {
-        if (value === '') {
-            // Clear the answer when value is empty
-            onAnswerClear(columnPosition, fieldType);
-            return;
-        }
-
-        const numericValue = parseInt(value, 10);
-        if (isNaN(numericValue)) return;
-
-        // Create answer object for non-empty values
-        const answer: AdditionUserAnswer = {
-            columnPosition,
-            fieldType,
-            value: numericValue,
-            isCorrect: false, // Will be validated in the parent
-            timestamp: new Date(),
-        };
-
-        onAnswerSubmit(answer);
-    };
-
-    // Handle auto-advance to next field
-    const handleAutoAdvance = () => {
-        // Small delay to ensure current input is processed
-        setTimeout(() => {
-            // Find the next field to focus
-            const allFields = getAllRequiredFields();
-            const currentIndex = allFields.findIndex(
-                field => field.columnPosition === currentFocus.columnPosition && field.fieldType === currentFocus.fieldType
-            );
-
-            if (currentIndex < allFields.length - 1) {
-                const nextField = allFields[currentIndex + 1];
-                onFieldClick(nextField.columnPosition, nextField.fieldType);
-            }
-        }, 0); // Reduced to 0ms for instant response
-    };
-
-    // Handle problem editing
-    const handleAddend1Change = (value: string) => {
-        if (!problem) return;
-        const newAddend1 = parseInt(value, 10);
-        if (!isNaN(newAddend1) && newAddend1 > 0 && onUpdateProblem) {
-            onUpdateProblem(newAddend1, problem.addend2);
-        }
-    };
-
-    const handleAddend2Change = (value: string) => {
-        if (!problem) return;
-        const newAddend2 = parseInt(value, 10);
-        if (!isNaN(newAddend2) && newAddend2 > 0 && onUpdateProblem) {
-            onUpdateProblem(problem.addend1, newAddend2);
-        }
-    };
-
-    // Constants for layout
-    const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
-    const ROW_HEIGHT = BOX_TOTAL_WIDTH;
-    const CARRY_HEIGHT = ROW_HEIGHT * 0.6; // Smaller height for carry boxes
-
-    // Helper function to create an input with consistent keyboard event handling
-    const createInput = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-        return (
-            <Input
-                ref={currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType ? activeInputRef : undefined}
-                value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
-                variant={getInputVariant(columnPosition, fieldType)}
-                onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
-                onClick={() => onFieldClick(columnPosition, fieldType)}
-                onAutoAdvance={handleAutoAdvance}
-                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
-                placeholder="?"
-                aria-label={fieldType === 'carry' ? `Carry for column ${columnPosition + 1}` : `Sum for column ${columnPosition + 1}`}
-                className={fieldType === 'carry' ? 'carry-input' : ''}
-            />
-        );
-    };
-
-    // Process steps for display, removing leading zeros and sorting right-to-left
-    const processSteps = () => {
-        if (!problem) return [];
-
-        // Sort steps by column position (most significant digit first)
-        const sortedSteps = [...problem.steps].sort((a, b) => b.columnPosition - a.columnPosition);
-
-        // Find the first non-zero digit in each addend
-        let firstNonZeroIndex1 = -1;
-        let firstNonZeroIndex2 = -1;
-
-        for (let i = 0; i < sortedSteps.length; i++) {
-            if (firstNonZeroIndex1 === -1 && sortedSteps[i].digit1 !== 0) {
-                firstNonZeroIndex1 = i;
-            }
-            if (firstNonZeroIndex2 === -1 && sortedSteps[i].digit2 !== 0) {
-                firstNonZeroIndex2 = i;
-            }
-            if (firstNonZeroIndex1 !== -1 && firstNonZeroIndex2 !== -1) {
-                break;
-            }
-        }
-
-        // If all digits are zero, keep at least one
-        if (firstNonZeroIndex1 === -1) firstNonZeroIndex1 = sortedSteps.length - 1;
-        if (firstNonZeroIndex2 === -1) firstNonZeroIndex2 = sortedSteps.length - 1;
-
-        // Get the highest index to start from (to avoid cutting off digits)
-        const startIndex = Math.min(firstNonZeroIndex1, firstNonZeroIndex2);
-
-        // Return only the relevant steps
-        return sortedSteps.slice(startIndex);
-    };
-
-    const displaySteps = processSteps();
-
-    // Check if we need an extra box for the final carry
-    // This happens when the sum has more digits than either addend
-    const hasExtraBox = needsExtraBox();
-
-    // Helper to determine if a column receives a carry
-    const receivesCarry = (columnPosition: number) => {
+    // Check if a column receives a carry
+    const receivesCarry = useCallback((columnPosition: number) => {
         if (!problem) return false;
-        const prevStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
-        return prevStep && prevStep.carry > 0;
-    };
+
+        // Find the step for the previous column
+        const previousStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
+
+        // If there's a previous step and it generates a carry, this column receives it
+        return previousStep !== undefined && previousStep.carry > 0;
+    }, [problem]);
 
     // Check if all answers are correct
-    const areAllAnswersCorrect = () => {
-        if (!isSubmitted || userAnswers.length === 0) return false;
-        return userAnswers.every(answer => answer.isCorrect);
-    };
+    const areAllAnswersCorrect = useCallback(() => {
+        if (!problem || !userAnswers.length) return false;
 
-    // Fix the useEffect dependency array (around line 106)
-    useEffect(() => {
-        // If the problem is submitted and complete, focus on the next button
-        if (isSubmitted && areAllAnswersCorrect()) {
-            // Focus will be handled by the Next Problem button having autoFocus
-            return;
-        }
+        // Get all required fields
+        const requiredFields = getAllRequiredFields();
 
-        // Focus on the first empty or incorrect field
-        const fields = getAllRequiredFields();
-        if (fields.length > 0) {
-            const firstEmptyField = fields.find(field => {
-                const answer = getUserAnswer(field.columnPosition, field.fieldType);
-                return !answer || !answer.isCorrect;
-            });
+        // Check if we have a correct answer for each required field
+        return requiredFields.every(field => {
+            const answer = getUserAnswer(field.columnPosition, field.fieldType);
+            return answer && answer.isCorrect === true;
+        });
+    }, [problem, userAnswers, getAllRequiredFields, getUserAnswer]);
 
-            if (firstEmptyField) {
-                onFieldClick(firstEmptyField.columnPosition, firstEmptyField.fieldType);
-            } else if (fields.length > 0) {
-                // If all fields have answers, focus on the first one
-                onFieldClick(fields[0].columnPosition, fields[0].fieldType);
-            }
-        }
-    }, [isSubmitted, userAnswers, problem, onFieldClick, areAllAnswersCorrect, getAllRequiredFields, getUserAnswer]);
-
-    // Loading state
+    // If problem is null or loading, show loading state
     if (isLoading) {
         return (
             <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
@@ -367,16 +312,12 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         );
     }
 
-    // Error state
+    // If there was an error fetching the problem
     if (fetchError) {
         return (
             <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg text-red-500 mb-4">Error loading problem</p>
-                <p className="mb-4">
-                    {typeof fetchError === 'string'
-                        ? fetchError
-                        : fetchError.message || 'An unknown error occurred'}
-                </p>
+                <p className="mb-4">{fetchError.message}</p>
                 <button
                     onClick={onRetryFetch}
                     className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors"
@@ -387,7 +328,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         );
     }
 
-    // No problem state
+    // If no problem is available yet
     if (!problem) {
         return (
             <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
@@ -401,6 +342,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             </div>
         );
     }
+
+    // Process steps for display
+    const displaySteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
+    const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
+    const ROW_HEIGHT = BOX_TOTAL_WIDTH;
+    const CARRY_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for carry boxes
+    const needsExtraBox = checkExtraBoxNeeded();
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
@@ -457,17 +405,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             {/* Carry row - now above the addends */}
                             <div className="flex justify-end mb-1">
                                 {/* Carry boxes for each column that receives a carry */}
-                                {hasExtraBox && (
-                                    <div
-                                        className="flex items-center justify-center"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${CARRY_HEIGHT}px` }}
-                                    >
-                                        <div className="scale-70 transform origin-center">
-                                            {createInput(displaySteps.length, 'carry')}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {displaySteps.map((step) => (
                                     <div
                                         key={`carry-input-${step.columnPosition}`}
@@ -481,11 +418,26 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         )}
                                     </div>
                                 ))}
+
+                                {/* Only show carry box for the leftmost position if needed */}
+                                {needsExtraBox && (
+                                    <div
+                                        className="flex items-center justify-center"
+                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${CARRY_HEIGHT}px` }}
+                                    >
+                                        {/* Only show carry input if the leftmost column actually has a carry */}
+                                        {receivesCarry(displaySteps.length) && (
+                                            <div className="scale-70 transform origin-center">
+                                                {createInput(displaySteps.length, 'carry')}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* First addend */}
                             <div className="flex justify-end mb-2">
-                                {hasExtraBox && (
+                                {needsExtraBox && (
                                     <div
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
@@ -509,7 +461,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                 >
                                     +
                                 </div>
-                                {hasExtraBox && (
+                                {needsExtraBox && (
                                     <div
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
@@ -532,7 +484,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             {/* Sum row (user inputs) */}
                             <div className="flex justify-end">
                                 {/* Extra box for final digit of sum if needed */}
-                                {hasExtraBox && (
+                                {needsExtraBox && (
                                     <div
                                         className="flex items-center justify-center"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
@@ -571,50 +523,57 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 )}
             </div>
 
-            {/* Tab to move forward help text - now as a footnote */}
-            <div className="text-center text-sm text-gray-500 mt-8">
-                Press Tab to move to the next field
+            {/* Button layout in triangle formation */}
+            <div className="flex flex-col items-center mt-6">
+                {/* Submit button */}
+                {!isSubmitted && (
+                    <button
+                        onClick={onProblemSubmit}
+                        disabled={!allFieldsFilled}
+                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!allFieldsFilled
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                            } transition-colors`}
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Submit Answers
+                        </span>
+                    </button>
+                )}
+
+                {/* Reset and New Problem buttons */}
+                <div className="flex justify-center space-x-4">
+                    <button
+                        onClick={onResetProblem}
+                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                            Reset Problem
+                        </span>
+                    </button>
+                    <button
+                        onClick={onNewProblem}
+                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                            </svg>
+                            New Problem
+                        </span>
+                    </button>
+                </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex justify-center mt-8 gap-4">
-                {/* Button layout in a triangle formation */}
-                <div className="flex flex-col items-center gap-4">
-                    {/* Top button */}
-                    {isSubmitted ? (
-                        <button
-                            onClick={onNextProblem}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                            autoFocus
-                        >
-                            Next Problem →
-                        </button>
-                    ) : (
-                        <button
-                            onClick={onProblemSubmit}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                            disabled={!allFieldsFilled}
-                        >
-                            Submit
-                        </button>
-                    )}
-
-                    {/* Bottom row buttons */}
-                    <div className="flex gap-4">
-                        <button
-                            onClick={onResetProblem}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-                        >
-                            Reset
-                        </button>
-                        <button
-                            onClick={onNewProblem}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-                        >
-                            New Problem
-                        </button>
-                    </div>
-                </div>
+            {/* Help text as footnote outside the main container */}
+            <div className="text-center text-xs text-gray-500 mt-4">
+                Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
             </div>
         </div>
     );

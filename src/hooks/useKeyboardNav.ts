@@ -141,9 +141,10 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
                 break;
             case KEYBOARD_KEYS.ENTER:
                 e.preventDefault();
-                if (isSubmitted && onNextProblem) {
-                    // If problem is already submitted, go to next problem
-                    onNextProblem();
+                if (isSubmitted) {
+                    // If problem is already submitted, don't auto-advance
+                    // Let the user manually click "Next Problem" in the ProblemComplete dialog
+                    return;
                 } else if (onProblemSubmit && (isLastField() || areAllFieldsFilled())) {
                     // Submit the problem if we're at the last field or all fields are filled
                     onProblemSubmit();

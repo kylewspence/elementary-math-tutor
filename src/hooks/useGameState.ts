@@ -178,7 +178,8 @@ export function useGameState() {
         const currentLevel = GAME_LEVELS.find(l => l.id === gameState.currentLevel);
         if (!currentLevel) return;
 
-        const updatedProblem = generateProblem(currentLevel);
+        // Generate a problem with the specific dividend and divisor
+        const updatedProblem = generateProblem(currentLevel, dividend, divisor);
         setGameState(prev => ({
             ...prev,
             problem: updatedProblem,
@@ -198,44 +199,22 @@ export function useGameState() {
                     a.fieldPosition === answer.fieldPosition)
             );
 
-            // Validate the answer
+            // Validate the answer (but don't show validation until explicit submission)
             const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
 
             // Add validated answer to the list
             const validatedAnswer = { ...answer, isCorrect };
             const validatedAnswers = [...filteredAnswers, validatedAnswer];
 
-            // Check if all required fields are filled and correct
-            const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
-
-            // If complete and not previously submitted, update score and completed levels
-            let updatedScore = prev.score;
-            const completedLevels = [...prev.completedLevels];
-            const availableLevels = [...prev.availableLevels];
-
-            if (complete && !prev.isSubmitted) {
-                updatedScore += 10; // Award points for completion
-
-                // Mark level as completed if not already
-                if (!completedLevels.includes(prev.currentLevel)) {
-                    completedLevels.push(prev.currentLevel);
-                }
-
-                // Unlock next level if appropriate
-                const nextLevel = prev.currentLevel + 1;
-                if (nextLevel <= GAME_LEVELS.length && !availableLevels.includes(nextLevel)) {
-                    availableLevels.push(nextLevel);
-                }
-            }
+            // IMPORTANT: Don't set isSubmitted or isComplete here!
+            // These should only be set when the user explicitly clicks "Submit Answers"
+            // which calls submitProblem(). Setting isSubmitted here causes premature
+            // validation feedback and hides the submit button.
 
             return {
                 ...prev,
                 userAnswers: validatedAnswers,
-                isSubmitted: true,
-                isComplete: complete,
-                score: updatedScore,
-                completedLevels,
-                availableLevels,
+                // Preserve existing isSubmitted and isComplete values
             };
         });
     }, []);
@@ -269,6 +248,8 @@ export function useGameState() {
 
             // Check if the problem is complete and all answers are correct
             const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
+
+
 
             // If complete and not previously submitted, update score and completed levels
             let updatedScore = prev.score;
