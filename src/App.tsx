@@ -110,10 +110,10 @@ function App() {
     submitAnswer(answer);
   };
 
-  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleAnswerClear = (_stepNumber: number, _fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', _position: number) => {
     // Implement the clear functionality if needed
     // This is a placeholder since the clearAnswer function is commented out
-    console.log('Clear answer:', stepNumber, fieldType, position);
   };
 
   const handleProblemSubmit = () => {
@@ -127,7 +127,7 @@ function App() {
   };
 
   const handleKeyboardNav = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, handleProblemSubmit, handleNextProblem);
+    handleKeyDown(e, handleProblemSubmit);
   };
 
   const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
