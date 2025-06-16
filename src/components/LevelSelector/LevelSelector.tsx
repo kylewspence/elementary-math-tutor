@@ -2,14 +2,15 @@ import React from 'react';
 import { GAME_LEVELS, ADDITION_LEVELS } from '../../utils/constants';
 import type { GameState } from '../../types/game';
 import type { AdditionGameState } from '../../types/addition';
+import type { MultiplicationGameState } from '../../types/multiplication';
 
 interface LevelSelectorProps {
-    gameState: GameState | AdditionGameState;
+    gameState: GameState | AdditionGameState | MultiplicationGameState;
     onLevelSelect: (levelId: number) => void;
 }
 
 const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect }) => {
-    const { currentLevel, currentProblemIndex, levelProblems, gameMode } = gameState as (GameState & { gameMode?: 'division' | 'addition' });
+    const { currentLevel, currentProblemIndex, levelProblems, gameMode } = gameState;
     const currentProblem = currentProblemIndex + 1; // Convert to 1-based
     const totalProblems = levelProblems.length;
 

@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+.cursor/mcp.json
+
 
 # Environment files
 .env
