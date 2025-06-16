@@ -70,9 +70,11 @@ const MultiplicationTutorPage: React.FC = () => {
 
     // Handle answer clear
     const handleAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        // For now, we'll just log this as it's not fully implemented in the game state
-        console.log('Clearing answer:', fieldType, position, partialIndex);
+        // For now, this is not fully implemented in the game state
         // In a full implementation, we would call a clearAnswer function from the game state
+        void fieldType;
+        void position;
+        void partialIndex;
     };
 
     return (
