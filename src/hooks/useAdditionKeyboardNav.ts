@@ -7,7 +7,7 @@ export interface AdditionCurrentFocus {
     fieldType: 'sum' | 'carry';
 }
 
-export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnswers: AdditionUserAnswer[] = [], isSubmitted: boolean = false) {
+export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAnswers?: AdditionUserAnswer[], isSubmitted: boolean = false) {
     // Initialize with focus on the rightmost sum digit (position 0)
     const [currentFocus, setCurrentFocus] = useState<AdditionCurrentFocus>({
         columnPosition: 0,

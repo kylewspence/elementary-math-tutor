@@ -17,7 +17,7 @@ interface AdditionDisplayProps {
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
-    fetchError?: any;
+    fetchError?: string | null;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
     onFieldClick: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     gameState?: AdditionGameState;
@@ -317,7 +317,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         return (
             <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg text-red-500 mb-4">Error loading problem</p>
-                <p className="mb-4">{fetchError.message}</p>
+                <p className="mb-4">{fetchError}</p>
                 <button
                     onClick={onRetryFetch}
                     className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors"

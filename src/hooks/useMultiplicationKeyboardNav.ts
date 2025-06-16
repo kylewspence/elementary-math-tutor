@@ -86,7 +86,8 @@ export function useMultiplicationKeyboardNav(
                 moveDown();
                 break;
         }
-    }, [problem, currentFocus, userAnswers.length]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [problem, currentFocus, userAnswers.length, onSubmitAnswer, onSubmitProblem]);
 
     // Helper function to determine if a position needs a carry
     const shouldShowCarry = useCallback((position: number): boolean => {

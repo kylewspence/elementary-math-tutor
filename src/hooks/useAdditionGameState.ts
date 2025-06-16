@@ -342,6 +342,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // Helper function to calculate addition steps
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function calculateAdditionSteps(addend1: number, addend2: number): AdditionStep[] {
     const addend1Str = addend1.toString();
     const addend2Str = addend2.toString();

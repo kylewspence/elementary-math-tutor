@@ -129,7 +129,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
     }, [problem, getAllFieldsInOrder, getCurrentFieldIndex]);
 
     // Handle keyboard events
-    const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void) => {
         switch (e.key) {
             case KEYBOARD_KEYS.TAB:
                 e.preventDefault();

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -55,7 +55,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
+    // Removed unused allFieldsFilled state
     const firstRenderRef = useRef(true);
 
     // Set initial focus on first render
@@ -118,37 +118,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Check if all input fields have answers
-    useEffect(() => {
-        if (!problem || !userAnswers.length) {
-            setAllFieldsFilled(false);
-            return;
-        }
-
-        // Count total required fields
-        let totalFields = 0;
-
-        // Product digits
-        totalFields += problem.product.toString().length;
-
-        // Carry digits (estimate based on product and partial products)
-        // This is a simplified calculation - in a real app, you'd calculate exact carries needed
-        if (problem.multiplier >= 10) {
-            totalFields += Math.floor(problem.product.toString().length / 2); // Rough estimate for carries
-        } else {
-            // For single-digit multiplier, carry is needed when digit * multiplier >= 10
-            const multiplicandStr = problem.multiplicand.toString();
-            for (let i = 0; i < multiplicandStr.length; i++) {
-                const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - i], 10);
-                if (digit * problem.multiplier >= 10) {
-                    totalFields += 1; // Add a carry field
-                }
-            }
-        }
-
-        // Check if we have answers for all fields
-        setAllFieldsFilled(userAnswers.length >= totalFields);
-    }, [problem, userAnswers]);
+    // Removed unused allFieldsFilled effect
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
@@ -178,12 +148,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         return 'default';
     };
 
-    // Handle auto-advance to next field
-    const handleAutoAdvance = () => {
-        // We would need to implement the navigation logic here
-        // For now, we'll just use a placeholder implementation
-        console.log('Auto-advance triggered');
-    };
+    // Removed unused handleAutoAdvance function
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {

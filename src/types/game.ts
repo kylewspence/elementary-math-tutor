@@ -67,7 +67,7 @@ export interface MultiplicationGameState {
     currentProblemIndex: number;
     levelProblems: MultiplicationProblem[];
     problem: MultiplicationProblem | null;
-    userAnswers: any[]; // Using any for now, should be MultiplicationUserAnswer[]
+    userAnswers: UserAnswer[]; // Reusing UserAnswer type for consistency
     isSubmitted: boolean;
     isComplete: boolean;
     score: number;
