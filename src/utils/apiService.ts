@@ -1,6 +1,9 @@
 import type { DivisionProblem } from '../types/game';
+import type { MultiplicationProblem, MultiplicationQuestion } from '../types/multiplication';
 import { calculateDivisionSteps } from './problemGenerator';
+
 import { API_CONFIG } from './config';
+import { v4 as uuidv4 } from 'uuid';
 
 interface MathQuestion {
     question: string;
@@ -73,6 +76,48 @@ export function convertToDivisionProblem(question: MathQuestion): DivisionProble
 }
 
 /**
+ * Converts an API question to a multiplication problem format
+ */
+export function convertToMultiplicationProblem(question: MultiplicationQuestion): MultiplicationProblem {
+    // For multiplication, number_0 is the multiplicand and number_1 is the multiplier
+    const multiplicand = parseInt(question.number_0);
+    const multiplier = parseInt(question.number_1);
+    const product = multiplicand * multiplier;
+
+    // Generate partial products
+    const partialProducts = [];
+    const multiplierStr = multiplier.toString();
+
+    for (let i = 0; i < multiplierStr.length; i++) {
+        const position = multiplierStr.length - 1 - i; // 0 for ones, 1 for tens, etc.
+        const multiplierDigit = parseInt(multiplierStr[i], 10);
+        const value = multiplicand * multiplierDigit * Math.pow(10, position);
+
+        partialProducts.push({
+            multiplierDigit,
+            position,
+            value,
+        });
+    }
+
+    const multiplicationProblem: MultiplicationProblem = {
+        id: uuidv4(),
+        multiplicand,
+        multiplier,
+        product,
+        partialProducts,
+        isEditable: false,
+        difficulty: 'medium'
+    };
+
+    // Calculate actual difficulty based on the problem
+    const difficultyScore = evaluateMultiplicationDifficulty(multiplicationProblem);
+    multiplicationProblem.difficulty = difficultyScore <= 3 ? 'easy' : difficultyScore <= 7 ? 'medium' : 'hard';
+
+    return multiplicationProblem;
+}
+
+/**
  * Evaluates the difficulty of a division problem
  * @returns A difficulty score from 1-10
  */
@@ -107,10 +152,62 @@ function evaluateProblemDifficulty(problem: DivisionProblem): number {
 }
 
 /**
+ * Evaluates the difficulty of a multiplication problem
+ * @returns A difficulty score from 1-10
+ */
+function evaluateMultiplicationDifficulty(problem: MultiplicationProblem): number {
+    let difficulty = 1;
+
+    // Factor 1: Number of digits in multiplicand
+    const multiplicandDigits = problem.multiplicand.toString().length;
+    difficulty += multiplicandDigits - 1;
+
+    // Factor 2: Number of digits in multiplier
+    const multiplierDigits = problem.multiplier.toString().length;
+    difficulty += multiplierDigits - 1;
+
+    // Factor 3: Size of product
+    const productDigits = problem.product.toString().length;
+    if (productDigits >= 4) {
+        difficulty += 1;
+    }
+    if (productDigits >= 6) {
+        difficulty += 1;
+    }
+
+    // Factor 4: Carrying complexity
+    // Check if there are carries in the multiplication
+    let hasCarries = false;
+    for (let i = 0; i < problem.multiplicand.toString().length; i++) {
+        for (let j = 0; j < problem.multiplier.toString().length; j++) {
+            const digit1 = parseInt(problem.multiplicand.toString()[i]);
+            const digit2 = parseInt(problem.multiplier.toString()[j]);
+            if (digit1 * digit2 >= 10) {
+                hasCarries = true;
+                break;
+            }
+        }
+        if (hasCarries) break;
+    }
+    if (hasCarries) {
+        difficulty += 1;
+    }
+
+    // Cap the difficulty between 1 and 10
+    return Math.max(1, Math.min(10, difficulty));
+}
+
+/**
  * Generates a unique identifier for a division problem to detect duplicates
  */
-function getProblemKey(problem: DivisionProblem): string {
-    return `${problem.dividend}_${problem.divisor}`;
+function getProblemKey(problem: DivisionProblem | MultiplicationProblem): string {
+    if ('dividend' in problem) {
+        // It's a division problem
+        return `div_${problem.dividend}_${problem.divisor}`;
+    } else {
+        // It's a multiplication problem
+        return `mul_${problem.multiplicand}_${problem.multiplier}`;
+    }
 }
 
 /**
@@ -142,6 +239,35 @@ function meetsLevelRequirements(problem: DivisionProblem, levelId: number): bool
     // Level 5+: Accept more complex problems
     return (divisorDigits >= 1 && dividendDigits >= 3) &&
         (divisorDigits >= 2 || dividendDigits >= 4);
+}
+
+/**
+ * Enforces minimum complexity requirements for each level of multiplication problems
+ */
+function meetsMultiplicationLevelRequirements(problem: MultiplicationProblem, levelId: number): boolean {
+    // For Level 1, accept any valid problem
+    if (levelId <= 1) return true;
+
+    const multiplicandDigits = problem.multiplicand.toString().length;
+    const multiplierDigits = problem.multiplier.toString().length;
+
+    // Level 2: Single digit multiplier, 2+ digit multiplicand
+    if (levelId === 2) {
+        return multiplierDigits === 1 && multiplicandDigits >= 2;
+    }
+
+    // Level 3: Single digit multiplier, 3+ digit multiplicand
+    if (levelId === 3) {
+        return multiplierDigits === 1 && multiplicandDigits >= 3;
+    }
+
+    // Level 4: Two-digit multiplier, 2+ digit multiplicand
+    if (levelId === 4) {
+        return multiplierDigits === 2 && multiplicandDigits >= 2;
+    }
+
+    // Level 5+: More complex problems
+    return (multiplierDigits >= 2 && multiplicandDigits >= 2);
 }
 
 /**
@@ -189,6 +315,50 @@ function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): D
 }
 
 /**
+ * Filters multiplication problems to ensure they match the expected difficulty level and removes duplicates
+ */
+function filterMultiplicationProblemsForLevel(problems: MultiplicationProblem[], levelId: number): MultiplicationProblem[] {
+    // Create a map to track unique problems
+    const uniqueProblems = new Map<string, MultiplicationProblem>();
+
+    // More flexible difficulty ranges
+    let minDifficulty = 1;
+    let maxDifficulty = 10; // Allow all difficulties initially
+
+    // Adjust ranges based on level but be more inclusive
+    if (levelId === 1) {
+        minDifficulty = 1;
+        maxDifficulty = 4;
+    } else if (levelId === 2) {
+        minDifficulty = 2;
+        maxDifficulty = 6;
+    } else if (levelId === 3) {
+        minDifficulty = 3;
+        maxDifficulty = 7;
+    } else if (levelId >= 4) {
+        minDifficulty = 3;
+        maxDifficulty = 10;
+    }
+
+    // Filter problems
+    for (const problem of problems) {
+        const difficulty = evaluateMultiplicationDifficulty(problem);
+        const key = getProblemKey(problem);
+
+        // Check each filter condition separately
+        if (difficulty >= minDifficulty &&
+            difficulty <= maxDifficulty &&
+            !uniqueProblems.has(key) &&
+            meetsMultiplicationLevelRequirements(problem, levelId)) {
+            uniqueProblems.set(key, problem);
+        }
+    }
+
+    // Return unique problems that meet criteria
+    return Array.from(uniqueProblems.values());
+}
+
+/**
  * Fetches division problems of a specific level
  * @param level 0=easy, 1=medium, 2=hard
  */
@@ -209,6 +379,35 @@ export async function fetchDivisionProblems(level: number = 0): Promise<Division
 
         // Filter problems by difficulty level and remove duplicates
         const filteredProblems = filterProblemsForLevel(allDivisionProblems, level);
+
+        return filteredProblems;
+    } catch {
+        // Return empty array on error
+        return [];
+    }
+}
+
+/**
+ * Fetches multiplication problems of a specific level
+ * @param level 0=easy, 1=medium, 2=hard
+ */
+export async function fetchMultiplicationProblems(level: number = 0): Promise<MultiplicationProblem[]> {
+    try {
+        const response = await fetchMathProblems();
+
+        // Get all multiplication problems from all levels - we'll filter by difficulty later
+        const allMultiplicationProblems: MultiplicationProblem[] = [];
+
+        // Get problems from all multiplication levels in the API response
+        for (let i = 0; i <= 2; i++) {
+            const key = `multiplication_${i}`;
+            const multiplicationQuestions = response.public[key] || [];
+            const problems = multiplicationQuestions.map(q => convertToMultiplicationProblem(q as MultiplicationQuestion));
+            allMultiplicationProblems.push(...problems);
+        }
+
+        // Filter problems by difficulty level and remove duplicates
+        const filteredProblems = filterMultiplicationProblemsForLevel(allMultiplicationProblems, level);
 
         return filteredProblems;
     } catch {

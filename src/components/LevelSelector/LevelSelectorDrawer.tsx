@@ -1,21 +1,24 @@
-
 import React, { useState } from 'react';
 import { GAME_LEVELS, ADDITION_LEVELS } from '../../utils/constants';
-import type { GameState } from '../../types/game';
-import type { AdditionGameState } from '../../types/addition';
+
+type GameMode = 'division' | 'addition' | 'multiplication';
 
 interface LevelSelectorDrawerProps {
-    gameState: GameState | AdditionGameState;
+    gameMode: GameMode;
+    currentLevel: number;
+    availableLevels: number[];
+    completedLevels: number[];
     onLevelSelect: (levelId: number) => void;
 }
 
-const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({ gameState, onLevelSelect }) => {
+const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({
+    gameMode,
+    currentLevel,
+    availableLevels,
+    completedLevels,
+    onLevelSelect
+}) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { currentLevel, currentProblemIndex, levelProblems, gameMode } = gameState as (GameState & { gameMode?: 'division' | 'addition' });
-
-    const currentProblem = currentProblemIndex + 1; // Convert to 1-based
-    const totalProblems = levelProblems.length;
-    const progressPercentage = Math.round((currentProblem / totalProblems) * 100);
 
     // Determine which levels to use based on game mode
     const levels = gameMode === 'addition' ? ADDITION_LEVELS : GAME_LEVELS;
@@ -78,22 +81,6 @@ const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({ gameState, on
                             <div className="text-2xl font-bold text-blue-900">
                                 Level {currentLevel}
                             </div>
-                            <div className="text-sm text-blue-700">
-                                Problem {currentProblem} of {totalProblems}
-                            </div>
-                        </div>
-
-                        {/* Progress Bar for Current Level */}
-                        <div>
-                            <div className="w-full bg-blue-200 rounded-full h-3">
-                                <div
-                                    className="bg-blue-500 h-3 rounded-full transition-all duration-300"
-                                    style={{ width: `${progressPercentage}%` }}
-                                />
-                            </div>
-                            <div className="text-xs text-blue-600 text-center mt-1">
-                                {progressPercentage}% Complete
-                            </div>
                         </div>
                     </div>
 
@@ -102,7 +89,8 @@ const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({ gameState, on
                         <h3 className="text-sm font-semibold text-blue-800 mb-2">Levels:</h3>
                         {levels.map((level) => {
                             const isCurrentLevel = level.id === currentLevel;
-                            const isUnlocked = level.id <= currentLevel;
+                            const isUnlocked = availableLevels.includes(level.id);
+                            const isCompleted = completedLevels.includes(level.id);
 
                             return (
                                 <button
@@ -126,6 +114,11 @@ const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({ gameState, on
                                         {isCurrentLevel && (
                                             <div className="text-xs bg-blue-600 px-2 py-1 rounded">
                                                 Current
+                                            </div>
+                                        )}
+                                        {isCompleted && !isCurrentLevel && (
+                                            <div className="text-xs bg-green-600 text-white px-2 py-1 rounded">
+                                                Completed
                                             </div>
                                         )}
                                         {!isUnlocked && (

@@ -3,9 +3,10 @@ import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+import ProblemComplete from '../UI/ProblemComplete';
 
 interface DivisionDisplayProps {
-    problem: DivisionProblem;
+    problem: DivisionProblem | null;
     userAnswers: UserAnswer[];
     currentFocus: CurrentFocus;
     onAnswerSubmit: (answer: UserAnswer) => void;
@@ -15,12 +16,17 @@ interface DivisionDisplayProps {
     onEnableEditing?: () => void;
     onDisableEditing?: () => void;
     isSubmitted?: boolean;
+    isComplete?: boolean;
+    isLoading?: boolean;
+    fetchError?: Error | null;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
     onResetProblem?: () => void;
     onNewProblem?: () => void;
+    onRetryFetch?: () => void;
+    onUpdateProblem?: (dividend: number, divisor: number) => void;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -29,17 +35,22 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     currentFocus,
     onAnswerSubmit,
     onAnswerClear,
-    onProblemChange,
+    // onProblemChange, // Unused prop
     onProblemSubmit,
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
     onKeyDown,
     onFieldClick,
-    gameState,
+    // gameState, // Unused prop
     onNextProblem,
     onResetProblem,
     onNewProblem,
+    isLoading,
+    fetchError,
+    onRetryFetch,
+    onUpdateProblem,
+    isComplete
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -54,7 +65,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle clicking outside the problem area to disable editing
     useEffect(() => {
-        if (!problem.isEditable) return;
+        // Early return if problem is null or not editable
+        if (!problem || problem.isEditable !== true) return;
 
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -82,7 +94,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing]);
 
     // Check if all input fields have answers
     useEffect(() => {
@@ -113,6 +125,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         setAllFieldsFilled(userAnswers.length >= totalFields);
     }, [problem, userAnswers]);
 
+
+
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
         return userAnswers.find(a => a.stepNumber === stepNumber && a.fieldType === fieldType && a.fieldPosition === position);
@@ -123,7 +137,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         const userAnswer = getUserAnswer(stepNumber, fieldType, position);
         const isActive = currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position;
 
-        // After submission, prioritize validation colors over active state
+        // Only show validation colors after explicit submission by the user
         if (isSubmitted && userAnswer) {
             return userAnswer.isCorrect === true ? 'correct' : 'error';
         }
@@ -165,15 +179,21 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
+        if (!problem) return; // Early return if no problem
+
         // Small delay to ensure current input is processed
         setTimeout(() => {
             if (currentFocus.fieldType === 'quotient') {
                 // Move to multiply - start with the leftmost digit
                 const step = problem.steps[currentFocus.stepNumber];
+                if (!step) return;
+
                 const multiplyDigits = getDigitCount(step.multiply);
                 onFieldClick(currentFocus.stepNumber, 'multiply', multiplyDigits - 1);
             } else if (currentFocus.fieldType === 'multiply') {
                 const step = problem.steps[currentFocus.stepNumber];
+                if (!step) return;
+
                 if (currentFocus.fieldPosition > 0) {
                     // Move to next multiply digit
                     onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
@@ -184,6 +204,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 }
             } else if (currentFocus.fieldType === 'subtract') {
                 const step = problem.steps[currentFocus.stepNumber];
+                if (!step) return;
+
                 if (currentFocus.fieldPosition > 0) {
                     // Move to next subtract digit
                     onFieldClick(currentFocus.stepNumber, 'subtract', currentFocus.fieldPosition - 1);
@@ -204,24 +226,82 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     // Handle problem editing
     const handleDividendChange = (value: string) => {
         const newDividend = parseInt(value, 10);
-        if (!isNaN(newDividend) && newDividend > 0 && onProblemChange) {
-            onProblemChange(newDividend, problem.divisor);
+        if (!isNaN(newDividend) && newDividend > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(newDividend, problem.divisor);
         }
     };
 
     const handleDivisorChange = (value: string) => {
         const newDivisor = parseInt(value, 10);
-        if (!isNaN(newDivisor) && newDivisor > 0 && onProblemChange) {
-            onProblemChange(problem.dividend, newDivisor);
+        if (!isNaN(newDivisor) && newDivisor > 0 && onUpdateProblem && problem) {
+            onUpdateProblem(problem.dividend, newDivisor);
         }
     };
 
+    // If problem is null or loading, show loading state
+    if (isLoading) {
+        return (
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">Loading problem...</p>
+            </div>
+        );
+    }
+
+    // If there was an error fetching the problem
+    if (fetchError) {
+        return (
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg text-red-500 mb-4">Error loading problem</p>
+                <p className="mb-4">{fetchError.message}</p>
+                <button
+                    onClick={onRetryFetch}
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    // If no problem is available yet
+    if (!problem) {
+        return (
+            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+                <p className="text-lg">No problem available</p>
+                <button
+                    onClick={onNewProblem}
+                    className="px-6 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors mt-4"
+                >
+                    Generate New Problem
+                </button>
+            </div>
+        );
+    }
+
+    // At this point, we know problem is not null
     const dividendStr = problem.dividend.toString();
     const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
 
     // Vertical spacing constants for use throughout the component
     const ROW_HEIGHT = BOX_TOTAL_WIDTH;
     const STEP_SPACING = ROW_HEIGHT * 2.5; // Space between steps
+
+    // Helper function to create an input with consistent keyboard event handling
+    const createInput = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
+        return (
+            <Input
+                ref={currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position ? activeInputRef : undefined}
+                value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
+                variant={getInputVariant(stepNumber, fieldType, position)}
+                onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onClick={() => onFieldClick(stepNumber, fieldType, position)}
+                onAutoAdvance={handleAutoAdvance}
+                readOnly={isSubmitted}
+                placeholder="?"
+            />
+        );
+    };
 
     // New positioning logic
     const renderInputGrid = () => {
@@ -231,8 +311,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
         // Total grid width based on dividend length
         const gridWidth = dividendStr.length * BOX_TOTAL_WIDTH;
-
-
 
         return (
             <div className="division-grid relative" style={{ width: `${gridWidth}px` }}>
@@ -267,8 +345,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         // This aligns each step with the correct place value in the dividend
                         const stepPosition = dividendStr.length - problem.steps.length + stepIndex;
 
-
-
                         // Calculate positions for alignment
                         const multiplyLeft = stepPosition - multiplyDigits + 1;
                         const subtractLeft = stepPosition - subtractDigits + 1;
@@ -288,8 +364,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                 }}>
                                     {Array.from({ length: multiplyDigits }).map((_, digitIndex) => {
                                         const position = multiplyDigits - 1 - digitIndex; // Right to left positioning
-
-
 
                                         return (
                                             <div key={`multiply-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>
@@ -319,8 +393,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     {Array.from({ length: subtractDigits }).map((_, digitIndex) => {
                                         const position = subtractDigits - 1 - digitIndex; // Right to left
 
-
-
                                         return (
                                             <div key={`subtract-box-${digitIndex}`} style={{ width: `${BOX_TOTAL_WIDTH}px` }}>
                                                 {createInput(stepIndex, 'subtract', position)}
@@ -346,23 +418,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     })}
                 </div>
             </div>
-        );
-    };
-
-    // Helper function to create an input with consistent keyboard event handling
-    const createInput = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
-        return (
-            <Input
-                ref={currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position ? activeInputRef : undefined}
-                value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
-                variant={getInputVariant(stepNumber, fieldType, position)}
-                onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
-                onClick={() => onFieldClick(stepNumber, fieldType, position)}
-                onAutoAdvance={handleAutoAdvance}
-                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
-                placeholder="?"
-            />
         );
     };
 
@@ -500,25 +555,21 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     </div>
                 </div>
 
+
+
                 {/* Completion card - positioned in the center of the workspace */}
-                {isSubmitted && gameState?.isComplete && (
-                    <div className="absolute top-0 right-0 w-64 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center shadow-lg">
-                        <div className="text-2xl mb-2">🎉</div>
-                        <h3 className="text-lg font-bold text-green-800 mb-1">
-                            Problem Complete!
-                        </h3>
-                        <p className="text-sm text-green-700 mb-3">
-                            Great job! You solved {problem.dividend} ÷ {problem.divisor} = {problem.quotient}
-                            {problem.remainder > 0 && ` remainder ${problem.remainder}`}
-                        </p>
-                        <button
-                            onClick={onNextProblem}
-                            className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
-                            autoFocus
-                        >
-                            Next Problem →
-                        </button>
-                    </div>
+                {isSubmitted && isComplete && (
+                    <ProblemComplete
+                        type="division"
+                        problem={{
+                            dividend: problem.dividend,
+                            divisor: problem.divisor,
+                            quotient: problem.quotient,
+                            remainder: problem.remainder
+                        }}
+                        onNextProblem={onNextProblem || (() => { })}
+                        variant="card"
+                    />
                 )}
             </div>
 
@@ -528,15 +579,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 {!isSubmitted && (
                     <button
                         onClick={() => onProblemSubmit?.()}
-                        disabled={!userAnswers.length}
-                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!userAnswers.length
+                        disabled={!allFieldsFilled}
+                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!allFieldsFilled
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : allFieldsFilled
-                                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
                             } transition-colors`}
                     >
-                        Submit Answers
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Submit Answers
+                        </span>
                     </button>
                 )}
 
@@ -546,13 +600,23 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         onClick={onResetProblem}
                         className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
                     >
-                        Reset Problem
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                            Reset Problem
+                        </span>
                     </button>
                     <button
                         onClick={onNewProblem}
                         className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                     >
-                        New Problem
+                        <span className="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                            </svg>
+                            New Problem
+                        </span>
                     </button>
                 </div>
             </div>
@@ -565,4 +629,4 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     );
 };
 
-export default DivisionDisplay; 
+export default DivisionDisplay;

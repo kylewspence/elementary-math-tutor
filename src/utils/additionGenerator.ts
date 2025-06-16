@@ -3,43 +3,52 @@ import type { AdditionProblem, AdditionStep, AdditionLevel } from '../types/addi
 /**
  * Generates an addition problem based on the level parameters
  */
-export function generateAdditionProblem(level: AdditionLevel): AdditionProblem {
-    // Generate two numbers based on level difficulty
-    const maxValue = level.maxValue;
-    const minValue = Math.pow(10, level.maxDigits - 1); // Ensure minimum digits
+export function generateAdditionProblem(level: AdditionLevel, specificAddend1?: number, specificAddend2?: number): AdditionProblem {
+    // If specific values are provided, use them
+    let addend1: number;
+    let addend2: number;
 
-    const addend1 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
-    let addend2 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+    if (specificAddend1 !== undefined && specificAddend2 !== undefined) {
+        addend1 = specificAddend1;
+        addend2 = specificAddend2;
+    } else {
+        // Generate two numbers based on level difficulty
+        const maxValue = level.maxValue;
+        const minValue = Math.pow(10, level.maxDigits - 1); // Ensure minimum digits
 
-    // If carry is required for this level, ensure at least one column needs carrying
-    if (level.carryRequired) {
-        let hasCarry = false;
+        addend1 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+        addend2 = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
 
-        // Check if any column would require carrying
-        const addend1Str = addend1.toString();
-        const addend2Str = addend2.toString();
-        const maxLength = Math.max(addend1Str.length, addend2Str.length);
+        // If carry is required for this level, ensure at least one column needs carrying
+        if (level.carryRequired) {
+            let hasCarry = false;
 
-        for (let i = 0; i < maxLength; i++) {
-            const digit1 = parseInt(addend1Str[addend1Str.length - 1 - i] || '0');
-            const digit2 = parseInt(addend2Str[addend2Str.length - 1 - i] || '0');
+            // Check if any column would require carrying
+            const addend1Str = addend1.toString();
+            const addend2Str = addend2.toString();
+            const maxLength = Math.max(addend1Str.length, addend2Str.length);
 
-            if (digit1 + digit2 >= 10) {
-                hasCarry = true;
-                break;
+            for (let i = 0; i < maxLength; i++) {
+                const digit1 = parseInt(addend1Str[addend1Str.length - 1 - i] || '0');
+                const digit2 = parseInt(addend2Str[addend2Str.length - 1 - i] || '0');
+
+                if (digit1 + digit2 >= 10) {
+                    hasCarry = true;
+                    break;
+                }
             }
-        }
 
-        // If no carry found, modify the numbers to ensure at least one carry
-        if (!hasCarry) {
-            // Modify the ones digit to ensure a carry
-            const lastDigit1 = addend1 % 10;
-            const lastDigit2 = addend2 % 10;
+            // If no carry found, modify the numbers to ensure at least one carry
+            if (!hasCarry) {
+                // Modify the ones digit to ensure a carry
+                const lastDigit1 = addend1 % 10;
+                const lastDigit2 = addend2 % 10;
 
-            if (lastDigit1 + lastDigit2 < 10) {
-                // Adjust the ones digit to ensure it carries
-                const adjustment = 10 - (lastDigit1 + lastDigit2);
-                addend2 = addend2 - lastDigit2 + lastDigit2 + adjustment;
+                if (lastDigit1 + lastDigit2 < 10) {
+                    // Adjust the ones digit to ensure it carries
+                    const adjustment = 10 - (lastDigit1 + lastDigit2);
+                    addend2 = addend2 - lastDigit2 + lastDigit2 + adjustment;
+                }
             }
         }
     }

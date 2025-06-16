@@ -7,6 +7,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
     onChange?: (value: string) => void;
     onEnter?: () => void;
     onAutoAdvance?: () => void;
+    small?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -17,6 +18,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     onAutoAdvance,
     onKeyDown,
     value,
+    small = false,
     ...props
 }, ref) => {
     const variantClasses = {
@@ -29,23 +31,24 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     const { BOX_WIDTH, BOX_HEIGHT } = GRID_CONSTANTS;
 
     const baseClasses = `
-    text-center text-lg font-mono border-2 rounded-lg
+    text-center font-mono border-2 rounded-lg
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
     transition-all duration-200
     min-w-[40px] min-h-[40px]
   `.trim();
 
+    const textSizeClass = small ? 'text-sm' : 'text-lg';
+
     const combinedClasses = [
         baseClasses,
+        textSizeClass,
         variantClasses[variant],
         className,
     ].join(' ');
 
-    // Auto-select content when focused (for easy replacement)
     useEffect(() => {
         if (variant === 'active' && ref && typeof ref !== 'function' && ref.current) {
             const input = ref.current;
-            // Small delay to ensure focus has completed
             setTimeout(() => {
                 if (input === document.activeElement && input.value) {
                     input.select();
@@ -55,12 +58,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     }, [variant, ref]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
+        const value = e.target.value.replace(/[^0-9]/g, '');
 
         if (onChange) {
             onChange(value);
 
-            // Auto-advance immediately if user typed a digit
             if (value.length === 1 && onAutoAdvance) {
                 onAutoAdvance();
             }
@@ -68,52 +70,43 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        // Handle numeric input - if there's existing content, replace it
         if (/^[0-9]$/.test(e.key)) {
             const input = e.target as HTMLInputElement;
             if (input.value && input.selectionStart === input.selectionEnd) {
-                // If there's content and nothing is selected, select all first
                 input.select();
             }
         }
 
-        // Always call the parent's onKeyDown first to ensure keyboard navigation works
         if (onKeyDown) {
             onKeyDown(e);
 
-            // If the event was prevented by the parent handler, respect that
             if (e.defaultPrevented) {
                 return;
             }
         }
 
-        // Now handle our local Enter behavior if it wasn't handled by the parent
         if (e.key === 'Enter' && onEnter) {
             e.preventDefault();
             onEnter();
         }
 
-        // Handle backspace/delete to clear field
         if (e.key === 'Backspace' || e.key === 'Delete') {
             e.preventDefault();
             if (onChange) {
-                onChange(''); // Clear the field
+                onChange('');
             }
         }
     };
 
     const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
-        // Select all on click too, for better UX
         e.currentTarget.select();
     };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        // Select all content when focused for easy replacement
         if (e.target.value) {
             e.target.select();
         }
 
-        // Call original onFocus if provided
         if (props.onFocus) {
             props.onFocus(e);
         }
@@ -128,8 +121,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             maxLength={1}
             className={combinedClasses}
             style={{
-                width: `${BOX_WIDTH}px`,
-                height: `${BOX_HEIGHT}px`,
+                width: small ? `${BOX_WIDTH * 0.75}px` : `${BOX_WIDTH}px`,
+                height: small ? `${BOX_HEIGHT * 0.6}px` : `${BOX_HEIGHT}px`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

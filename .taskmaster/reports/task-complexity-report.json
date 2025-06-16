@@ -1,12 +1,12 @@
 {
 	"meta": {
-		"generatedAt": "2025-06-15T18:54:33.268Z",
-		"tasksAnalyzed": 15,
-		"totalTasks": 15,
-		"analysisCount": 15,
+		"generatedAt": "2025-06-15T20:00:34.322Z",
+		"tasksAnalyzed": 1,
+		"totalTasks": 16,
+		"analysisCount": 16,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
-		"usedResearch": false
+		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
@@ -128,6 +128,14 @@
 			"recommendedSubtasks": 3,
 			"expansionPrompt": "Divide into updating documentation, preparing for deployment, and verifying deployment success.",
 			"reasoning": "Documentation and deployment are distinct tasks that require careful preparation and verification."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Fix TypeScript Errors in Project",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the task into the following subtasks: 1. Review the TypeScript error log to identify specific files and lines where errors occur. 2. Address type mismatches between different problem types such as DivisionProblem, AdditionProblem, and MultiplicationProblem by ensuring consistent interfaces and type definitions. 3. Remove unused variables and imports to clean up the code. 4. Add missing required properties in returned objects to ensure all required properties are included. 5. Investigate and resolve issues with state management in the useGameState hook to ensure it correctly manages and updates state as expected.",
+			"reasoning": "The task involves resolving 26 TypeScript errors, including type mismatches, unused variables and imports, missing properties, and state management issues. Each of these error categories requires a distinct approach and careful attention to detail. Breaking down the task into specific subtasks allows for a more organized and efficient resolution process, ensuring that all issues are addressed systematically."
 		}
 	]
 }

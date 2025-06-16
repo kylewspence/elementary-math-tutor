@@ -1,39 +1,42 @@
-// Complex multi-game state union types cause TypeScript issues
-// This file has pre-existing TypeScript errors due to the complex GameState union type
-// that handles multiple game modes (division, addition, multiplication) in a single hook.
-// The functionality works correctly, but TypeScript cannot properly infer the return types.
-import { useState, useCallback } from 'react';
-import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
+import { useState, useCallback, useEffect } from 'react';
+import type { MultiplicationGameState, MultiplicationProblem, MultiplicationUserAnswer, MultiplicationDifficulty } from '../types/multiplication';
 import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
-import { generateProblem } from '../utils/problemGenerator';
-import { validateAnswer, isProblemComplete } from '../utils/divisionValidator';
-import { fetchDivisionProblems } from '../utils/apiService';
+import { generateMultiplicationProblem, createSpecificMultiplicationProblem } from '../utils/multiplicationProblemGenerator';
+import { validateMultiplicationAnswer, isMultiplicationProblemComplete } from '../utils/multiplicationValidator';
+import { fetchMultiplicationProblems } from '../utils/apiService';
 import { FEATURES } from '../utils/config';
 
 // Minimum number of problems needed per level before falling back to local generation
 const MIN_PROBLEMS_PER_LEVEL = 8;
 
 /**
- * Generates a problem specifically for the given level ID
+ * Maps game level ID to multiplication difficulty
  */
-function generateLevelSpecificProblem(levelId: number): DivisionProblem {
-    const level = GAME_LEVELS.find(l => l.id === levelId);
-    if (!level) {
-        throw new Error(`Level ${levelId} not found`);
-    }
-
-    // Generate the problem with full computation using the level object
-    const problem = generateProblem(level);
-
-    return problem;
+function mapLevelToDifficulty(levelId: number): MultiplicationDifficulty {
+    // Map level IDs to difficulty
+    if (levelId <= 2) return 'easy';
+    if (levelId <= 5) return 'medium';
+    if (levelId <= 8) return 'hard';
+    return 'expert';
 }
 
 /**
- * Custom hook to manage the game state
+ * Generates a multiplication problem specifically for the given level ID
  */
-export function useGameState() {
+function generateLevelSpecificMultiplicationProblem(levelId: number): MultiplicationProblem {
+    // Map the level ID to a difficulty
+    const difficulty = mapLevelToDifficulty(levelId);
+
+    // Generate the problem with the appropriate difficulty
+    return generateMultiplicationProblem(difficulty);
+}
+
+/**
+ * Custom hook to manage the multiplication game state
+ */
+export function useMultiplicationGameState() {
     // Complete game state
-    const [gameState, setGameState] = useState<GameState>({
+    const [gameState, setGameState] = useState<MultiplicationGameState>({
         currentLevel: 1,
         completedLevels: [],
         availableLevels: [1],
@@ -44,7 +47,7 @@ export function useGameState() {
         isSubmitted: false,
         isComplete: false,
         score: 0,
-        gameMode: 'division',
+        gameMode: 'multiplication',
     });
 
     // Loading state for API calls
@@ -57,13 +60,12 @@ export function useGameState() {
         setFetchError(null);
 
         try {
-            let problems: DivisionProblem[] = [];
+            let problems: MultiplicationProblem[] = [];
 
             // Only fetch from API if feature is enabled
             if (FEATURES.USE_API_PROBLEMS) {
                 // Pass the actual level ID to the API service for proper filtering
-                // The API service will handle mapping to appropriate API difficulty levels internally
-                problems = await fetchDivisionProblems(levelId);
+                problems = await fetchMultiplicationProblems(levelId);
             }
 
             // If we didn't get enough problems from API, generate locally
@@ -71,7 +73,7 @@ export function useGameState() {
                 // Generate enough additional problems
                 const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
                 for (let i = 0; i < neededProblems; i++) {
-                    problems.push(generateLevelSpecificProblem(levelId));
+                    problems.push(generateLevelSpecificMultiplicationProblem(levelId));
                 }
             }
 
@@ -79,24 +81,19 @@ export function useGameState() {
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
 
-            setGameState(prev => {
-                if (prev.gameMode === 'division') {
-                    return {
-                        ...prev,
-                        levelProblems: problems,
-                        currentProblemIndex: 0,
-                        problem: problems.length > 0 ? problems[0] : null,
-                    };
-                }
-                return prev;
-            });
+            setGameState(prev => ({
+                ...prev,
+                levelProblems: problems,
+                currentProblemIndex: 0,
+                problem: problems.length > 0 ? problems[0] : null,
+            }));
 
         } catch {
-            setFetchError('Failed to load problems. Please try again.');
+            setFetchError('Failed to load multiplication problems. Please try again.');
 
             // Fallback to locally generated problems
             const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
-                () => generateLevelSpecificProblem(levelId));
+                () => generateLevelSpecificMultiplicationProblem(levelId));
 
             setGameState(prev => ({
                 ...prev,
@@ -165,7 +162,7 @@ export function useGameState() {
             }
 
             // If we've run out of problems, generate a new one
-            const newProblem = generateLevelSpecificProblem(prev.currentLevel);
+            const newProblem = generateLevelSpecificMultiplicationProblem(prev.currentLevel);
             return {
                 ...prev,
                 problem: newProblem,
@@ -177,18 +174,18 @@ export function useGameState() {
     }, []);
 
     // Update current problem (for editing)
-    const updateProblem = useCallback((dividend: number, divisor: number) => {
-        if (dividend < divisor) {
-            // Ensure dividend is larger than divisor
+    const updateProblem = useCallback((multiplicand: number, multiplier: number) => {
+        if (multiplicand <= 0 || multiplier <= 0) {
+            // Ensure both numbers are positive
             return;
         }
 
-        // Find the current level object
-        const currentLevel = GAME_LEVELS.find(l => l.id === gameState.currentLevel);
-        if (!currentLevel) return;
+        // Get the appropriate difficulty for the current level
+        const difficulty = mapLevelToDifficulty(gameState.currentLevel);
 
-        // Generate a problem with the specific dividend and divisor
-        const updatedProblem = generateProblem(currentLevel, dividend, divisor);
+        // Generate new problem with the specified numbers
+        const updatedProblem = createSpecificMultiplicationProblem(multiplicand, multiplier, difficulty);
+
         setGameState(prev => ({
             ...prev,
             problem: updatedProblem,
@@ -199,42 +196,83 @@ export function useGameState() {
     }, [gameState.currentLevel]);
 
     // Submit an answer for a specific field
-    const submitAnswer = useCallback((answer: UserAnswer) => {
-        setGameState(prev => {
-            // First remove any existing answer for the same field
-            const filteredAnswers = prev.userAnswers.filter(a =>
-                !(a.stepNumber === answer.stepNumber &&
-                    a.fieldType === answer.fieldType &&
-                    a.fieldPosition === answer.fieldPosition)
-            );
+    const submitAnswer = (
+        value: number,
+        fieldType: 'product' | 'partial' | 'carry',
+        position: number,
+        partialIndex?: number
+    ) => {
+        if (!gameState.problem) return;
 
-            // Validate the answer (but don't show validation until explicit submission)
-            const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
+        // Create a copy of the current answers
+        const updatedAnswers = [...gameState.userAnswers];
 
-            // Add validated answer to the list
-            const validatedAnswer = { ...answer, isCorrect };
-            const validatedAnswers = [...filteredAnswers, validatedAnswer];
+        // Check if this answer already exists
+        const existingIndex = updatedAnswers.findIndex(
+            a => a.fieldType === fieldType &&
+                a.fieldPosition === position &&
+                a.partialIndex === partialIndex
+        );
 
-            // IMPORTANT: Don't set isSubmitted or isComplete here!
-            // These should only be set when the user explicitly clicks "Submit Answers"
-            // which calls submitProblem(). Setting isSubmitted here causes premature
-            // validation feedback and hides the submit button.
+        // Calculate the correct answer based on field type
+        let isCorrect = false;
 
-            return {
-                ...prev,
-                userAnswers: validatedAnswers,
-                // Preserve existing isSubmitted and isComplete values
-            };
-        });
-    }, []);
+        if (fieldType === 'product') {
+            // For product fields, check against the product digits
+            const productDigits = gameState.problem.product.toString().split('').map(Number).reverse();
+            isCorrect = value === productDigits[position];
+        }
+        else if (fieldType === 'partial' && partialIndex !== undefined) {
+            // For partial product fields, check against the partial product digits
+            const partial = gameState.problem.partialProducts[partialIndex];
+            const partialDigits = partial.value.toString().split('').map(Number).reverse();
+            isCorrect = value === partialDigits[position];
+        }
+        else if (fieldType === 'carry') {
+            // For carry fields, calculate the correct carry value
+            const multiplicandStr = gameState.problem.multiplicand.toString();
+            // Position is from right to left, so we need to adjust the index
+            if (position < multiplicandStr.length) {
+                const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
+                const product = digit * gameState.problem.multiplier;
+                const correctCarry = Math.floor(product / 10); // The carry is the tens digit
+                isCorrect = value === correctCarry;
+            } else {
+                // If position is out of range, any value is incorrect
+                isCorrect = false;
+            }
+        }
+
+        // Create or update the answer
+        const answer: MultiplicationUserAnswer = {
+            fieldType,
+            fieldPosition: position,
+            partialIndex,
+            value,
+            isCorrect,
+            timestamp: new Date(),
+        };
+
+        if (existingIndex >= 0) {
+            updatedAnswers[existingIndex] = answer;
+        } else {
+            updatedAnswers.push(answer);
+        }
+
+        // Update the game state
+        setGameState(prev => ({
+            ...prev,
+            userAnswers: updatedAnswers,
+        }));
+    };
 
     // Clear an answer for a specific field
-    const clearAnswer = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+    const clearAnswer = useCallback((fieldType: 'product' | 'partial', fieldPosition: number, partialIndex?: number) => {
         setGameState(prev => {
             const filteredAnswers = prev.userAnswers.filter(a =>
-                !(a.stepNumber === stepNumber &&
-                    a.fieldType === fieldType &&
-                    a.fieldPosition === position)
+                !(a.fieldType === fieldType &&
+                    a.fieldPosition === fieldPosition &&
+                    a.partialIndex === partialIndex)
             );
 
             return {
@@ -251,14 +289,12 @@ export function useGameState() {
 
             // Validate each answer
             const validatedAnswers = prev.userAnswers.map(answer => {
-                const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
+                const isCorrect = validateMultiplicationAnswer(prev.problem!, answer);
                 return { ...answer, isCorrect };
             });
 
             // Check if the problem is complete and all answers are correct
-            const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
-
-
+            const complete = isMultiplicationProblemComplete(prev.problem, validatedAnswers);
 
             // If complete and not previously submitted, update score and completed levels
             let updatedScore = prev.score;
@@ -311,7 +347,7 @@ export function useGameState() {
             }
 
             // If we've completed all problems, generate a new one
-            const newProblem = generateLevelSpecificProblem(prev.currentLevel);
+            const newProblem = generateLevelSpecificMultiplicationProblem(prev.currentLevel);
             return {
                 ...prev,
                 problem: newProblem,
@@ -353,6 +389,11 @@ export function useGameState() {
             };
         });
     }, []);
+
+    // Initialize the game on first load
+    useEffect(() => {
+        initializeGame();
+    }, [initializeGame]);
 
     return {
         gameState,

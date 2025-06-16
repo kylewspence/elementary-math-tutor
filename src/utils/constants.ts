@@ -3,6 +3,7 @@
 import type { GameLevel } from '../types/game';
 import type { AdditionLevel } from '../types/addition';
 
+
 export const DIVISION_CONSTANTS = {
     // Input validation
     MIN_DIVISOR: 1,
@@ -180,6 +181,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 2,
         maxDivisor: 9,
         maxDividend: 99,
+        minDigits: 1,
+        maxDigits: 1,
     },
     {
         id: 2,
@@ -189,6 +192,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 3,
         maxDivisor: 9,
         maxDividend: 999,
+        minDigits: 1,
+        maxDigits: 2,
     },
     {
         id: 3,
@@ -198,6 +203,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 4,
         maxDivisor: 9,
         maxDividend: 9999,
+        minDigits: 2,
+        maxDigits: 2,
     },
     {
         id: 4,
@@ -207,6 +214,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 3,
         maxDivisor: 99,
         maxDividend: 999,
+        minDigits: 2,
+        maxDigits: 2,
     },
     {
         id: 5,
@@ -216,6 +225,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 4,
         maxDivisor: 99,
         maxDividend: 9999,
+        minDigits: 2,
+        maxDigits: 3,
     },
     {
         id: 6,
@@ -225,6 +236,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 5,
         maxDivisor: 99,
         maxDividend: 99999,
+        minDigits: 2,
+        maxDigits: 3,
     },
     {
         id: 7,
@@ -234,6 +247,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 4,
         maxDivisor: 999,
         maxDividend: 9999,
+        minDigits: 3,
+        maxDigits: 3,
     },
     {
         id: 8,
@@ -243,6 +258,8 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 5,
         maxDivisor: 999,
         maxDividend: 99999,
+        minDigits: 3,
+        maxDigits: 3,
     },
     {
         id: 9,
@@ -252,15 +269,19 @@ export const GAME_LEVELS: GameLevel[] = [
         dividendDigits: 6,
         maxDivisor: 999,
         maxDividend: 999999,
+        minDigits: 3,
+        maxDigits: 4,
     },
     {
         id: 10,
         name: 'Level 10',
-        description: 'Four digit divisor, 6-digit dividend',
+        description: 'Custom problem',
         divisorDigits: 4,
         dividendDigits: 6,
         maxDivisor: 9999,
         maxDividend: 999999,
+        minDigits: 4,
+        maxDigits: 4,
     },
 ];
 
@@ -380,4 +401,26 @@ export const ADDITION_LEVELS: AdditionLevel[] = [
         maxValue: 99999,
         carryRequired: true,
     },
-]; 
+];
+
+// Configuration for different difficulty levels
+export const DIFFICULTY_CONFIG = {
+    multiplication: {
+        easy: {
+            multiplicandDigits: 2,
+            multiplierDigits: 1,
+        },
+        medium: {
+            multiplicandDigits: 2,
+            multiplierDigits: 2,
+        },
+        hard: {
+            multiplicandDigits: 3,
+            multiplierDigits: 2,
+        },
+        expert: {
+            multiplicandDigits: 3,
+            multiplierDigits: 3,
+        },
+    },
+} as const; 
