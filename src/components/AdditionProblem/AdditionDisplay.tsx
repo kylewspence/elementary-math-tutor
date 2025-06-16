@@ -98,13 +98,9 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const checkExtraBoxNeeded = useCallback(() => {
         if (!problem) return false;
 
-        // If sum has more digits than the max number of digits in addends
-        const maxAddendDigits = Math.max(
-            problem.addend1.toString().length,
-            problem.addend2.toString().length
-        );
-
-        return problem.sum > Math.pow(10, maxAddendDigits) - 1;
+        // For addition problems, the steps already handle all necessary positions
+        // including final carries, so we don't need extra boxes
+        return false;
     }, [problem]);
 
     // Get all required fields for this problem
@@ -112,29 +108,19 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         if (!problem) return [];
 
         const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
-        const needsExtraBox = checkExtraBoxNeeded();
 
         // Sort steps by column position (right to left, starting with ones place)
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-        // First, add all sum fields from right to left (ones, tens, hundreds)
+        // For each column position, add sum field and then any carry field
         for (const step of orderedSteps) {
+            // Add sum field for this column
             fields.push({
                 columnPosition: step.columnPosition,
                 fieldType: 'sum'
             });
-        }
 
-        // Add extra sum box if needed (leftmost position)
-        if (needsExtraBox) {
-            fields.push({
-                columnPosition: problem.steps.length,
-                fieldType: 'sum'
-            });
-        }
-
-        // Then, add carry fields for columns that need them
-        for (const step of orderedSteps) {
+            // If this column generates a carry, add the carry field immediately after
             if (step.carry > 0) {
                 const nextColumnPosition = step.columnPosition + 1;
                 fields.push({
@@ -145,7 +131,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         }
 
         return fields;
-    }, [problem, checkExtraBoxNeeded]);
+    }, [problem]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = useCallback((columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
@@ -343,8 +329,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         );
     }
 
-    // Process steps for display
-    const displaySteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
+    // Process steps for display - sort in descending order (left to right)
+    const displaySteps = [...problem.steps].sort((a, b) => b.columnPosition - a.columnPosition);
     const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
     const ROW_HEIGHT = BOX_TOTAL_WIDTH;
     const CARRY_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for carry boxes
@@ -418,38 +404,17 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         )}
                                     </div>
                                 ))}
-
-                                {/* Only show carry box for the leftmost position if needed */}
-                                {needsExtraBox && (
-                                    <div
-                                        className="flex items-center justify-center"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${CARRY_HEIGHT}px` }}
-                                    >
-                                        {/* Only show carry input if the leftmost column actually has a carry */}
-                                        {receivesCarry(displaySteps.length) && (
-                                            <div className="scale-70 transform origin-center">
-                                                {createInput(displaySteps.length, 'carry')}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
                             </div>
 
                             {/* First addend */}
                             <div className="flex justify-end mb-2">
-                                {needsExtraBox && (
-                                    <div
-                                        className="flex items-center justify-center text-xl"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
-                                    ></div>
-                                )}
                                 {displaySteps.map((step) => (
                                     <div
                                         key={`addend1-${step.columnPosition}`}
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1}
+                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : step.digit1}
                                     </div>
                                 ))}
                             </div>
@@ -461,19 +426,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                 >
                                     +
                                 </div>
-                                {needsExtraBox && (
-                                    <div
-                                        className="flex items-center justify-center text-xl"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
-                                    ></div>
-                                )}
                                 {displaySteps.map((step) => (
                                     <div
                                         key={`addend2-${step.columnPosition}`}
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2}
+                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : step.digit2}
                                     </div>
                                 ))}
                             </div>
@@ -483,16 +442,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
                             {/* Sum row (user inputs) */}
                             <div className="flex justify-end">
-                                {/* Extra box for final digit of sum if needed */}
-                                {needsExtraBox && (
-                                    <div
-                                        className="flex items-center justify-center"
-                                        style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
-                                    >
-                                        {createInput(displaySteps.length, 'sum')}
-                                    </div>
-                                )}
-
                                 {/* Sum boxes for each column */}
                                 {displaySteps.map((step) => (
                                     <div
