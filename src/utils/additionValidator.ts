@@ -66,10 +66,7 @@ export function isAdditionProblemComplete(problem: AdditionProblem, answers: Add
         )
     );
 
-    // Debug log
-    console.log('Required fields:', requiredFields);
-    console.log('User answers:', answers);
-    console.log('All fields correct:', allFieldsCorrect);
+
 
     return allFieldsCorrect;
 }
