@@ -2,6 +2,7 @@
 
 import type { GameLevel } from '../types/game';
 import type { AdditionLevel } from '../types/addition';
+import type { MultiplicationLevel } from '../types/multiplication';
 
 
 export const DIVISION_CONSTANTS = {
@@ -285,7 +286,7 @@ export const GAME_LEVELS: GameLevel[] = [
     },
 ];
 
-export const PROBLEMS_PER_LEVEL = 5;
+export const PROBLEMS_PER_LEVEL = 10;
 
 export const UI_COLORS = {
     CORRECT: 'bg-green-100 border-green-400 text-green-800',
@@ -400,6 +401,90 @@ export const ADDITION_LEVELS: AdditionLevel[] = [
         maxDigits: 5,
         maxValue: 99999,
         carryRequired: true,
+    },
+];
+
+// Multiplication levels
+export const MULTIPLICATION_LEVELS: MultiplicationLevel[] = [
+    {
+        id: 1,
+        name: 'Level 1',
+        description: 'Single digit × single digit',
+        multiplicandDigits: 1,
+        multiplierDigits: 1,
+        difficulty: 'easy',
+    },
+    {
+        id: 2,
+        name: 'Level 2',
+        description: 'Two digit × single digit',
+        multiplicandDigits: 2,
+        multiplierDigits: 1,
+        difficulty: 'easy',
+    },
+    {
+        id: 3,
+        name: 'Level 3',
+        description: 'Three digit × single digit',
+        multiplicandDigits: 3,
+        multiplierDigits: 1,
+        difficulty: 'medium',
+    },
+    {
+        id: 4,
+        name: 'Level 4',
+        description: 'Two digit × two digit',
+        multiplicandDigits: 2,
+        multiplierDigits: 2,
+        difficulty: 'medium',
+    },
+    {
+        id: 5,
+        name: 'Level 5',
+        description: 'Three digit × two digit',
+        multiplicandDigits: 3,
+        multiplierDigits: 2,
+        difficulty: 'hard',
+    },
+    {
+        id: 6,
+        name: 'Level 6',
+        description: 'Four digit × two digit',
+        multiplicandDigits: 4,
+        multiplierDigits: 2,
+        difficulty: 'hard',
+    },
+    {
+        id: 7,
+        name: 'Level 7',
+        description: 'Three digit × three digit',
+        multiplicandDigits: 3,
+        multiplierDigits: 3,
+        difficulty: 'expert',
+    },
+    {
+        id: 8,
+        name: 'Level 8',
+        description: 'Four digit × three digit',
+        multiplicandDigits: 4,
+        multiplierDigits: 3,
+        difficulty: 'expert',
+    },
+    {
+        id: 9,
+        name: 'Level 9',
+        description: 'Five digit × three digit',
+        multiplicandDigits: 5,
+        multiplierDigits: 3,
+        difficulty: 'expert',
+    },
+    {
+        id: 10,
+        name: 'Level 10',
+        description: 'Custom problem',
+        multiplicandDigits: 5,
+        multiplierDigits: 4,
+        difficulty: 'expert',
     },
 ];
 

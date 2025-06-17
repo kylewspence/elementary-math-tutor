@@ -8,6 +8,7 @@ import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useAdditionGameState } from './hooks/useAdditionGameState';
 import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
+import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
@@ -111,6 +112,12 @@ function App() {
     jumpToField: jumpToAdditionField,
   } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted);
 
+  // Multiplication game state
+  const {
+    gameState: multiplicationGameState,
+    jumpToLevel: jumpToMultiplicationLevel,
+  } = useMultiplicationGameState();
+
   // Initialize the appropriate game on mount and when mode changes
   useEffect(() => {
     if (gameMode === 'division') {
@@ -189,6 +196,10 @@ function App() {
     loadAdditionProblemsForLevel(additionGameState.currentLevel);
   };
 
+  const handleMultiplicationLevelSelect = (levelId: number) => {
+    jumpToMultiplicationLevel(levelId);
+  };
+
   const toggleGameMode = (mode: GameMode) => {
     setGameMode(mode);
   };
@@ -206,6 +217,12 @@ function App() {
         availableLevels: additionGameState.availableLevels,
         completedLevels: additionGameState.completedLevels,
       };
+    } else if (gameMode === 'multiplication') {
+      return {
+        currentLevel: multiplicationGameState.currentLevel,
+        availableLevels: multiplicationGameState.availableLevels,
+        completedLevels: multiplicationGameState.completedLevels,
+      };
     }
     // Default values if no game mode is active
     return {
@@ -215,12 +232,38 @@ function App() {
     };
   };
 
+  const getCurrentProblemInfo = () => {
+    if (gameMode === 'division') {
+      return {
+        currentProblem: gameState.currentProblemIndex + 1,
+        totalProblems: gameState.levelProblems.length,
+      };
+    } else if (gameMode === 'addition') {
+      return {
+        currentProblem: additionGameState.currentProblemIndex + 1,
+        totalProblems: additionGameState.levelProblems.length,
+      };
+    } else if (gameMode === 'multiplication') {
+      return {
+        currentProblem: multiplicationGameState.currentProblemIndex + 1,
+        totalProblems: multiplicationGameState.levelProblems.length,
+      };
+    }
+    // Default values if no game mode is active
+    return {
+      currentProblem: 1,
+      totalProblems: 1,
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         gameMode={gameMode}
         onToggleGameMode={toggleGameMode}
         currentLevel={getCurrentLevelInfo().currentLevel}
+        currentProblem={getCurrentProblemInfo().currentProblem}
+        totalProblems={getCurrentProblemInfo().totalProblems}
       />
 
       <main className="container mx-auto px-4 py-8">
@@ -283,7 +326,11 @@ function App() {
         currentLevel={getCurrentLevelInfo().currentLevel}
         availableLevels={getCurrentLevelInfo().availableLevels}
         completedLevels={getCurrentLevelInfo().completedLevels}
-        onLevelSelect={gameMode === 'addition' ? handleAdditionLevelSelect : handleLevelSelect}
+        onLevelSelect={
+          gameMode === 'addition' ? handleAdditionLevelSelect :
+            gameMode === 'multiplication' ? handleMultiplicationLevelSelect :
+              handleLevelSelect
+        }
       />
     </div>
   );
