@@ -42,7 +42,6 @@ function App() {
   };
 
   const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
-    console.log('🧹 App: handleAnswerClear called', { stepNumber, fieldType, position });
     clearAnswer(stepNumber, fieldType, position);
   };
 

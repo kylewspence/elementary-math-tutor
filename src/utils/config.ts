@@ -8,12 +8,12 @@
 // API Configuration
 export const API_CONFIG = {
     // Use HTTPS for production endpoints
-    BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || '',
     ENDPOINTS: {
         MATH_PROBLEMS: '/dev/publicmathget',
     },
     // In production, this would come from a secure source
-    DEVICE_ID: import.meta.env.VITE_DEVICE_ID,
+    DEVICE_ID: import.meta.env.VITE_DEVICE_ID || '',
 };
 
 // Logging Configuration
