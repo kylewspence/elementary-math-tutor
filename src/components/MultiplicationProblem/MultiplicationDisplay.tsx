@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
-import ProblemComplete from '../UI/ProblemComplete';
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -431,7 +430,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     return (
         <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
-            <div className="text-center mb-16" ref={problemRef}>
+            <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
                     {problem.isEditable ? (
                         <>
@@ -473,18 +472,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 )}
             </div>
 
-            {/* Problem complete notification - positioned right after header */}
+            {/* Problem complete notification - compact inline message */}
             {isSubmitted && isComplete && (
-                <ProblemComplete
-                    type="multiplication"
-                    problem={{
-                        multiplicand: problem?.multiplicand,
-                        multiplier: problem?.multiplier,
-                        product: problem?.product
-                    }}
-                    onNextProblem={onNextProblem || (() => { })}
-                    variant="card"
-                />
+                <div className="text-center mb-4">
+                    <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 font-semibold">
+                        Problem complete! 🎉
+                    </div>
+                </div>
             )}
 
             {/* Main content with problem work */}
