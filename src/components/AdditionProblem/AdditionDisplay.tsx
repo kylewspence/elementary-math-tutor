@@ -94,15 +94,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
-    // Check if we need an extra box for the final carry
-    const checkExtraBoxNeeded = useCallback(() => {
-        if (!problem) return false;
-
-        // For addition problems, the steps already handle all necessary positions
-        // including final carries, so we don't need extra boxes
-        return false;
-    }, [problem]);
-
     // Get all required fields for this problem
     const getAllRequiredFields = useCallback(() => {
         if (!problem) return [];
@@ -352,7 +343,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
     const ROW_HEIGHT = BOX_TOTAL_WIDTH;
     const CARRY_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for carry boxes
-    const needsExtraBox = checkExtraBoxNeeded();
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
