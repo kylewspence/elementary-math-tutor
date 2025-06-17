@@ -490,7 +490,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     return (
         <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
-            <div className="text-center mb-16" ref={problemRef}>
+            <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
                     {problem.isEditable ? (
                         <>
@@ -521,19 +521,37 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         </div>
                     )}
                 </div>
+
                 {problem.isEditable ? (
                     <div className="text-sm text-blue-600 mt-2">
                         ✏️ Edit the numbers above - click elsewhere when done
                     </div>
                 ) : (
-                    <div className="text-sm text-gray-500 mt-2 mb-30">
+                    <div className="text-sm text-gray-500 mt-2">
                         💡 Click the problem above to edit it
                     </div>
                 )}
             </div>
 
+            {/* Problem complete notification - positioned below edit instruction, above division work */}
+            {isSubmitted && isComplete && (
+                <div className="text-center mt-2 mb-4">
+                    <ProblemComplete
+                        type="division"
+                        problem={{
+                            dividend: problem.dividend,
+                            divisor: problem.divisor,
+                            quotient: problem.quotient,
+                            remainder: problem.remainder
+                        }}
+                        onNextProblem={onNextProblem || (() => { })}
+                        variant="card"
+                    />
+                </div>
+            )}
+
             {/* Main content with problem work */}
-            <div className="relative">
+            <div className="relative mt-16">
                 {/* Division layout - centered */}
                 <div className="flex justify-center">
                     <div className="division-workspace relative">
@@ -624,25 +642,12 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
 
                 {/* Completion card - positioned in the center of the workspace */}
-                {isSubmitted && isComplete && (
-                    <ProblemComplete
-                        type="division"
-                        problem={{
-                            dividend: problem.dividend,
-                            divisor: problem.divisor,
-                            quotient: problem.quotient,
-                            remainder: problem.remainder
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
             </div>
 
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-[-2rem]">
-                {/* Submit button */}
-                {!isSubmitted && (
+                {/* Submit/Next Problem button */}
+                {!isSubmitted ? (
                     <button
                         onClick={() => onProblemSubmit?.()}
                         disabled={!allFieldsFilled}
@@ -658,7 +663,17 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                             Submit Answers
                         </span>
                     </button>
-                )}
+                ) : isComplete ? (
+                    <button
+                        onClick={() => onNextProblem?.()}
+                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        autoFocus
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            Next Problem →
+                        </span>
+                    </button>
+                ) : null}
 
                 {/* Reset and New Problem buttons */}
                 <div className="flex justify-center space-x-4">

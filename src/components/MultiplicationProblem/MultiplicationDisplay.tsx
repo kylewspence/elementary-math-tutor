@@ -473,6 +473,20 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 )}
             </div>
 
+            {/* Problem complete notification - positioned right after header */}
+            {isSubmitted && isComplete && (
+                <ProblemComplete
+                    type="multiplication"
+                    problem={{
+                        multiplicand: problem?.multiplicand,
+                        multiplier: problem?.multiplier,
+                        product: problem?.product
+                    }}
+                    onNextProblem={onNextProblem || (() => { })}
+                    variant="card"
+                />
+            )}
+
             {/* Main content with problem work */}
             <div className="relative">
                 {/* Multiplication layout - centered */}
@@ -481,27 +495,12 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         {renderMultiplicationGrid()}
                     </div>
                 </div>
-
-                {/* Problem complete notification using the new component */}
-                {/* Debug info: isSubmitted={isSubmitted.toString()}, isComplete={isComplete.toString()} */}
-                {isSubmitted && isComplete && (
-                    <ProblemComplete
-                        type="multiplication"
-                        problem={{
-                            multiplicand: problem?.multiplicand,
-                            multiplier: problem?.multiplier,
-                            product: problem?.product
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
             </div>
 
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-6">
-                {/* Submit button */}
-                {!isSubmitted && (
+                {/* Submit/Next Problem button */}
+                {!isSubmitted ? (
                     <button
                         onClick={() => onProblemSubmit?.()}
                         disabled={!userAnswers.length}
@@ -517,7 +516,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                             Submit Answers
                         </span>
                     </button>
-                )}
+                ) : isComplete ? (
+                    <button
+                        onClick={() => onNextProblem?.()}
+                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        autoFocus
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            Next Problem →
+                        </span>
+                    </button>
+                ) : null}
 
                 {/* Reset and New Problem buttons */}
                 <div className="flex justify-center space-x-4">
