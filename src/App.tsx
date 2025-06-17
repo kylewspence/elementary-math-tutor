@@ -60,7 +60,6 @@ function App() {
     currentFocus,
     handleKeyDown,
     jumpToField,
-    movePrevious,
     getPreviousField,
   } = useKeyboardNav(
     gameState.problem as DivisionProblem | null,
