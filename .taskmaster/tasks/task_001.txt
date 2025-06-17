@@ -1,97 +1,31 @@
 # Task ID: 1
-# Title: Setup Project Repository
-# Status: in-progress
+# Title: Audit Current Codebase
+# Status: pending
 # Dependencies: None
-# Priority: medium
-# Description: Initialize the project repository with the required structure and dependencies, and prepare for integration with the multiplication components.
+# Priority: high
+# Description: Conduct a thorough audit of the existing codebase to identify duplication and common patterns across math operation components.
 # Details:
-Create a new branch for the integration project. Ensure the repository includes React, TypeScript, Vite, and Tailwind CSS. Set up the initial folder structure as outlined in the PRD. Prepare the repository to integrate the multiplication components by creating a MultiplicationDisplay component, useMultiplicationGameState hook, and useMultiplicationKeyboardNav hook. Adapt the multiplication-specific components to match our division tutor's style and behavior, and integrate with the existing App component. Implement a consistent UI and state management system across multiplication and division components. The basic file structure for the multiplication component has been created, including types, API service updates, a validator, and a problem generator.
+Review the code for Division, Addition, and Multiplication tabs. Document areas of code duplication and common patterns. Identify potential reusable components and hooks.
 
 # Test Strategy:
-Verify that the project builds successfully, the initial structure is in place, and the multiplication components are correctly integrated and styled to match the division tutor. Test keyboard navigation and ensure consistent behavior across all game modes. Ensure the new route for the multiplication component is functional and the navigation is updated accordingly.
+Ensure all existing tests pass to confirm no changes to functionality during audit.
 
 # Subtasks:
-## 101. Create MultiplicationDisplay Component [done]
+## 1. Review Division Component [pending]
 ### Dependencies: None
-### Description: Develop the MultiplicationDisplay component following the pattern of DivisionDisplay.
+### Description: Conduct a detailed review of the Division component to identify any duplication and patterns.
 ### Details:
+Analyze the Division component's code and documentation to ensure it meets the required standards and identify any areas for improvement.
 
-
-## 102. Develop useMultiplicationGameState Hook [in-progress]
+## 2. Review Addition Component [pending]
 ### Dependencies: None
-### Description: Complete the implementation of the useMultiplicationGameState hook following the pattern of useGameState.
+### Description: Conduct a detailed review of the Addition component to identify any duplication and patterns.
 ### Details:
+Analyze the Addition component's code and documentation to ensure it meets the required standards and identify any areas for improvement.
 
-
-## 103. Develop useMultiplicationKeyboardNav Hook [in-progress]
+## 3. Review Multiplication Component [pending]
 ### Dependencies: None
-### Description: Create a useMultiplicationKeyboardNav hook following the pattern of useKeyboardNav.
+### Description: Conduct a detailed review of the Multiplication component to identify any duplication and patterns.
 ### Details:
-
-
-## 104. Adapt Multiplication Components [in-progress]
-### Dependencies: None
-### Description: Adapt MultiplicationSteps, ProductInput, and InputSquare components to match the division tutor's style and behavior.
-### Details:
-
-
-## 105. Integrate with App Component [in-progress]
-### Dependencies: None
-### Description: Ensure the multiplication components are integrated with the existing App component to support multiple game modes.
-### Details:
-
-
-## 106. Implement MultiplicationLayout Component [done]
-### Dependencies: None
-### Description: Create MultiplicationLayout.tsx similar to DivisionLayout.tsx in src/components/MultiplicationProblem/.
-### Details:
-
-
-## 107. Create InputField and ProblemInput Components [in-progress]
-### Dependencies: None
-### Description: Develop InputField.tsx and ProblemInput.tsx for the multiplication component in src/components/MultiplicationProblem/.
-### Details:
-
-
-## 108. Implement ValidationFeedback Component [in-progress]
-### Dependencies: None
-### Description: Create ValidationFeedback.tsx to provide consistent validation feedback for multiplication problems.
-### Details:
-
-
-## 109. Update API Service for Multiplication [done]
-### Dependencies: None
-### Description: Adapt the existing useMathQuestions.ts hook and update apiService.ts to include multiplication problem fetching.
-### Details:
-
-
-## 110. Modify App Component for Multiplication Mode [in-progress]
-### Dependencies: None
-### Description: Modify App.tsx to include a third game mode option: 'multiplication' and implement mode switching.
-### Details:
-
-
-## 111. Update Header Component [in-progress]
-### Dependencies: None
-### Description: Update the Header component to include the multiplication option.
-### Details:
-
-
-## 112. Fix Linter Errors [in-progress]
-### Dependencies: None
-### Description: Fix any linter errors in the existing files to ensure code quality.
-### Details:
-
-
-## 113. Create Multiplication Route [in-progress]
-### Dependencies: None
-### Description: Create a new route for the multiplication component in the application.
-### Details:
-
-
-## 114. Update Navigation for Multiplication [in-progress]
-### Dependencies: None
-### Description: Update the navigation to include the multiplication component.
-### Details:
-
+Analyze the Multiplication component's code and documentation to ensure it meets the required standards and identify any areas for improvement.
 

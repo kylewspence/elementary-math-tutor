@@ -150,42 +150,34 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
     // Removed unused handleAutoAdvance function
 
-    // Helper function to create an input with consistent keyboard event handling
+    // Helper function to create an input with robust navigation and clearing
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
         const isActive =
             currentFocus.fieldType === fieldType &&
             currentFocus.fieldPosition === position &&
             currentFocus.partialIndex === partialIndex;
-
-        // Get user answer for this field
         const userAnswer = getUserAnswer(fieldType, position, partialIndex);
-
-        // Handle input change
-        const handleChange = (value: string) => {
-            if (value === '') {
-                // Clear the answer
-                onAnswerClear(fieldType, position, partialIndex);
-                return;
-            }
-
-            const numValue = parseInt(value, 10);
-            if (!isNaN(numValue)) {
-                onAnswerSubmit(numValue, fieldType, position, partialIndex);
-            }
-        };
-
         return (
             <Input
                 ref={isActive ? activeInputRef : undefined}
                 value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(fieldType, position, partialIndex)}
-                onClick={() => onFieldClick(fieldType, position, partialIndex)}
+                onChange={(value) => {
+                    if (value === '') onAnswerClear(fieldType, position, partialIndex);
+                    else {
+                        const numValue = parseInt(value, 10);
+                        if (!isNaN(numValue)) onAnswerSubmit(numValue, fieldType, position, partialIndex);
+                    }
+                }}
                 onKeyDown={onKeyDown}
-                onChange={handleChange}
-                readOnly={isSubmitted}
+                onClick={() => onFieldClick(fieldType, position, partialIndex)}
+                onAutoAdvance={() => {/* parent handles focus movement */ }}
+                onEnter={isSubmitted ? onNextProblem : undefined}
                 placeholder="?"
                 maxLength={1}
-                className={fieldType === 'carry' ? 'carry-input' : ''}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-label={`${fieldType} input for position ${position}`}
             />
         );
     };

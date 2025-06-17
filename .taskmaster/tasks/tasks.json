@@ -3,146 +3,141 @@
     "tasks": [
       {
         "id": 1,
-        "title": "Setup Project Repository",
-        "description": "Initialize the project repository with the required structure and dependencies, and prepare for integration with the multiplication components.",
-        "status": "in-progress",
+        "title": "Audit Current Codebase",
+        "description": "Conduct a thorough audit of the existing codebase to identify duplication and common patterns across math operation components.",
+        "details": "Review the code for Division, Addition, and Multiplication tabs. Document areas of code duplication and common patterns. Identify potential reusable components and hooks.",
+        "testStrategy": "Ensure all existing tests pass to confirm no changes to functionality during audit.",
+        "priority": "high",
         "dependencies": [],
-        "priority": "medium",
-        "details": "Create a new branch for the integration project. Ensure the repository includes React, TypeScript, Vite, and Tailwind CSS. Set up the initial folder structure as outlined in the PRD. Prepare the repository to integrate the multiplication components by creating a MultiplicationDisplay component, useMultiplicationGameState hook, and useMultiplicationKeyboardNav hook. Adapt the multiplication-specific components to match our division tutor's style and behavior, and integrate with the existing App component. Implement a consistent UI and state management system across multiplication and division components. The basic file structure for the multiplication component has been created, including types, API service updates, a validator, and a problem generator.",
-        "testStrategy": "Verify that the project builds successfully, the initial structure is in place, and the multiplication components are correctly integrated and styled to match the division tutor. Test keyboard navigation and ensure consistent behavior across all game modes. Ensure the new route for the multiplication component is functional and the navigation is updated accordingly.",
+        "status": "pending",
         "subtasks": [
           {
-            "id": 101,
-            "title": "Create MultiplicationDisplay Component",
-            "description": "Develop the MultiplicationDisplay component following the pattern of DivisionDisplay.",
-            "status": "done"
+            "id": 1,
+            "title": "Analyze UI Components",
+            "description": "Review the current UI components to identify duplication and patterns.",
+            "dependencies": [],
+            "details": "Examine the existing UI components for consistency and reusability. Document any patterns or duplications found.",
+            "status": "pending"
           },
           {
-            "id": 102,
-            "title": "Develop useMultiplicationGameState Hook",
-            "description": "Complete the implementation of the useMultiplicationGameState hook following the pattern of useGameState.",
-            "status": "in-progress"
+            "id": 2,
+            "title": "Plan UI Component Refactor",
+            "description": "Create a plan for refactoring UI components based on analysis.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop a strategy for refactoring UI components to improve consistency and reusability.",
+            "status": "pending"
           },
           {
-            "id": 103,
-            "title": "Develop useMultiplicationKeyboardNav Hook",
-            "description": "Create a useMultiplicationKeyboardNav hook following the pattern of useKeyboardNav.",
-            "status": "in-progress"
+            "id": 3,
+            "title": "Review Keyboard Navigation",
+            "description": "Evaluate the current keyboard navigation implementation.",
+            "dependencies": [],
+            "details": "Assess the keyboard navigation for accessibility and efficiency. Identify areas for improvement.",
+            "status": "pending"
           },
           {
-            "id": 104,
-            "title": "Adapt Multiplication Components",
-            "description": "Adapt MultiplicationSteps, ProductInput, and InputSquare components to match the division tutor's style and behavior.",
-            "status": "in-progress"
+            "id": 4,
+            "title": "Analyze State Management",
+            "description": "Examine the state management approach used in the codebase.",
+            "dependencies": [],
+            "details": "Review the current state management strategy to identify inefficiencies or complexities.",
+            "status": "pending"
           },
           {
-            "id": 105,
-            "title": "Integrate with App Component",
-            "description": "Ensure the multiplication components are integrated with the existing App component to support multiple game modes.",
-            "status": "in-progress"
+            "id": 5,
+            "title": "Plan State Management Refactor",
+            "description": "Develop a plan to refactor state management for better performance.",
+            "dependencies": [
+              4
+            ],
+            "details": "Outline steps to refactor state management to enhance performance and maintainability.",
+            "status": "pending"
           },
           {
-            "id": 106,
-            "title": "Implement MultiplicationLayout Component",
-            "description": "Create MultiplicationLayout.tsx similar to DivisionLayout.tsx in src/components/MultiplicationProblem/.",
-            "status": "done"
+            "id": 6,
+            "title": "Review Validation Logic",
+            "description": "Assess the validation logic used throughout the codebase.",
+            "dependencies": [],
+            "details": "Identify any redundant or inefficient validation logic and document findings.",
+            "status": "pending"
           },
           {
-            "id": 107,
-            "title": "Create InputField and ProblemInput Components",
-            "description": "Develop InputField.tsx and ProblemInput.tsx for the multiplication component in src/components/MultiplicationProblem/.",
-            "status": "in-progress"
+            "id": 7,
+            "title": "Analyze Problem Generation",
+            "description": "Review the logic for generating problems in the application.",
+            "dependencies": [],
+            "details": "Examine the problem generation logic for consistency and efficiency.",
+            "status": "pending"
           },
           {
-            "id": 108,
-            "title": "Implement ValidationFeedback Component",
-            "description": "Create ValidationFeedback.tsx to provide consistent validation feedback for multiplication problems.",
-            "status": "in-progress"
+            "id": 8,
+            "title": "Plan Problem Generation Refactor",
+            "description": "Create a plan to refactor problem generation logic.",
+            "dependencies": [
+              7
+            ],
+            "details": "Develop a strategy to refactor problem generation to improve logic and performance.",
+            "status": "pending"
           },
           {
-            "id": 109,
-            "title": "Update API Service for Multiplication",
-            "description": "Adapt the existing useMathQuestions.ts hook and update apiService.ts to include multiplication problem fetching.",
-            "status": "done"
+            "id": 9,
+            "title": "Review Accessibility Features",
+            "description": "Evaluate the accessibility features implemented in the application.",
+            "dependencies": [],
+            "details": "Assess the current accessibility features and identify areas for improvement.",
+            "status": "pending"
           },
           {
-            "id": 110,
-            "title": "Modify App Component for Multiplication Mode",
-            "description": "Modify App.tsx to include a third game mode option: 'multiplication' and implement mode switching.",
-            "status": "in-progress"
-          },
-          {
-            "id": 111,
-            "title": "Update Header Component",
-            "description": "Update the Header component to include the multiplication option.",
-            "status": "in-progress"
-          },
-          {
-            "id": 112,
-            "title": "Fix Linter Errors",
-            "description": "Fix any linter errors in the existing files to ensure code quality.",
-            "status": "in-progress"
-          },
-          {
-            "id": 113,
-            "title": "Create Multiplication Route",
-            "description": "Create a new route for the multiplication component in the application.",
-            "status": "in-progress"
-          },
-          {
-            "id": 114,
-            "title": "Update Navigation for Multiplication",
-            "description": "Update the navigation to include the multiplication component.",
-            "status": "in-progress"
+            "id": 10,
+            "title": "Plan Testing and Documentation",
+            "description": "Develop a comprehensive testing and documentation plan.",
+            "dependencies": [],
+            "details": "Outline a plan to ensure thorough testing and documentation of the refactored codebase.",
+            "status": "pending"
           }
         ]
       },
       {
         "id": 2,
-        "title": "Component Analysis and Preparation",
-        "description": "Analyze existing division and multiplication components to identify integration points.",
-        "details": "Review the codebases of both components to identify shared components and differences in structure, naming conventions, and styling.",
-        "testStrategy": "Document findings and ensure all integration points are identified.",
-        "priority": "medium",
+        "title": "Create Refactoring Plan",
+        "description": "Develop a detailed refactoring plan based on the audit findings, specifying components to extract and shared logic to implement.",
+        "details": "Outline a step-by-step plan for refactoring, including the creation of reusable components and hooks. Prioritize tasks based on complexity and impact.",
+        "testStrategy": "Review plan with stakeholders to ensure alignment with project goals and constraints.",
+        "priority": "high",
         "dependencies": [
           1
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Identify Components to Extract",
+            "description": "Determine which components need to be extracted from the existing system for better modularity and maintainability.",
+            "dependencies": [],
+            "details": "Review the current system architecture and identify components that can be isolated. Consider factors such as reusability, complexity, and dependencies.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Define Shared Logic",
+            "description": "Establish the shared logic that will be used across different components to ensure consistency and reduce redundancy.",
+            "dependencies": [
+              1
+            ],
+            "details": "Analyze the identified components to determine common functionalities and logic that can be centralized. Document the shared logic and how it will be implemented.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 3,
-        "title": "Create Operation Selector Component",
-        "description": "Develop a new component for switching between division and multiplication operations.",
-        "details": "Implement the OperationSelector component in the header or sidebar to allow users to switch between operations. Ensure it follows the same styling and UX patterns as existing components.",
-        "testStrategy": "Test the operation selector for correct rendering and functionality.",
-        "priority": "medium",
-        "dependencies": [
-          1
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 4,
-        "title": "Implement Routing for Operations",
-        "description": "Set up routing to switch between division and multiplication modes.",
-        "details": "Use React Router to create routes for division and multiplication. Ensure the default route is set to division and that navigation is seamless.",
-        "testStrategy": "Verify that navigation between routes works correctly and the correct components are rendered.",
-        "priority": "medium",
-        "dependencies": [
-          3
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 5,
-        "title": "Refactor Shared Components",
-        "description": "Identify and refactor UI components that can be shared between both operations.",
-        "details": "Extract common UI elements from division and multiplication components and standardize them for reuse.",
-        "testStrategy": "Ensure shared components render correctly in both operations.",
-        "priority": "medium",
+        "title": "Implement Shared Utilities and Hooks",
+        "description": "Extract shared logic into reusable hooks and utilities to reduce duplication across math operation components.",
+        "details": "Create hooks for common logic such as input validation and state management. Ensure hooks are well-documented and tested.",
+        "testStrategy": "Write unit tests for each hook to ensure they function correctly and integrate seamlessly with existing components.",
+        "priority": "high",
         "dependencies": [
           2
         ],
@@ -150,620 +145,398 @@
         "subtasks": [
           {
             "id": 1,
-            "title": "Identify Common Elements",
-            "description": "Analyze the existing codebase to identify elements that are repeated or can be abstracted into reusable components.",
+            "title": "Create Hooks for Input Validation",
+            "description": "Develop reusable hooks to handle input validation across the application.",
             "dependencies": [],
-            "details": "Review the code to find patterns, duplicated code, or similar functionalities that can be grouped together.",
+            "details": "Design and implement hooks that can be used to validate user inputs, ensuring they meet specified criteria before being processed.",
             "status": "pending"
           },
           {
             "id": 2,
-            "title": "Refactor Common Elements",
-            "description": "Refactor the identified common elements into reusable components or functions.",
-            "dependencies": [
-              1
-            ],
-            "details": "Create new components or functions for the identified common elements, ensuring they are well-documented and maintainable.",
+            "title": "Create Hooks for State Management",
+            "description": "Develop hooks to manage state effectively within the application.",
+            "dependencies": [],
+            "details": "Implement hooks that facilitate state management, allowing for efficient data handling and updates within the application.",
             "status": "pending"
           },
           {
             "id": 3,
-            "title": "Test for Consistency",
-            "description": "Test the refactored components to ensure they work consistently across the application.",
+            "title": "Document Hooks Usage and Implementation",
+            "description": "Create comprehensive documentation for the hooks developed for input validation and state management.",
             "dependencies": [
+              1,
               2
             ],
-            "details": "Develop and run test cases to verify that the refactored components maintain the same functionality and performance as before.",
+            "details": "Write detailed documentation that explains how to use the hooks, including examples and best practices.",
+            "status": "pending"
+          },
+          {
+            "id": 4,
+            "title": "Test Hooks Functionality",
+            "description": "Develop and execute tests to ensure the hooks for input validation and state management work as intended.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create test cases that cover various scenarios to validate the functionality and reliability of the hooks.",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Refactor Division Component",
+        "description": "Refactor the Division component to use shared hooks and utilities, ensuring no change in functionality or UX.",
+        "details": "Replace duplicated logic in the Division component with calls to shared hooks and utilities. Maintain all existing UX details.",
+        "testStrategy": "Conduct regression testing on the Division tab to verify functionality and UX remain unchanged.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Replace Logic in Component",
+            "description": "Refactor the logic within the specified component to improve performance and maintainability.",
+            "dependencies": [],
+            "details": "Identify the component that requires logic replacement. Refactor the code to ensure it meets the new requirements without altering the existing functionality.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Conduct Regression Testing",
+            "description": "Perform regression testing to ensure that the refactored component functions correctly and no existing functionality is broken.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop a comprehensive set of test cases that cover all aspects of the component's functionality. Execute these tests after the logic replacement to verify that the component behaves as expected.",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Refactor Addition Component",
+        "description": "Refactor the Addition component to use shared hooks and utilities, ensuring no change in functionality or UX.",
+        "details": "Replace duplicated logic in the Addition component with calls to shared hooks and utilities. Maintain all existing UX details.",
+        "testStrategy": "Conduct regression testing on the Addition tab to verify functionality and UX remain unchanged.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Logic Replacement",
+            "description": "Refactor the existing code to replace the current logic with the new logic as specified in the project requirements.",
+            "dependencies": [],
+            "details": "Review the current logic implementation, understand the new logic requirements, and refactor the code to implement the new logic. Ensure that the new logic is correctly integrated into the existing codebase.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Regression Testing",
+            "description": "Conduct regression testing to ensure that the new logic does not introduce any new bugs and that existing functionality is not broken.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop and execute a comprehensive set of test cases that cover both the new logic and existing functionalities. Document any issues found and verify that all tests pass successfully.",
             "status": "pending"
           }
         ]
       },
       {
         "id": 6,
-        "title": "Integrate Multiplication Component",
-        "description": "Integrate the external multiplication component into the existing application.",
-        "details": "Adapt the multiplication component to match the division component's folder structure, naming conventions, and styling. Ensure it follows the same keyboard navigation patterns.",
-        "testStrategy": "Verify that the multiplication component functions correctly within the application.",
+        "title": "Refactor Multiplication Component",
+        "description": "Refactor the Multiplication component to use shared hooks and utilities, ensuring no change in functionality or UX.",
+        "details": "Replace duplicated logic in the Multiplication component with calls to shared hooks and utilities. Maintain all existing UX details.",
+        "testStrategy": "Conduct regression testing on the Multiplication tab to verify functionality and UX remain unchanged.",
         "priority": "medium",
         "dependencies": [
-          4,
-          5
+          3
         ],
         "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Adapting Structure",
-            "description": "Modify the existing project structure to accommodate new integration requirements.",
+            "title": "Replace Duplicated Logic",
+            "description": "Identify and replace duplicated logic in the codebase with a single, reusable function or module.",
             "dependencies": [],
-            "details": "Review the current project structure and identify areas that need modification to support the integration. Implement necessary changes to ensure the structure is adaptable for future integration steps.",
+            "details": "Review the codebase to locate instances of duplicated logic. Refactor the code to replace these instances with a single, reusable function or module. Ensure that the new implementation maintains the same functionality as the original code.",
             "status": "pending"
           },
           {
             "id": 2,
-            "title": "Aligning Naming Conventions",
-            "description": "Ensure consistent naming conventions across the project to facilitate integration.",
+            "title": "Perform Regression Tests",
+            "description": "Conduct regression testing to ensure that the refactoring did not introduce any new bugs.",
             "dependencies": [
               1
             ],
-            "details": "Audit the current naming conventions used in the project. Develop a naming convention guideline and refactor existing code to align with these standards.",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Styling",
-            "description": "Update the project's styling to ensure consistency and compatibility with new components.",
-            "dependencies": [
-              2
-            ],
-            "details": "Review the current styling guidelines and update them to ensure they are compatible with the new components being integrated. Apply these styling updates across the project.",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Testing Integration",
-            "description": "Conduct thorough testing to ensure the integration is successful and compatible with existing systems.",
-            "dependencies": [
-              3
-            ],
-            "details": "Develop a comprehensive testing plan to verify the integration's functionality and compatibility. Execute the tests and document any issues or areas for improvement.",
+            "details": "After replacing the duplicated logic, run a comprehensive suite of regression tests to verify that the application still functions correctly. Pay special attention to areas of the code that were refactored.",
             "status": "pending"
           }
         ]
       },
       {
         "id": 7,
-        "title": "Update Keyboard Navigation",
-        "description": "Ensure consistent keyboard navigation across both components.",
-        "details": "Standardize Tab/Shift+Tab and Enter key behaviors in both division and multiplication components.",
-        "testStrategy": "Test keyboard navigation to ensure it works identically in both components.",
+        "title": "Standardize Prop Interfaces",
+        "description": "Standardize prop interfaces across similar components to improve consistency and maintainability.",
+        "details": "Review and update prop interfaces to ensure consistency. Document changes and update any affected components.",
+        "testStrategy": "Verify that all components using standardized props function correctly and pass all tests.",
         "priority": "medium",
         "dependencies": [
-          6
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 8,
-        "title": "Adapt Level Selector for Both Operations",
-        "description": "Modify the level selector to support both division and multiplication operations.",
-        "details": "Ensure the level selector dynamically updates based on the selected operation and maintains consistency in UX.",
-        "testStrategy": "Test the level selector for correct operation-specific behavior.",
-        "priority": "medium",
-        "dependencies": [
-          6
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 9,
-        "title": "Refactor State Management",
-        "description": "Adapt the multiplication component to use the same state management pattern as the division component.",
-        "details": "Create separate state hooks for division and multiplication, and implement a parent app state for operation selection.",
-        "testStrategy": "Verify state management consistency and correct state updates for both operations.",
-        "priority": "medium",
-        "dependencies": [
+          4,
+          5,
           6
         ],
         "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create State Hooks",
-            "description": "Develop individual state hooks for managing component-specific states.",
+            "title": "Review Current Interfaces",
+            "description": "Conduct a comprehensive review of all existing interfaces to identify inconsistencies and areas for improvement.",
             "dependencies": [],
-            "details": "Identify components that require state management and create custom hooks for each to encapsulate state logic.",
+            "details": "Gather all interface documentation and current implementations. Analyze them for adherence to current standards and note any deviations.",
             "status": "pending"
           },
           {
             "id": 2,
-            "title": "Implement Parent App State",
-            "description": "Integrate a centralized state management solution for the parent application.",
+            "title": "Update Interfaces",
+            "description": "Make necessary updates to the interfaces based on the review findings to ensure they meet the standard requirements.",
             "dependencies": [
               1
             ],
-            "details": "Choose a state management library or pattern, and refactor the application to use a centralized state for shared data.",
+            "details": "Implement changes to the interfaces as identified in the review. Ensure all updates are tested for functionality and compliance.",
             "status": "pending"
           },
           {
             "id": 3,
-            "title": "Test State Updates",
-            "description": "Ensure that state updates are correctly propagated and handled throughout the application.",
+            "title": "Document Changes",
+            "description": "Document all changes made to the interfaces for future reference and to maintain a record of updates.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create detailed documentation of the changes made, including before and after states, reasons for changes, and any new standards applied.",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Enhance Code Organization and File Structure",
+        "description": "Improve the organization of the codebase by restructuring files and directories for better maintainability.",
+        "details": "Reorganize files and directories to reflect the new component structure. Update import paths and ensure all components are correctly linked.",
+        "testStrategy": "Run the application to ensure all components load correctly and no import errors occur.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Reorganize Files",
+            "description": "Reorganize the project files to improve code organization.",
+            "dependencies": [],
+            "details": "Review the current file structure and move files into a more logical and organized structure. Ensure that all files are placed in appropriate directories based on their functionality.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Update Import Paths",
+            "description": "Update the import paths in the codebase to reflect the new file organization.",
+            "dependencies": [
+              1
+            ],
+            "details": "After reorganizing the files, update all import statements in the codebase to ensure they point to the correct file locations. This includes updating relative paths and ensuring no broken imports exist.",
+            "status": "pending"
+          },
+          {
+            "id": 3,
+            "title": "Verify Component Links",
+            "description": "Verify that all components are correctly linked and functioning after reorganization.",
             "dependencies": [
               1,
               2
             ],
-            "details": "Write and execute tests to verify that state changes trigger appropriate updates in the UI and other dependent components.",
+            "details": "Test the application to ensure that all components are correctly linked and functioning as expected. This includes running the application and checking for any errors or broken links.",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement Comprehensive Test Coverage",
+        "description": "Ensure comprehensive test coverage for the refactored codebase to maintain functionality and prevent regressions.",
+        "details": "Develop unit and integration tests for all components and hooks. Use a testing framework compatible with the existing tech stack.",
+        "testStrategy": "Achieve 100% test coverage and ensure all tests pass consistently.",
+        "priority": "high",
+        "dependencies": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Unit Tests",
+            "description": "Create unit tests for individual components or functions to ensure they work as expected in isolation.",
+            "dependencies": [],
+            "details": "Identify key components and functions within the codebase that require unit testing. Write tests using a suitable testing framework and ensure they cover various edge cases.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Develop Integration Tests",
+            "description": "Create integration tests to verify that different components or systems work together as intended.",
+            "dependencies": [
+              1
+            ],
+            "details": "Identify interactions between components that need testing. Develop tests that simulate real-world usage scenarios to ensure components interact correctly.",
+            "status": "pending"
+          },
+          {
+            "id": 3,
+            "title": "Achieve Coverage Goals",
+            "description": "Ensure that the test suite achieves the desired level of code coverage.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Analyze current test coverage reports and identify areas lacking sufficient tests. Write additional tests to cover these areas and meet the coverage targets.",
+            "status": "pending"
+          },
+          {
+            "id": 4,
+            "title": "Ensure Test Consistency",
+            "description": "Verify that tests consistently produce the same results and are reliable.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Run tests multiple times to ensure they are deterministic and not flaky. Address any issues causing inconsistent test results.",
             "status": "pending"
           }
         ]
       },
       {
         "id": 10,
-        "title": "Standardize Validation and Feedback Mechanisms",
-        "description": "Ensure validation and feedback mechanisms are consistent across both components.",
-        "details": "Adapt validation and feedback mechanisms in the multiplication component to match those of the division component.",
-        "testStrategy": "Test validation feedback for consistency in both components.",
+        "title": "Document Architecture Decisions and Component Relationships",
+        "description": "Create detailed documentation of the refactored architecture and component relationships for future reference.",
+        "details": "Document the architecture, including component diagrams and relationships. Explain the rationale behind refactoring decisions.",
+        "testStrategy": "Review documentation for completeness and clarity with team members.",
         "priority": "medium",
         "dependencies": [
-          6
+          8
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Document Architecture",
+            "description": "Create comprehensive documentation of the current system architecture.",
+            "dependencies": [],
+            "details": "Include diagrams, component descriptions, and data flow explanations to provide a clear understanding of the system's structure.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Explain Refactoring Decisions",
+            "description": "Document the rationale behind recent refactoring decisions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Provide detailed explanations for each refactoring decision, including the problems addressed and the benefits achieved.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 11,
-        "title": "Implement Consistent Error Handling",
-        "description": "Ensure consistent error handling across both components.",
-        "details": "Standardize error handling patterns and ensure they are implemented in both division and multiplication components.",
-        "testStrategy": "Test error scenarios to ensure consistent handling and messaging.",
+        "title": "Generate Before/After Code Metrics",
+        "description": "Produce metrics to demonstrate the reduction in code duplication and improvement in code organization.",
+        "details": "Use code analysis tools to generate metrics on lines of code and duplication before and after refactoring.",
+        "testStrategy": "Verify metrics accurately reflect changes and improvements made during refactoring.",
         "priority": "medium",
         "dependencies": [
           9
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Generate Metrics Before Refactoring",
+            "description": "Collect and analyze metrics from the current codebase before any refactoring is done.",
+            "dependencies": [],
+            "details": "Identify key performance indicators and gather data on the current state of the codebase. This may include metrics such as code complexity, execution time, memory usage, and any other relevant performance indicators.",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Generate Metrics After Refactoring",
+            "description": "Collect and analyze metrics from the codebase after refactoring has been completed.",
+            "dependencies": [
+              1
+            ],
+            "details": "After refactoring, gather the same set of metrics as before to compare and analyze the impact of the refactoring. This will help in understanding the improvements or regressions in the codebase.",
+            "status": "pending"
+          }
+        ]
       },
       {
         "id": 12,
-        "title": "Conduct Cross-Component Testing",
-        "description": "Verify consistent behavior and integration between division and multiplication components.",
-        "details": "Perform comprehensive testing to ensure both components function correctly and integrate seamlessly.",
-        "testStrategy": "Conduct functional and integration tests across both components.",
-        "priority": "medium",
+        "title": "Final Review and Deployment",
+        "description": "Conduct a final review of the refactored codebase and deploy the updated application.",
+        "details": "Perform a thorough review of the entire codebase. Ensure all tests pass and documentation is complete. Deploy the application to production.",
+        "testStrategy": "Monitor the application post-deployment to ensure stability and functionality.",
+        "priority": "high",
         "dependencies": [
           10,
           11
         ],
         "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 13,
-        "title": "Responsive Design Testing",
-        "description": "Ensure layout consistency across different screen sizes.",
-        "details": "Test the application on various devices to ensure responsive design and layout consistency.",
-        "testStrategy": "Verify that the application maintains a consistent layout on different screen sizes.",
-        "priority": "medium",
-        "dependencies": [
-          12
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 14,
-        "title": "Performance Optimization",
-        "description": "Optimize the application to maintain performance standards.",
-        "details": "Ensure the application maintains sub-second response times for all interactions. Optimize rendering and state updates where necessary.",
-        "testStrategy": "Use performance profiling tools to identify bottlenecks and verify optimization.",
-        "priority": "medium",
-        "dependencies": [
-          13
-        ],
-        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Profile Performance",
-            "description": "Measure the current performance of the system to establish a baseline.",
+            "title": "Codebase Review",
+            "description": "Conduct a thorough review of the codebase to identify any potential issues or improvements.",
             "dependencies": [],
-            "details": "Use profiling tools to gather data on system performance, including CPU usage, memory usage, and execution time.",
+            "details": "Review the entire codebase for coding standards, potential bugs, and areas for optimization. Document any findings and suggest improvements.",
             "status": "pending"
           },
           {
             "id": 2,
-            "title": "Identify Bottlenecks",
-            "description": "Analyze profiling data to identify performance bottlenecks.",
+            "title": "Test Verification",
+            "description": "Verify that all tests pass successfully and cover necessary functionality.",
             "dependencies": [
               1
             ],
-            "details": "Examine the profiling data to find areas where the system is underperforming or consuming excessive resources.",
+            "details": "Run all existing tests to ensure they pass. Review test coverage reports to ensure all critical paths are tested. Write additional tests if necessary.",
             "status": "pending"
           },
           {
             "id": 3,
-            "title": "Optimize Performance",
-            "description": "Implement changes to address identified bottlenecks and improve system performance.",
+            "title": "Deployment",
+            "description": "Deploy the application to the production environment after ensuring stability and functionality.",
             "dependencies": [
               2
             ],
-            "details": "Apply optimization techniques such as code refactoring, algorithm improvements, or resource management adjustments.",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Verify Improvements",
-            "description": "Test the system to ensure that performance optimizations have been successful.",
-            "dependencies": [
-              3
-            ],
-            "details": "Re-profile the system and compare the results to the baseline to confirm that performance has improved.",
+            "details": "Prepare the deployment plan, execute the deployment process, and monitor the application post-deployment to ensure everything is functioning as expected.",
             "status": "pending"
           }
         ]
-      },
-      {
-        "id": 15,
-        "title": "Update Documentation and Deploy",
-        "description": "Update technical documentation and deploy the integrated application.",
-        "details": "Ensure all documentation reflects the new integration. Deploy the updated application to the production environment.",
-        "testStrategy": "Verify that documentation is complete and accurate. Ensure deployment is successful and the application is live.",
-        "priority": "medium",
-        "dependencies": [
-          14
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 16,
-        "title": "Fix TypeScript Errors in Project",
-        "description": "Resolve all TypeScript errors identified during the build process to ensure successful project compilation.",
-        "details": "This task involves addressing 26 TypeScript errors that have been identified in the project. These errors include type mismatches between different problem types such as DivisionProblem, AdditionProblem, and MultiplicationProblem. Additionally, there are unused variables and imports that need to be removed, missing required properties in returned objects that must be added, and issues with state management in the useGameState hook that need to be resolved. Start by reviewing the TypeScript error log to identify the specific files and lines where errors occur. For type mismatches, ensure that all problem types have consistent interfaces and type definitions. Remove any unused variables and imports to clean up the code. For missing properties, review the function or component signatures to ensure all required properties are included. Finally, investigate the useGameState hook to resolve any state management issues, ensuring it correctly manages and updates state as expected.",
-        "testStrategy": "To verify the completion of this task, run the TypeScript compiler to ensure there are no remaining errors. Conduct a build process to confirm the project compiles successfully without any TypeScript errors. Additionally, perform manual testing of the application to ensure all functionalities work as expected, particularly focusing on areas where errors were fixed. Use a linter to check for any remaining unused variables or imports.",
-        "status": "pending",
-        "dependencies": [
-          1,
-          6
-        ],
-        "priority": "high",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Review TypeScript Error Log",
-            "description": "Analyze the TypeScript error log to identify specific files and lines where errors occur.",
-            "dependencies": [],
-            "details": "Utilize tools like Visual Studio Code's built-in debugging support to navigate through the error log and pinpoint the exact locations of the 26 TypeScript errors.\n<info added on 2025-06-15T20:01:16.613Z>\nAfter reviewing the TypeScript error log, the following issues have been identified:\n\n1. Type mismatches:\n   - In App.tsx, MultiplicationProblem and AdditionProblem are not assignable to DivisionProblem.\n   - In useGameState.ts, there are multiple issues with GameState types not being compatible.\n\n2. Unused variables and imports:\n   - clearAnswer, gameState, onProblemChange in DivisionDisplay.tsx\n   - digit in MultiplicationDisplay.tsx\n   - MultiplicationCurrentFocus in MultiplicationLayout.tsx\n   - needsCarry in useAdditionKeyboardNav.ts\n   - generateMultiplicationProblem in apiService.ts\n   - MultiplicationDifficulty in constants.ts\n   - PartialProduct and GameLevel in multiplicationProblemGenerator.ts\n\n3. Missing required properties:\n   - 'difficulty' property is missing in a returned object in apiService.ts\n\n4. State management issues:\n   - In useGameState.ts, there are multiple errors related to type incompatibility when updating the state.\n\nThe files that need to be modified are:\n- src/App.tsx\n- src/components/DivisionProblem/DivisionDisplay.tsx\n- src/components/MultiplicationProblem/MultiplicationDisplay.tsx\n- src/components/MultiplicationProblem/MultiplicationLayout.tsx\n- src/hooks/useAdditionKeyboardNav.ts\n- src/hooks/useGameState.ts\n- src/utils/apiService.ts\n- src/utils/constants.ts\n- src/utils/multiplicationProblemGenerator.ts\n\nThese issues need to be addressed to resolve the TypeScript errors.\n</info added on 2025-06-15T20:01:16.613Z>",
-            "status": "in-progress"
-          },
-          {
-            "id": 2,
-            "title": "Resolve Type Mismatches",
-            "description": "Address type mismatches between different problem types such as DivisionProblem, AdditionProblem, and MultiplicationProblem by ensuring consistent interfaces and type definitions.",
-            "dependencies": [
-              1
-            ],
-            "details": "Define and implement consistent interfaces for all problem types to ensure type compatibility and prevent type mismatch errors.",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Remove Unused Variables and Imports",
-            "description": "Clean up the code by removing unused variables and imports.",
-            "dependencies": [
-              1
-            ],
-            "details": "Use static analysis tools like ESLint to detect and eliminate unused variables and imports, enhancing code readability and maintainability.",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Add Missing Required Properties",
-            "description": "Ensure all returned objects include all required properties.",
-            "dependencies": [
-              1
-            ],
-            "details": "Review the code to identify objects missing required properties and update them accordingly to meet the expected structure.",
-            "status": "pending"
-          },
-          {
-            "id": 5,
-            "title": "Investigate and Resolve State Management Issues",
-            "description": "Investigate and resolve issues with state management in the useGameState hook to ensure it correctly manages and updates state as expected.",
-            "dependencies": [
-              1
-            ],
-            "details": "Debug the useGameState hook to identify and fix any issues affecting state management, ensuring it functions as intended.",
-            "status": "pending"
-          }
-        ]
-      },
-      {
-        "id": 17,
-        "title": "Update MultiplicationDisplay Component Styling",
-        "description": "Update the MultiplicationDisplay component to match the styling of the division and addition components.",
-        "details": "This task involves updating the MultiplicationDisplay component to have the same visual appearance as the DivisionDisplay and AdditionDisplay components. This includes using the same card styling, fonts, colors, spacing, and layout patterns.",
-        "testStrategy": "",
-        "status": "done",
-        "dependencies": [
-          1
-        ],
-        "priority": "high",
-        "subtasks": []
-      },
-      {
-        "id": 18,
-        "title": "Implement Tab/Shift+Tab Navigation",
-        "description": "Ensure keyboard navigation works consistently in the multiplication tab.",
-        "details": "Implement tab/shift+tab navigation between input fields in the multiplication component, matching the behavior in the division and addition tabs. Ensure keyboard shortcuts work identically across all tabs.",
-        "testStrategy": "",
-        "status": "done",
-        "dependencies": [
-          17
-        ],
-        "priority": "high",
-        "subtasks": []
-      },
-      {
-        "id": 19,
-        "title": "Add Carry Number Functionality",
-        "description": "Add empty boxes above the problem for carrying numbers in the multiplication tab.",
-        "details": "Implement carry number input fields in the appropriate positions, matching the behavior in the division and addition tabs. Ensure these fields can be navigated to with keyboard.",
-        "testStrategy": "",
-        "status": "done",
-        "dependencies": [
-          18
-        ],
-        "priority": "high",
-        "subtasks": []
-      },
-      {
-        "id": 20,
-        "title": "Standardize Button Layout and Icons",
-        "description": "Match button placement and styling with other tabs and add relevant icons.",
-        "status": "in-progress",
-        "dependencies": [
-          17
-        ],
-        "priority": "high",
-        "details": "Implement the same button set (Submit/Check, Next, Reset, New Problem) with consistent styling (colors, sizes, hover effects). Specifically, update the multiplication tab to match the division tab's button layout, which is arranged in a triangle formation with Submit Answers at the top, and Reset Problem and New Problem side by side below it. Ensure all buttons have identical styling (colors, hover effects, font weights) and positioning. Add relevant icons to buttons for visual appeal.",
-        "testStrategy": "Verify that the button layout in the multiplication tab matches the division tab's triangle formation. Check that all buttons have consistent styling, including colors, hover effects, and font weights. Ensure icons are present and correctly aligned on each button. Test across different browsers and screen sizes to confirm responsiveness and visual consistency.",
-        "subtasks": []
-      },
-      {
-        "id": 21,
-        "title": "Implement Editable Problem Feature",
-        "description": "Ensure the multiplication problem's edit functionality matches the division tab's behavior.",
-        "status": "pending",
-        "dependencies": [
-          17
-        ],
-        "priority": "high",
-        "details": "Focus on refining the existing implementation in the MultiplicationDisplay component to ensure it matches the division tab. Verify that the problem is clickable to enter edit mode, shows input fields for multiplicand and multiplier, implements click-outside behavior to save changes, and includes the same edit mode indicator text as the division tab. Ensure the styling and positioning of the editable problem header matches the division tab exactly.",
-        "testStrategy": "Conduct a side-by-side comparison of the multiplication and division tabs to ensure consistent behavior and appearance. Test the click-to-edit functionality, input field display, click-outside save behavior, and edit mode indicator text. Verify that the styling and positioning are identical to the division tab.",
-        "subtasks": [
-          {
-            "id": 211,
-            "title": "Verify click-to-edit functionality",
-            "description": "Ensure the multiplication problem is clickable to enter edit mode, similar to the division tab.",
-            "status": "pending"
-          },
-          {
-            "id": 212,
-            "title": "Check input fields display",
-            "description": "Verify that input fields for multiplicand and multiplier are displayed correctly in edit mode.",
-            "status": "pending"
-          },
-          {
-            "id": 213,
-            "title": "Implement click-outside behavior",
-            "description": "Ensure that clicking outside the input fields saves changes and exits edit mode.",
-            "status": "pending"
-          },
-          {
-            "id": 214,
-            "title": "Add edit mode indicator text",
-            "description": "Ensure the same edit mode indicator text as the division tab is displayed.",
-            "status": "pending"
-          },
-          {
-            "id": 215,
-            "title": "Match styling and positioning",
-            "description": "Ensure the styling and positioning of the editable problem header matches the division tab exactly.",
-            "status": "pending"
-          }
-        ]
-      },
-      {
-        "id": 22,
-        "title": "Standardize Instruction Placement",
-        "description": "Standardize the placement and styling of instruction text in the multiplication tab to match the division tab.",
-        "status": "pending",
-        "dependencies": [
-          17
-        ],
-        "priority": "medium",
-        "details": "Ensure the keyboard navigation help text and any other instructions appear in the same position as in the division tab. Use consistent styling for font size, color, and spacing. Ensure wording is identical across tabs. Remove any instruction text that doesn't exist in the division tab.",
-        "testStrategy": "Verify that all instruction text in the multiplication tab matches the division tab in terms of position, styling, and wording. Check that any unnecessary instructions not present in the division tab have been removed.",
-        "subtasks": [
-          {
-            "id": 101,
-            "title": "Align Keyboard Navigation Help Text",
-            "description": "Ensure the keyboard navigation help text is positioned identically to the division tab.",
-            "status": "pending"
-          },
-          {
-            "id": 102,
-            "title": "Standardize Instruction Styling",
-            "description": "Apply consistent font size, color, and spacing to all instruction text to match the division tab.",
-            "status": "pending"
-          },
-          {
-            "id": 103,
-            "title": "Unify Instruction Wording",
-            "description": "Ensure all instruction wording is identical to that used in the division tab.",
-            "status": "pending"
-          },
-          {
-            "id": 104,
-            "title": "Remove Unnecessary Instructions",
-            "description": "Identify and remove any instruction text not present in the division tab.",
-            "status": "pending"
-          }
-        ]
-      },
-      {
-        "id": 23,
-        "title": "Fix Remaining TypeScript and Lint Errors",
-        "description": "Fix all TypeScript and lint errors in the multiplication components and address critical UI issues.",
-        "status": "done",
-        "dependencies": [
-          16
-        ],
-        "priority": "high",
-        "details": "Address all TypeScript and lint errors identified in the codebase, particularly in the multiplication-related files. Ensure all components use proper typing and follow the project's code style guidelines. Additionally, standardize the MultiplicationDisplay component layout to be visually indistinguishable from the division page, except for the mathematical operation. This includes removing unnecessary text like 'multiplication tutor' and 'level 1' headings, eliminating any 'next step' box, ensuring the container/wrapper around the equation is identical, standardizing the position and styling of the problem header, positioning input boxes consistently, and ensuring the completion message appears in the same position and styling.",
-        "testStrategy": "Test the MultiplicationDisplay component to ensure it matches the division page layout exactly. Verify that all TypeScript and lint errors are resolved. Conduct user testing to confirm that the layout is standardized, unnecessary elements are removed, and the visual appearance is consistent with the division tab.",
-        "subtasks": [
-          {
-            "id": 101,
-            "title": "Reduce number of boxes in MultiplicationDisplay",
-            "description": "Simplify the layout by reducing the number of carry boxes and partial products to match the division page.",
-            "status": "done"
-          },
-          {
-            "id": 102,
-            "title": "Ensure cursor starts at correct position",
-            "description": "Modify the MultiplicationDisplay to ensure the cursor starts at the correct position for solving.",
-            "status": "done"
-          },
-          {
-            "id": 103,
-            "title": "Add '?' placeholders in empty boxes",
-            "description": "Ensure all empty input boxes in the MultiplicationDisplay have a '?' placeholder.",
-            "status": "done"
-          },
-          {
-            "id": 104,
-            "title": "Fix typing issues in MultiplicationDisplay",
-            "description": "Resolve issues with typing in the MultiplicationDisplay to ensure values enter correctly.",
-            "status": "done"
-          },
-          {
-            "id": 105,
-            "title": "Improve navigation order",
-            "description": "Adjust the navigation order in the MultiplicationDisplay to be logical and intuitive.",
-            "status": "done"
-          },
-          {
-            "id": 106,
-            "title": "Align layout with division page",
-            "description": "Rewrite the MultiplicationDisplay layout to match the clean and simple structure of the division page.",
-            "status": "done"
-          },
-          {
-            "id": 107,
-            "title": "Remove unnecessary text and elements",
-            "description": "Remove 'multiplication tutor', 'level 1' headings, and any 'next step' boxes that do not exist in the division tab.",
-            "status": "done"
-          },
-          {
-            "id": 108,
-            "title": "Standardize container and header styling",
-            "description": "Ensure the container/wrapper and problem header styling and positioning are identical to the division tab.",
-            "status": "done"
-          },
-          {
-            "id": 109,
-            "title": "Position input boxes consistently",
-            "description": "Adjust the position of input boxes to match the layout of the division tab.",
-            "status": "done"
-          },
-          {
-            "id": 110,
-            "title": "Ensure consistent completion message",
-            "description": "Make sure the completion message appears in the same position and with the same styling as in the division tab.",
-            "status": "done"
-          },
-          {
-            "id": 111,
-            "title": "Consider rewriting MultiplicationDisplay component",
-            "description": "If the existing MultiplicationDisplay component proves too difficult to modify, create a new component that mirrors the DivisionDisplay structure. Ensure the new component uses the same styling, layout, and component structure, adapting only the logic specific to multiplication operations. Maintain all features such as editable problems and keyboard navigation. Ensure the button layout and styling exactly matches the division tab, and remove any unnecessary elements that don't exist in the division tab.",
-            "status": "done"
-          }
-        ]
-      },
-      {
-        "id": 24,
-        "title": "Unify Layout and Structure of Multiplication and Division Tabs",
-        "description": "Ensure the layout and structure of the multiplication and division tabs are identical, removing unnecessary elements.",
-        "details": "Begin by reviewing the current layout of both the multiplication and division tabs. Identify all elements that differ between the two, including buttons, containers, and any structural components. Remove any unnecessary text such as 'multiplication tutor' and 'level 1' headings from both tabs. Eliminate the 'next step' box from the layout. Ensure that all visual elements, such as button styles, container borders, and spacing, match exactly between the two tabs. Use CSS to standardize styles and ensure that any JavaScript logic affecting layout is consistent. Coordinate with the team responsible for Task 20 to ensure button layouts are standardized. After implementing changes, conduct a visual comparison to verify exact matches.",
-        "testStrategy": "Conduct a visual inspection of both tabs to ensure they are identical in layout and structure. Use a design comparison tool to overlay screenshots of both tabs and identify any discrepancies. Verify that all unnecessary text and elements have been removed. Ensure that the removal of elements does not affect functionality by testing all interactive components. Confirm that the changes do not introduce any new visual or functional bugs.",
-        "status": "done",
-        "dependencies": [
-          6,
-          17,
-          20
-        ],
-        "priority": "high",
-        "subtasks": []
-      },
-      {
-        "id": 25,
-        "title": "Enhance Keyboard Navigation for Multiplication Tab",
-        "description": "Implement intuitive keyboard navigation for multiplication problems, ensuring the flow mimics natural problem-solving methods.",
-        "status": "pending",
-        "dependencies": [
-          7,
-          18,
-          24
-        ],
-        "priority": "high",
-        "details": "Focus on creating a keyboard navigation system where the cursor starts in the first empty box under the equation under the single digit. The navigation should then jump up to a 'carry' box if needed, otherwise move to the second empty box under the equation. This should reflect the natural right-to-left flow a user follows when solving multiplication problems, including handling carries appropriately. Ensure Shift+Tab navigates in reverse order. Analyze the logical sequence a user follows when solving multiplication problems and implement it programmatically. Ensure consistency with existing navigation logic across tabs.",
-        "testStrategy": "1. Open the multiplication tab and press Tab to ensure the focus starts at the first empty input box under the equation under the single digit.\n2. Enter a value and press Tab again to verify the focus moves to the 'carry' box if applicable, or the next empty input box.\n3. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order correctly.\n4. Ensure the navigation order is consistent with how multiplication is taught (right-to-left, handling carries appropriately).\n5. Test with various multiplication problem sizes to ensure the navigation logic handles all cases correctly.",
-        "subtasks": [
-          {
-            "id": 101,
-            "title": "Analyze natural flow for solving multiplication problems",
-            "description": "Study how users naturally solve multiplication problems to inform the navigation logic.",
-            "status": "pending"
-          },
-          {
-            "id": 102,
-            "title": "Implement tab/shift+tab navigation",
-            "description": "Develop the navigation logic to follow the natural problem-solving flow, ensuring the cursor starts in the correct position and handles carries appropriately.",
-            "status": "pending"
-          },
-          {
-            "id": 103,
-            "title": "Test navigation with various problem sizes",
-            "description": "Verify that the navigation works correctly across different multiplication problem sizes, ensuring it feels intuitive and helpful.",
-            "status": "pending"
-          }
-        ]
-      },
-      {
-        "id": 26,
-        "title": "Implement Carry Number Functionality for Multiplication",
-        "description": "Focus on implementing the carry number functionality specifically for the multiplication tab, ensuring it is intuitive and visually consistent with the rest of the application.",
-        "status": "done",
-        "dependencies": [
-          18,
-          19,
-          25
-        ],
-        "priority": "high",
-        "details": "To implement the carry number functionality for multiplication, add empty boxes above the multiplication problem where carrying is necessary. These boxes should initially contain '?' placeholders to indicate that they are for carry numbers. The layout should match the existing approach used in the division tab. Integrate these carry boxes into the existing keyboard navigation flow, ensuring that users can navigate to them using Tab and Shift+Tab keys. Update the navigation logic to recognize these new input fields as part of the natural problem-solving sequence. Ensure that the carry boxes are visually distinct yet consistent with the overall design and are correctly positioned above the relevant digits in the multiplication problem.",
-        "testStrategy": "1. Open the multiplication tab and verify that empty boxes with '?' placeholders appear above the problem where carrying is needed.\n2. Use the Tab key to navigate through the input fields and ensure that the focus moves to the carry boxes in the correct sequence.\n3. Enter values in the carry boxes and verify that they can be edited and saved correctly.\n4. Use Shift+Tab to navigate backwards and ensure the focus moves in reverse order through the input fields, including the carry boxes.\n5. Check the visual alignment and styling of the carry boxes to ensure they are visually distinct yet consistent with the rest of the UI.",
-        "subtasks": []
       }
     ],
     "metadata": {
-      "created": "2025-06-15T18:54:08.328Z",
-      "updated": "2025-06-15T22:07:05.146Z",
-      "description": "Tasks for master context"
+      "created": "2025-06-17T17:04:43.602Z",
+      "updated": "2025-06-17T17:17:06.122Z",
+      "description": "Tasks for refactor context"
     }
   }
 }

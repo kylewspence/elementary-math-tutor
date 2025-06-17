@@ -213,12 +213,14 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         }
     }, [onUpdateProblem, problem]);
 
-    // Helper function to create an input with consistent keyboard event handling
+    // Helper function to create an input with robust navigation and clearing
     const createInput = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
+        const isActive = currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType;
+        const userAnswer = getUserAnswer(columnPosition, fieldType);
         return (
             <Input
-                ref={currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType ? activeInputRef : undefined}
-                value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
+                ref={isActive ? activeInputRef : undefined}
+                value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(columnPosition, fieldType)}
                 onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
                 onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
@@ -226,22 +228,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 onAutoAdvance={handleAutoAdvance}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 placeholder="?"
+                maxLength={1}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-label={`${fieldType} input for column ${columnPosition}`}
             />
         );
-    }, [
-        activeInputRef,
-        allFieldsFilled,
-        currentFocus,
-        getInputVariant,
-        getUserAnswer,
-        handleAutoAdvance,
-        handleInputChange,
-        isSubmitted,
-        onFieldClick,
-        onKeyDown,
-        onNextProblem,
-        onProblemSubmit
-    ]);
+    }, [activeInputRef, allFieldsFilled, currentFocus, getInputVariant, getUserAnswer, handleAutoAdvance, handleInputChange, isSubmitted, onFieldClick, onKeyDown, onNextProblem, onProblemSubmit]);
 
     // Check if all input fields have answers
     useEffect(() => {

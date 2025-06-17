@@ -1,11 +1,25 @@
 # Task ID: 11
-# Title: Implement Consistent Error Handling
+# Title: Generate Before/After Code Metrics
 # Status: pending
 # Dependencies: 9
 # Priority: medium
-# Description: Ensure consistent error handling across both components.
+# Description: Produce metrics to demonstrate the reduction in code duplication and improvement in code organization.
 # Details:
-Standardize error handling patterns and ensure they are implemented in both division and multiplication components.
+Use code analysis tools to generate metrics on lines of code and duplication before and after refactoring.
 
 # Test Strategy:
-Test error scenarios to ensure consistent handling and messaging.
+Verify metrics accurately reflect changes and improvements made during refactoring.
+
+# Subtasks:
+## 1. Generate Metrics Before Refactoring [pending]
+### Dependencies: None
+### Description: Collect and analyze metrics from the current codebase before any refactoring is done.
+### Details:
+Identify key performance indicators and gather data on the current state of the codebase. This may include metrics such as code complexity, execution time, memory usage, and any other relevant performance indicators.
+
+## 2. Generate Metrics After Refactoring [pending]
+### Dependencies: 11.1
+### Description: Collect and analyze metrics from the codebase after refactoring has been completed.
+### Details:
+After refactoring, gather the same set of metrics as before to compare and analyze the impact of the refactoring. This will help in understanding the improvements or regressions in the codebase.
+

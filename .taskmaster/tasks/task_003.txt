@@ -1,11 +1,37 @@
 # Task ID: 3
-# Title: Create Operation Selector Component
+# Title: Implement Shared Utilities and Hooks
 # Status: pending
-# Dependencies: 1
-# Priority: medium
-# Description: Develop a new component for switching between division and multiplication operations.
+# Dependencies: 2
+# Priority: high
+# Description: Extract shared logic into reusable hooks and utilities to reduce duplication across math operation components.
 # Details:
-Implement the OperationSelector component in the header or sidebar to allow users to switch between operations. Ensure it follows the same styling and UX patterns as existing components.
+Create hooks for common logic such as input validation and state management. Ensure hooks are well-documented and tested.
 
 # Test Strategy:
-Test the operation selector for correct rendering and functionality.
+Write unit tests for each hook to ensure they function correctly and integrate seamlessly with existing components.
+
+# Subtasks:
+## 1. Create Hooks for Input Validation [pending]
+### Dependencies: None
+### Description: Develop reusable hooks to handle input validation across the application.
+### Details:
+Design and implement hooks that can be used to validate user inputs, ensuring they meet specified criteria before being processed.
+
+## 2. Create Hooks for State Management [pending]
+### Dependencies: None
+### Description: Develop hooks to manage state effectively within the application.
+### Details:
+Implement hooks that facilitate state management, allowing for efficient data handling and updates within the application.
+
+## 3. Document Hooks Usage and Implementation [pending]
+### Dependencies: 3.1, 3.2
+### Description: Create comprehensive documentation for the hooks developed for input validation and state management.
+### Details:
+Write detailed documentation that explains how to use the hooks, including examples and best practices.
+
+## 4. Test Hooks Functionality [pending]
+### Dependencies: 3.1, 3.2
+### Description: Develop and execute tests to ensure the hooks for input validation and state management work as intended.
+### Details:
+Create test cases that cover various scenarios to validate the functionality and reliability of the hooks.
+

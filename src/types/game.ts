@@ -94,11 +94,4 @@ export interface InputFieldState {
     isActive: boolean;
     isCorrect: boolean | null;
     isError: boolean;
-}
-
-export interface KeyboardNavigation {
-    currentField: { stepNumber: number; fieldType: string; position: number } | null;
-    moveNext: () => void;
-    movePrevious: () => void;
-    jumpToField: (stepNumber: number, fieldType: string, position: number) => void;
 } 

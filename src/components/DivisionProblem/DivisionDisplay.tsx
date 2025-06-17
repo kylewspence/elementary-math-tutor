@@ -125,8 +125,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         setAllFieldsFilled(userAnswers.length >= totalFields);
     }, [problem, userAnswers]);
 
-
-
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
         return userAnswers.find(a => a.stepNumber === stepNumber && a.fieldType === fieldType && a.fieldPosition === position);
@@ -179,48 +177,33 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
-        if (!problem) return; // Early return if no problem
-
-        // Small delay to ensure current input is processed
-        setTimeout(() => {
-            if (currentFocus.fieldType === 'quotient') {
-                // Move to multiply - start with the leftmost digit
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                const multiplyDigits = getDigitCount(step.multiply);
-                onFieldClick(currentFocus.stepNumber, 'multiply', multiplyDigits - 1);
-            } else if (currentFocus.fieldType === 'multiply') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next multiply digit
-                    onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
-                } else {
-                    // Move to subtract
-                    const subtractDigits = getDigitCount(step.subtract);
-                    onFieldClick(currentFocus.stepNumber, 'subtract', subtractDigits - 1);
-                }
-            } else if (currentFocus.fieldType === 'subtract') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next subtract digit
-                    onFieldClick(currentFocus.stepNumber, 'subtract', currentFocus.fieldPosition - 1);
-                } else if (step.bringDown !== undefined) {
-                    // Move to bring down
-                    onFieldClick(currentFocus.stepNumber, 'bringDown', 0);
-                } else if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                    // Move to next step quotient
-                    onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-                }
-            } else if (currentFocus.fieldType === 'bringDown' && currentFocus.stepNumber + 1 < problem.steps.length) {
-                // Move to next step quotient
-                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
+        if (!problem) return;
+        // Find the current field in navigation order
+        const allFields = [];
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
+            allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
             }
-        }, 100);
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+            if (step.bringDown !== undefined) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
+            }
+        }
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === currentFocus.stepNumber &&
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition
+        );
+        if (currentIndex >= 0 && currentIndex < allFields.length - 1) {
+            const next = allFields[currentIndex + 1];
+            onFieldClick(next.stepNumber, next.fieldType as 'quotient' | 'multiply' | 'subtract' | 'bringDown', next.fieldPosition);
+        }
     };
 
     // Handle problem editing
@@ -294,11 +277,13 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
                 onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
                 readOnly={isSubmitted}
                 placeholder="?"
+                aria-label={`${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} digit ${position + 1}`}
+                maxLength={1}
             />
         );
     };
@@ -554,8 +539,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         </div>
                     </div>
                 </div>
-
-
 
                 {/* Completion card - positioned in the center of the workspace */}
                 {isSubmitted && isComplete && (

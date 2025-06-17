@@ -1,0 +1,107 @@
+import { useState, useCallback } from 'react';
+
+/**
+ * Shared keyboard navigation hook for math problem UIs (Division, Addition, Multiplication).
+ *
+ * @template Field - The type representing a field (e.g., {stepNumber, fieldType, fieldPosition})
+ * @param getAllFields - Function returning all fields in navigation order
+ * @param options - Optional: isSubmitted, onProblemSubmit, fieldEquals (custom field comparison)
+ */
+export function useMathKeyboardNav<Field>(
+    getAllFields: () => Field[],
+    options?: {
+        isSubmitted?: boolean;
+        onProblemSubmit?: () => void;
+        fieldEquals?: (a: Field, b: Field) => boolean;
+    }
+) {
+    const { isSubmitted = false, onProblemSubmit, fieldEquals } = options || {};
+
+    // Default field equality: shallow compare all keys
+    const defaultFieldEquals = (a: Field, b: Field) => {
+        return JSON.stringify(a) === JSON.stringify(b);
+    };
+    const eq = fieldEquals || defaultFieldEquals;
+
+    const allFields = getAllFields();
+    const [currentFocus, setCurrentFocus] = useState<Field>(allFields[0]);
+
+    // Find index of current field
+    const getCurrentFieldIndex = useCallback(() => {
+        return allFields.findIndex(f => eq(f, currentFocus));
+    }, [allFields, currentFocus, eq]);
+
+    // Move to next field
+    const moveNext = useCallback(() => {
+        const idx = getCurrentFieldIndex();
+        if (idx < allFields.length - 1 && idx !== -1) {
+            setCurrentFocus(allFields[idx + 1]);
+        } else if (allFields.length > 0) {
+            setCurrentFocus(allFields[0]); // wrap
+        }
+    }, [allFields, getCurrentFieldIndex]);
+
+    // Move to previous field
+    const movePrevious = useCallback(() => {
+        const idx = getCurrentFieldIndex();
+        if (idx > 0) {
+            setCurrentFocus(allFields[idx - 1]);
+        } else if (allFields.length > 0) {
+            setCurrentFocus(allFields[allFields.length - 1]); // wrap
+        }
+    }, [allFields, getCurrentFieldIndex]);
+
+    // Jump to a specific field
+    const jumpToField = useCallback((field: Field) => {
+        setCurrentFocus(field);
+    }, []);
+
+    // Check if a field is focused
+    const isFieldFocused = useCallback((field: Field) => {
+        return eq(field, currentFocus);
+    }, [currentFocus, eq]);
+
+    // Handle keyboard events
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        switch (e.key) {
+            case 'Tab':
+                e.preventDefault();
+                if (e.shiftKey) movePrevious();
+                else moveNext();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (isSubmitted) return;
+                if (onProblemSubmit && (getCurrentFieldIndex() === allFields.length - 1)) {
+                    onProblemSubmit();
+                } else {
+                    moveNext();
+                }
+                break;
+            case 'ArrowRight':
+            case 'ArrowDown':
+                e.preventDefault();
+                moveNext();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                e.preventDefault();
+                movePrevious();
+                break;
+            default:
+                // Allow numbers, backspace, delete, etc.
+                break;
+        }
+    }, [moveNext, movePrevious, isSubmitted, onProblemSubmit, getCurrentFieldIndex, allFields.length]);
+
+    return {
+        currentFocus,
+        setCurrentFocus,
+        moveNext,
+        movePrevious,
+        jumpToField,
+        isFieldFocused,
+        handleKeyDown,
+        allFields,
+    };
+} 
