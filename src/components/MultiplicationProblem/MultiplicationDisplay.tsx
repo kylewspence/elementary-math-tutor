@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
-import ProblemComplete from '../UI/ProblemComplete';
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -431,7 +430,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     return (
         <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
-            <div className="text-center mb-16" ref={problemRef}>
+            <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
                     {problem.isEditable ? (
                         <>
@@ -473,6 +472,15 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 )}
             </div>
 
+            {/* Problem complete notification - compact inline message */}
+            {isSubmitted && isComplete && (
+                <div className="text-center mb-4">
+                    <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 font-semibold">
+                        Problem complete! 🎉
+                    </div>
+                </div>
+            )}
+
             {/* Main content with problem work */}
             <div className="relative">
                 {/* Multiplication layout - centered */}
@@ -481,32 +489,12 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         {renderMultiplicationGrid()}
                     </div>
                 </div>
-
-                {/* Problem complete notification using the new component */}
-                {/* Debug info: isSubmitted={isSubmitted.toString()}, isComplete={isComplete.toString()} */}
-                {isSubmitted && isComplete && (
-                    <ProblemComplete
-                        type="multiplication"
-                        problem={{
-                            multiplicand: problem?.multiplicand,
-                            multiplier: problem?.multiplier,
-                            product: problem?.product
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
-            </div>
-
-            {/* Tab to move forward help text - now as a footnote */}
-            <div className="text-center text-sm text-gray-500 mt-8">
-                Press Tab to move to the next field
             </div>
 
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-6">
-                {/* Submit button */}
-                {!isSubmitted && (
+                {/* Submit/Next Problem button */}
+                {!isSubmitted ? (
                     <button
                         onClick={() => onProblemSubmit?.()}
                         disabled={!userAnswers.length}
@@ -522,7 +510,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                             Submit Answers
                         </span>
                     </button>
-                )}
+                ) : isComplete ? (
+                    <button
+                        onClick={() => onNextProblem?.()}
+                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        autoFocus
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            Next Problem →
+                        </span>
+                    </button>
+                ) : null}
 
                 {/* Reset and New Problem buttons */}
                 <div className="flex justify-center space-x-4">

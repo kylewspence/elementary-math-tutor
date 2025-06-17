@@ -4,6 +4,18 @@
 export type MultiplicationDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
 
 /**
+ * Represents a level in the multiplication game
+ */
+export interface MultiplicationLevel {
+    id: number;
+    name: string;
+    description: string;
+    multiplicandDigits: number;  // Number of digits in the multiplicand (top number)
+    multiplierDigits: number;    // Number of digits in the multiplier (bottom number)
+    difficulty: MultiplicationDifficulty;
+}
+
+/**
  * Represents a multiplication problem
  */
 export interface MultiplicationProblem {

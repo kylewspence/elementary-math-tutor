@@ -3,7 +3,6 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
-import ProblemComplete from '../UI/ProblemComplete';
 
 interface AdditionDisplayProps {
     problem: AdditionProblem | null;
@@ -347,7 +346,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
-            <div className="text-center mb-16" ref={problemRef}>
+            <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
                     {problem.isEditable ? (
                         <>
@@ -388,6 +387,15 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Problem complete notification - compact inline message */}
+            {isSubmitted && areAllAnswersCorrect() && (
+                <div className="text-center mb-4">
+                    <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 font-semibold">
+                        Problem complete! 🎉
+                    </div>
+                </div>
+            )}
 
             {/* Main content with problem work */}
             <div className="relative">
@@ -465,25 +473,12 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </div>
                 </div>
 
-                {/* Problem complete notification */}
-                {isSubmitted && areAllAnswersCorrect() && (
-                    <ProblemComplete
-                        type="addition"
-                        problem={{
-                            addend1: problem?.addend1,
-                            addend2: problem?.addend2,
-                            sum: problem?.sum
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
             </div>
 
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-6">
-                {/* Submit button */}
-                {!isSubmitted && (
+                {/* Submit/Next Problem button */}
+                {!isSubmitted ? (
                     <button
                         onClick={onProblemSubmit}
                         disabled={!allFieldsFilled}
@@ -499,7 +494,17 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             Submit Answers
                         </span>
                     </button>
-                )}
+                ) : areAllAnswersCorrect() ? (
+                    <button
+                        onClick={() => onNextProblem?.()}
+                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        autoFocus
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            Next Problem →
+                        </span>
+                    </button>
+                ) : null}
 
                 {/* Reset and New Problem buttons */}
                 <div className="flex justify-center space-x-4">
