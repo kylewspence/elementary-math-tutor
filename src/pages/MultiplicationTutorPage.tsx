@@ -8,6 +8,7 @@ const MultiplicationTutorPage: React.FC = () => {
     const {
         gameState,
         submitAnswer,
+        clearAnswer,
         submitProblem,
         nextProblem,
         resetProblem,
@@ -28,7 +29,8 @@ const MultiplicationTutorPage: React.FC = () => {
         gameState.problem,
         gameState.userAnswers,
         submitAnswer,
-        submitProblem
+        submitProblem,
+        clearAnswer
     );
 
     // Ensure focus is set on initial page load
@@ -54,8 +56,8 @@ const MultiplicationTutorPage: React.FC = () => {
 
     // Handle keyboard navigation
     const handleKeyDown = () => {
-        // Let the keyboard navigation hook handle it
-        // This is just a pass-through function to match the division interface
+        // The keyboard navigation hook handles events directly through document listeners
+        // This is just a pass-through function to match the interface
     };
 
     // Handle retry fetch
@@ -70,11 +72,7 @@ const MultiplicationTutorPage: React.FC = () => {
 
     // Handle answer clear
     const handleAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        // For now, this is not fully implemented in the game state
-        // In a full implementation, we would call a clearAnswer function from the game state
-        void fieldType;
-        void position;
-        void partialIndex;
+        clearAnswer(fieldType, position, partialIndex);
     };
 
     return (

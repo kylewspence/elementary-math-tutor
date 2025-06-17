@@ -18,7 +18,7 @@ interface AdditionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: string | null;
-    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
+    onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     gameState?: AdditionGameState;
     onNextProblem?: () => void;
@@ -221,9 +221,26 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
                 variant={getInputVariant(columnPosition, fieldType)}
                 onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onKeyDown={(e) => onKeyDown(e)}
                 onClick={() => onFieldClick(columnPosition, fieldType)}
                 onAutoAdvance={handleAutoAdvance}
+                onBackspace={() => {
+                    // Find previous field and move to it
+                    console.log('Backspace handler called in AdditionDisplay', { columnPosition, fieldType });
+                    const fields = getAllRequiredFields();
+                    console.log('All fields:', fields);
+                    const currentIndex = fields.findIndex(
+                        (field) => field.columnPosition === columnPosition && field.fieldType === fieldType
+                    );
+                    console.log('Current index:', currentIndex);
+                    if (currentIndex > 0) {
+                        const prevField = fields[currentIndex - 1];
+                        console.log('Moving to previous field:', prevField);
+                        onFieldClick(prevField.columnPosition, prevField.fieldType);
+                    } else {
+                        console.log('Already at first field, nowhere to go');
+                    }
+                }}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 placeholder="?"
             />
@@ -240,7 +257,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         onFieldClick,
         onKeyDown,
         onNextProblem,
-        onProblemSubmit
+        onProblemSubmit,
+        getAllRequiredFields
     ]);
 
     // Check if all input fields have answers
