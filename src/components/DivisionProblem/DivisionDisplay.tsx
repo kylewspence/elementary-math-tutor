@@ -4,7 +4,6 @@ import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import ProblemComplete from '../UI/ProblemComplete';
-import { useKeyboardNav } from '../../hooks/useKeyboardNav';
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
