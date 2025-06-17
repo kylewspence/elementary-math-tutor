@@ -389,6 +389,20 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 )}
             </div>
 
+            {/* Problem complete notification - positioned right after header */}
+            {isSubmitted && areAllAnswersCorrect() && (
+                <ProblemComplete
+                    type="addition"
+                    problem={{
+                        addend1: problem?.addend1,
+                        addend2: problem?.addend2,
+                        sum: problem?.sum
+                    }}
+                    onNextProblem={onNextProblem || (() => { })}
+                    variant="card"
+                />
+            )}
+
             {/* Main content with problem work */}
             <div className="relative">
                 {/* Addition layout - centered */}
@@ -465,25 +479,12 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </div>
                 </div>
 
-                {/* Problem complete notification */}
-                {isSubmitted && areAllAnswersCorrect() && (
-                    <ProblemComplete
-                        type="addition"
-                        problem={{
-                            addend1: problem?.addend1,
-                            addend2: problem?.addend2,
-                            sum: problem?.sum
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
             </div>
 
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-6">
-                {/* Submit button */}
-                {!isSubmitted && (
+                {/* Submit/Next Problem button */}
+                {!isSubmitted ? (
                     <button
                         onClick={onProblemSubmit}
                         disabled={!allFieldsFilled}
@@ -499,7 +500,17 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             Submit Answers
                         </span>
                     </button>
-                )}
+                ) : areAllAnswersCorrect() ? (
+                    <button
+                        onClick={() => onNextProblem?.()}
+                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        autoFocus
+                    >
+                        <span className="flex items-center justify-center gap-1">
+                            Next Problem →
+                        </span>
+                    </button>
+                ) : null}
 
                 {/* Reset and New Problem buttons */}
                 <div className="flex justify-center space-x-4">
