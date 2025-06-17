@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_LEVELS, ADDITION_LEVELS } from '../../utils/constants';
+import { GAME_LEVELS, ADDITION_LEVELS, MULTIPLICATION_LEVELS } from '../../utils/constants';
 import type { GameState } from '../../types/game';
 import type { AdditionGameState } from '../../types/addition';
 import type { MultiplicationGameState } from '../../types/multiplication';
@@ -15,7 +15,9 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ gameState, onLevelSelect 
     const totalProblems = levelProblems.length;
 
     // Determine which levels to use based on game mode
-    const levels = gameMode === 'addition' ? ADDITION_LEVELS : GAME_LEVELS;
+    const levels = gameMode === 'addition' ? ADDITION_LEVELS :
+        gameMode === 'multiplication' ? MULTIPLICATION_LEVELS :
+            GAME_LEVELS;
 
     return (
         <div className="bg-blue-100 p-4 rounded-lg border-2 border-blue-200">

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { MultiplicationGameState, MultiplicationProblem, MultiplicationUserAnswer, MultiplicationDifficulty } from '../types/multiplication';
-import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
+import { MULTIPLICATION_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
 import { generateMultiplicationProblem, createSpecificMultiplicationProblem } from '../utils/multiplicationProblemGenerator';
 import { validateMultiplicationAnswer, isMultiplicationProblemComplete } from '../utils/multiplicationValidator';
 import { fetchMultiplicationProblems } from '../utils/apiService';
@@ -114,7 +114,7 @@ export function useMultiplicationGameState() {
         // Initialize available levels based on feature flags
         let initialLevels = [1];
         if (FEATURES.ALLOW_LEVEL_SKIPPING) {
-            initialLevels = GAME_LEVELS.map(l => l.id);
+            initialLevels = MULTIPLICATION_LEVELS.map(l => l.id);
         }
 
         setGameState(prev => ({
@@ -129,7 +129,7 @@ export function useMultiplicationGameState() {
     // Jump to a specific level
     const jumpToLevel = useCallback((levelId: number) => {
         // Check if the level exists
-        if (!GAME_LEVELS.some(l => l.id === levelId)) {
+        if (!MULTIPLICATION_LEVELS.some(l => l.id === levelId)) {
             return;
         }
 
@@ -311,7 +311,7 @@ export function useMultiplicationGameState() {
 
                 // Unlock next level if appropriate
                 const nextLevel = prev.currentLevel + 1;
-                if (nextLevel <= GAME_LEVELS.length && !availableLevels.includes(nextLevel)) {
+                if (nextLevel <= MULTIPLICATION_LEVELS.length && !availableLevels.includes(nextLevel)) {
                     availableLevels.push(nextLevel);
                 }
             }

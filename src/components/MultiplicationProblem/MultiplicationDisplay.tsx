@@ -498,11 +498,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 )}
             </div>
 
-            {/* Tab to move forward help text - now as a footnote */}
-            <div className="text-center text-sm text-gray-500 mt-8">
-                Press Tab to move to the next field
-            </div>
-
             {/* Button layout in triangle formation */}
             <div className="flex flex-col items-center mt-6">
                 {/* Submit button */}

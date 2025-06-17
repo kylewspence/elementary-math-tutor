@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GAME_LEVELS, ADDITION_LEVELS } from '../../utils/constants';
+import { GAME_LEVELS, ADDITION_LEVELS, MULTIPLICATION_LEVELS } from '../../utils/constants';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
@@ -21,7 +21,9 @@ const LevelSelectorDrawer: React.FC<LevelSelectorDrawerProps> = ({
     const [isOpen, setIsOpen] = useState(false);
 
     // Determine which levels to use based on game mode
-    const levels = gameMode === 'addition' ? ADDITION_LEVELS : GAME_LEVELS;
+    const levels = gameMode === 'addition' ? ADDITION_LEVELS :
+        gameMode === 'multiplication' ? MULTIPLICATION_LEVELS :
+            GAME_LEVELS;
 
     const toggleDrawer = () => {
         setIsOpen(!isOpen);
