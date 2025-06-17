@@ -32,6 +32,11 @@ const API_ENDPOINT = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MATH_PROBLEMS
  * Fetches math problems from the server
  */
 export async function fetchMathProblems(): Promise<ApiResponse> {
+    // Check if API configuration is complete
+    if (!API_CONFIG.BASE_URL || !API_CONFIG.DEVICE_ID) {
+        throw new Error('API configuration incomplete - falling back to local generation');
+    }
+
     const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: {
