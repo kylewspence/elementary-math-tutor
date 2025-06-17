@@ -267,7 +267,7 @@ export function useMultiplicationGameState() {
     };
 
     // Clear an answer for a specific field
-    const clearAnswer = useCallback((fieldType: 'product' | 'partial', fieldPosition: number, partialIndex?: number) => {
+    const clearAnswer = useCallback((fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number) => {
         setGameState(prev => {
             const filteredAnswers = prev.userAnswers.filter(a =>
                 !(a.fieldType === fieldType &&
