@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import './App.css';
 import Header from './components/Header/Header';
 import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
@@ -10,7 +11,6 @@ import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
-import MultiplicationDisplay from './components/MultiplicationProblem/MultiplicationDisplay';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
@@ -276,26 +276,7 @@ function App() {
         )}
 
         {gameMode === 'multiplication' && (
-          <MultiplicationDisplay
-            problem={gameState.problem as MultiplicationProblem | null}
-            userAnswers={gameState.userAnswers as MultiplicationUserAnswer[]}
-            currentFocus={currentFocus as MultiplicationCurrentFocus}
-            onAnswerSubmit={handleAnswerSubmit}
-            onAnswerClear={handleAnswerClear}
-            onProblemSubmit={handleProblemSubmit}
-            onKeyDown={handleKeyDown}
-            onFieldClick={handleFieldClick}
-            isSubmitted={gameState.isSubmitted}
-            isComplete={gameState.isComplete}
-            isLoading={gameState.isLoading}
-            fetchError={gameState.fetchError}
-            onNextProblem={handleNextProblem}
-            onResetProblem={resetProblem}
-            onNewProblem={generateNewProblem}
-            onRetryFetch={handleRetryFetch}
-            onUpdateProblem={updateProblem}
-            getPreviousField={getPreviousField}
-          />
+          <MultiplicationTutorPage />
         )}
       </main>
 

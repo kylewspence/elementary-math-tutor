@@ -192,24 +192,9 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                     }
                 }}
                 onBackspace={() => {
-                    console.log('Backspace handler called in MultiplicationDisplay', { fieldType, position, partialIndex });
-
-                    // This is a simplified version since we don't have a getAllFieldsInOrder function
-                    // For multiplication, we'll just call onFieldClick with the previous position
-                    if (position > 0) {
-                        console.log('Moving to previous position in same field type');
-                        onFieldClick(fieldType, position - 1, partialIndex);
-                    } else if (fieldType === 'product' && position === 0 && problem) {
-                        // If we're at the rightmost product position, move to the last partial position
-                        console.log('Moving from product to last partial position');
-                        onFieldClick('partial', problem.multiplicand.toString().length - 1 || 0, 0);
-                    } else if (fieldType === 'partial' && position === 0 && partialIndex !== undefined && partialIndex > 0 && problem) {
-                        // If we're at the rightmost partial position of a row, move to the last position of the previous row
-                        console.log('Moving to previous partial row');
-                        onFieldClick('partial', problem.multiplicand.toString().length - 1 || 0, partialIndex - 1);
-                    } else {
-                        console.log('No previous field to move to');
-                    }
+                    // The keyboard navigation hook handles the backspace logic
+                    // This callback is called by the Input component when backspace is pressed on an empty field
+                    // The actual navigation is handled by the useMultiplicationKeyboardNav hook
                 }}
                 readOnly={isSubmitted}
                 placeholder="?"
