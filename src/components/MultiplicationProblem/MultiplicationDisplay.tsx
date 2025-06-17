@@ -152,6 +152,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        if (!currentFocus) return null;
         const isActive =
             currentFocus.fieldType === fieldType &&
             currentFocus.fieldPosition === position &&
@@ -171,6 +172,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             const numValue = parseInt(value, 10);
             if (!isNaN(numValue)) {
                 onAnswerSubmit(numValue, fieldType, position, partialIndex);
+                // Don't auto-advance here - let the Input component handle it
             }
         };
 
@@ -182,6 +184,18 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onKeyDown={onKeyDown}
                 onChange={handleChange}
+                // Remove onAutoAdvance to prevent unwanted navigation
+                onEnter={() => {
+                    // Move to the next field on Enter
+                    if (onProblemSubmit) {
+                        onProblemSubmit();
+                    }
+                }}
+                onBackspace={() => {
+                    // The keyboard navigation hook handles the backspace logic
+                    // This callback is called by the Input component when backspace is pressed on an empty field
+                    // The actual navigation is handled by the useMultiplicationKeyboardNav hook
+                }}
                 readOnly={isSubmitted}
                 placeholder="?"
                 maxLength={1}

@@ -10,7 +10,8 @@ export function useMultiplicationKeyboardNav(
     problem: MultiplicationProblem | null,
     userAnswers: MultiplicationUserAnswer[],
     onSubmitAnswer: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void,
-    onSubmitProblem: () => void
+    onSubmitProblem: () => void,
+    onClearAnswer?: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void
 ) {
     // Current focus state - start with rightmost product digit (position 0)
     const [currentFocus, setCurrentFocus] = useState<MultiplicationCurrentFocus>({
@@ -36,7 +37,7 @@ export function useMultiplicationKeyboardNav(
                 currentFocus.partialIndex
             );
 
-            // Automatically move to next field (similar to Tab behavior)
+            // Auto-advance to the next field
             moveToNextField();
             return;
         }
@@ -48,7 +49,7 @@ export function useMultiplicationKeyboardNav(
                 if (e.shiftKey) {
                     moveToPreviousField();
                 } else {
-                    moveToNextField();
+                    moveToNextField(true); // Allow wrap-around for manual Tab navigation
                 }
                 break;
 
@@ -62,8 +63,7 @@ export function useMultiplicationKeyboardNav(
             case KEYBOARD_KEYS.BACKSPACE:
             case KEYBOARD_KEYS.DELETE:
                 e.preventDefault();
-                // Clear the current field by submitting a special value (e.g., -1)
-                // This would need to be handled in the game state
+                handleBackspace();
                 break;
 
             case KEYBOARD_KEYS.ARROW_RIGHT:
@@ -73,7 +73,7 @@ export function useMultiplicationKeyboardNav(
 
             case KEYBOARD_KEYS.ARROW_LEFT:
                 e.preventDefault();
-                moveToNextField(); // Left moves to next (right-to-left input)
+                moveToNextField(true); // Left moves to next (right-to-left input), allow wrap-around
                 break;
 
             case KEYBOARD_KEYS.ARROW_UP:
@@ -127,171 +127,114 @@ export function useMultiplicationKeyboardNav(
         return false;
     }, [problem]);
 
-    // Move to the next field in the tab order
-    const moveToNextField = useCallback(() => {
-        if (!problem) return;
+    // Get all fields in order for navigation (similar to division tab)
+    const getAllFieldsInOrder = useCallback((): MultiplicationCurrentFocus[] => {
+        if (!problem) return [];
 
+        const allFields: MultiplicationCurrentFocus[] = [];
         const productDigits = problem.product.toString().length;
-        const multiplicandDigits = problem.multiplicand.toString().length;
 
-        // Current position
-        const { fieldType, fieldPosition } = currentFocus;
-
-        // New focus to be calculated
-        let newFocus: MultiplicationCurrentFocus;
-
-        // Navigation logic - following the natural flow of solving multiplication problems
-        if (fieldType === 'product') {
-            // If we're in the product row
-            if (fieldPosition < productDigits - 1) {
-                // Move to the next product digit (left)
-                const nextPosition = fieldPosition + 1;
-
-                // Check if there's a carry needed for the next position
-                if (shouldShowCarry(nextPosition)) {
-                    // Move to the carry box above the next position
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: nextPosition,
-                        partialIndex: 0 // Use 0 for all carries
-                    };
-                } else {
-                    // Move to the next product digit (left)
-                    newFocus = {
-                        fieldType: 'product',
-                        fieldPosition: nextPosition,
-                        partialIndex: undefined
-                    };
-                }
-            } else {
-                // We're at the leftmost product digit
-                // Check if we need a leftmost carry box
-                if (shouldShowCarry(multiplicandDigits)) {
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: multiplicandDigits,
-                        partialIndex: 0
-                    };
-                } else {
-                    // Wrap around to the first product digit
-                    newFocus = {
-                        fieldType: 'product',
-                        fieldPosition: 0,
-                        partialIndex: undefined
-                    };
-                }
-            }
-        } else if (fieldType === 'carry') {
-            // After filling in a carry, move to the product digit below it
-            newFocus = {
+        // Build fields in the natural solving order: right to left, interleaving product and carry fields
+        for (let pos = 0; pos < productDigits; pos++) {
+            // Add the product field at this position
+            allFields.push({
                 fieldType: 'product',
-                fieldPosition: fieldPosition,
+                fieldPosition: pos,
                 partialIndex: undefined
-            };
+            });
+
+            // If this position needs a carry (and it's not the rightmost position), add it next
+            if (pos < productDigits - 1 && shouldShowCarry(pos + 1)) {
+                allFields.push({
+                    fieldType: 'carry',
+                    fieldPosition: pos + 1,
+                    partialIndex: 0
+                });
+            }
         }
 
-        // Update the focus
-        setCurrentFocus(newFocus!);
-    }, [problem, currentFocus, shouldShowCarry]);
+        return allFields;
+    }, [problem, shouldShowCarry]);
+
+    // Get the previous field for backspace navigation
+    const getPreviousField = useCallback((
+        fieldType: 'product' | 'partial' | 'carry',
+        fieldPosition: number,
+        partialIndex?: number
+    ): MultiplicationCurrentFocus | null => {
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.fieldType === fieldType &&
+            field.fieldPosition === fieldPosition &&
+            field.partialIndex === partialIndex
+        );
+
+        if (currentIndex > 0) {
+            return allFields[currentIndex - 1];
+        }
+
+        return null; // No previous field if we're at the first field
+    }, [getAllFieldsInOrder]);
+
+    // Handle backspace navigation
+    const handleBackspace = useCallback(() => {
+        const { fieldType, fieldPosition, partialIndex } = currentFocus;
+
+        // Check if current field has a value
+        const hasValue = userAnswers.some(answer =>
+            answer.fieldType === fieldType &&
+            answer.fieldPosition === fieldPosition &&
+            answer.partialIndex === partialIndex
+        );
+
+        if (hasValue && onClearAnswer) {
+            // Clear the current field first
+            onClearAnswer(fieldType, fieldPosition, partialIndex);
+        } else {
+            // Field is empty, move to previous field
+            const previousField = getPreviousField(fieldType, fieldPosition, partialIndex);
+            if (previousField) {
+                setCurrentFocus(previousField);
+            }
+        }
+    }, [currentFocus, userAnswers, onClearAnswer, getPreviousField]);
+
+    // Move to the next field in the tab order (with wrap-around for manual navigation)
+    const moveToNextField = useCallback((allowWrapAround: boolean = false) => {
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition &&
+            field.partialIndex === currentFocus.partialIndex
+        );
+
+        // Move to next field in the ordered list
+        if (currentIndex < allFields.length - 1 && currentIndex !== -1) {
+            setCurrentFocus(allFields[currentIndex + 1]);
+        } else if (allowWrapAround && allFields.length > 0) {
+            // Wrap around to the first field only if explicitly allowed (for Tab navigation)
+            setCurrentFocus(allFields[0]);
+        }
+        // If we're at the last field and wrap-around is not allowed, stay there
+    }, [currentFocus, getAllFieldsInOrder]);
 
     // Move to the previous field in the tab order
     const moveToPreviousField = useCallback(() => {
-        if (!problem) return;
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.fieldType === currentFocus.fieldType &&
+            field.fieldPosition === currentFocus.fieldPosition &&
+            field.partialIndex === currentFocus.partialIndex
+        );
 
-        const productDigits = problem.product.toString().length;
-        const multiplicandDigits = problem.multiplicand.toString().length;
-
-        // Current position
-        const { fieldType, fieldPosition } = currentFocus;
-
-        // New focus to be calculated
-        let newFocus: MultiplicationCurrentFocus;
-
-        // Reverse navigation logic
-        if (fieldType === 'product') {
-            if (fieldPosition > 0) {
-                // Check if the current position has a carry
-                if (shouldShowCarry(fieldPosition)) {
-                    // Move to the carry box above this position
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: fieldPosition,
-                        partialIndex: 0
-                    };
-                } else {
-                    // Move to the previous product digit
-                    const prevPosition = fieldPosition - 1;
-                    newFocus = {
-                        fieldType: 'product',
-                        fieldPosition: prevPosition,
-                        partialIndex: undefined
-                    };
-                }
-            } else {
-                // We're at the rightmost product digit
-                // Check if there's a leftmost carry
-                if (shouldShowCarry(multiplicandDigits)) {
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: multiplicandDigits,
-                        partialIndex: 0
-                    };
-                } else {
-                    // Find the rightmost carry box
-                    let foundCarry = false;
-                    for (let pos = multiplicandDigits - 1; pos > 0; pos--) {
-                        if (shouldShowCarry(pos)) {
-                            newFocus = {
-                                fieldType: 'carry',
-                                fieldPosition: pos,
-                                partialIndex: 0
-                            };
-                            foundCarry = true;
-                            break;
-                        }
-                    }
-
-                    if (!foundCarry) {
-                        // Wrap around to the leftmost product digit
-                        newFocus = {
-                            fieldType: 'product',
-                            fieldPosition: productDigits - 1,
-                            partialIndex: undefined
-                        };
-                    }
-                }
-            }
-        } else if (fieldType === 'carry') {
-            // From carry, find the previous position that has a carry
-            let prevPosition = fieldPosition - 1;
-
-            // Look for previous positions with carries
-            while (prevPosition > 0) {
-                if (shouldShowCarry(prevPosition)) {
-                    // Found a previous position with a carry
-                    newFocus = {
-                        fieldType: 'carry',
-                        fieldPosition: prevPosition,
-                        partialIndex: 0
-                    };
-                    break;
-                }
-                prevPosition--;
-            }
-
-            if (prevPosition <= 0) {
-                // No previous carry found, go to the rightmost product digit
-                newFocus = {
-                    fieldType: 'product',
-                    fieldPosition: 0,
-                    partialIndex: undefined
-                };
-            }
+        // Move to previous field in the ordered list
+        if (currentIndex > 0) {
+            setCurrentFocus(allFields[currentIndex - 1]);
+        } else if (allFields.length > 0) {
+            // Wrap around to the last field if we're at the beginning
+            setCurrentFocus(allFields[allFields.length - 1]);
         }
-
-        // Update the focus
-        setCurrentFocus(newFocus!);
-    }, [problem, currentFocus, shouldShowCarry]);
+    }, [currentFocus, getAllFieldsInOrder]);
 
     // Move up (to carry box)
     const moveUp = useCallback(() => {
@@ -346,6 +289,8 @@ export function useMultiplicationKeyboardNav(
     return {
         currentFocus,
         setCurrentFocus,
-        handleKeyDown
+        handleKeyDown,
+        getAllFieldsInOrder,
+        getPreviousField
     };
 } 

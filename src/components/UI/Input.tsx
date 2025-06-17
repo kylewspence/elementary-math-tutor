@@ -7,6 +7,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
     onChange?: (value: string) => void;
     onEnter?: () => void;
     onAutoAdvance?: () => void;
+    onBackspace?: () => void;
     small?: boolean;
 }
 
@@ -16,6 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     onChange,
     onEnter,
     onAutoAdvance,
+    onBackspace,
     onKeyDown,
     value,
     small = false,
@@ -91,9 +93,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }
 
         if (e.key === 'Backspace' || e.key === 'Delete') {
-            e.preventDefault();
-            if (onChange) {
+            // If there's a value, clear it first
+            if (value && onChange) {
+                e.preventDefault();
                 onChange('');
+                return;
+            }
+
+            // If the field is already empty and we have an onBackspace handler, call it
+            if (!value && onBackspace) {
+                e.preventDefault();
+                onBackspace();
+                return;
             }
         }
     };
