@@ -152,6 +152,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        if (!currentFocus) return null;
         const isActive =
             currentFocus.fieldType === fieldType &&
             currentFocus.fieldPosition === position &&
@@ -171,6 +172,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             const numValue = parseInt(value, 10);
             if (!isNaN(numValue)) {
                 onAnswerSubmit(numValue, fieldType, position, partialIndex);
+                // Don't auto-advance here - let the Input component handle it
             }
         };
 
@@ -182,6 +184,33 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onKeyDown={onKeyDown}
                 onChange={handleChange}
+                // Remove onAutoAdvance to prevent unwanted navigation
+                onEnter={() => {
+                    // Move to the next field on Enter
+                    if (onProblemSubmit) {
+                        onProblemSubmit();
+                    }
+                }}
+                onBackspace={() => {
+                    console.log('Backspace handler called in MultiplicationDisplay', { fieldType, position, partialIndex });
+
+                    // This is a simplified version since we don't have a getAllFieldsInOrder function
+                    // For multiplication, we'll just call onFieldClick with the previous position
+                    if (position > 0) {
+                        console.log('Moving to previous position in same field type');
+                        onFieldClick(fieldType, position - 1, partialIndex);
+                    } else if (fieldType === 'product' && position === 0 && problem) {
+                        // If we're at the rightmost product position, move to the last partial position
+                        console.log('Moving from product to last partial position');
+                        onFieldClick('partial', problem.multiplicand.toString().length - 1 || 0, 0);
+                    } else if (fieldType === 'partial' && position === 0 && partialIndex !== undefined && partialIndex > 0 && problem) {
+                        // If we're at the rightmost partial position of a row, move to the last position of the previous row
+                        console.log('Moving to previous partial row');
+                        onFieldClick('partial', problem.multiplicand.toString().length - 1 || 0, partialIndex - 1);
+                    } else {
+                        console.log('No previous field to move to');
+                    }
+                }}
                 readOnly={isSubmitted}
                 placeholder="?"
                 maxLength={1}

@@ -10,6 +10,7 @@ import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
+import MultiplicationDisplay from './components/MultiplicationProblem/MultiplicationDisplay';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
@@ -22,7 +23,7 @@ function App() {
     generateNewProblem,
     submitAnswer,
     submitProblem,
-    // clearAnswer, // Unused variable
+    clearAnswer,
     nextProblem,
     jumpToLevel,
     resetProblem,
@@ -35,11 +36,57 @@ function App() {
     loadProblemsForLevel,
   } = useGameState();
 
+  // Division handlers
+  const handleAnswerSubmit = (answer: UserAnswer) => {
+    submitAnswer(answer);
+  };
+
+  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+    console.log('🧹 App: handleAnswerClear called', { stepNumber, fieldType, position });
+    clearAnswer(stepNumber, fieldType, position);
+  };
+
+  const handleProblemSubmit = () => {
+    submitProblem();
+
+    // Clear focus by setting it to a non-existent field after submission
+    if (gameState.problem) {
+      // Use a step number that's guaranteed not to exist
+      jumpToField(-1, 'quotient', 0);
+    }
+  };
+
   const {
     currentFocus,
     handleKeyDown,
     jumpToField,
-  } = useKeyboardNav(gameState.problem as DivisionProblem | null, gameState.userAnswers, gameState.isSubmitted);
+    movePrevious,
+    getPreviousField,
+  } = useKeyboardNav(
+    gameState.problem as DivisionProblem | null,
+    gameState.userAnswers,
+    gameState.isSubmitted
+  );
+
+  const handleKeyboardNav = (e: React.KeyboardEvent) => {
+    handleKeyDown(e, handleProblemSubmit);
+  };
+
+  const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
+    jumpToField(stepNumber, fieldType, position);
+  };
+
+  const handleNextProblem = () => {
+    nextProblem();
+  };
+
+  const handleLevelSelect = (levelId: number) => {
+    jumpToLevel(levelId);
+  };
+
+  const handleRetryFetch = () => {
+    loadProblemsForLevel(gameState.currentLevel);
+  };
 
   // Addition game state
   const {
@@ -104,47 +151,6 @@ function App() {
       jumpToAdditionField(0, 'sum');
     }
   }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
-
-  // Division handlers
-  const handleAnswerSubmit = (answer: UserAnswer) => {
-    submitAnswer(answer);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleAnswerClear = (_stepNumber: number, _fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', _position: number) => {
-    // Implement the clear functionality if needed
-    // This is a placeholder since the clearAnswer function is commented out
-  };
-
-  const handleProblemSubmit = () => {
-    submitProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (gameState.problem) {
-      // Use a step number that's guaranteed not to exist
-      jumpToField(-1, 'quotient', 0);
-    }
-  };
-
-  const handleKeyboardNav = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, handleProblemSubmit);
-  };
-
-  const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
-    jumpToField(stepNumber, fieldType, position);
-  };
-
-  const handleNextProblem = () => {
-    nextProblem();
-  };
-
-  const handleLevelSelect = (levelId: number) => {
-    jumpToLevel(levelId);
-  };
-
-  const handleRetryFetch = () => {
-    loadProblemsForLevel(gameState.currentLevel);
-  };
 
   // Addition handlers
   const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
@@ -241,6 +247,7 @@ function App() {
             onDisableEditing={disableEditing}
             onUpdateProblem={updateProblem}
             onNewProblem={generateNewProblem}
+            getPreviousField={getPreviousField}
           />
         )}
 
@@ -269,7 +276,26 @@ function App() {
         )}
 
         {gameMode === 'multiplication' && (
-          <MultiplicationTutorPage />
+          <MultiplicationDisplay
+            problem={gameState.problem as MultiplicationProblem | null}
+            userAnswers={gameState.userAnswers as MultiplicationUserAnswer[]}
+            currentFocus={currentFocus as MultiplicationCurrentFocus}
+            onAnswerSubmit={handleAnswerSubmit}
+            onAnswerClear={handleAnswerClear}
+            onProblemSubmit={handleProblemSubmit}
+            onKeyDown={handleKeyDown}
+            onFieldClick={handleFieldClick}
+            isSubmitted={gameState.isSubmitted}
+            isComplete={gameState.isComplete}
+            isLoading={gameState.isLoading}
+            fetchError={gameState.fetchError}
+            onNextProblem={handleNextProblem}
+            onResetProblem={resetProblem}
+            onNewProblem={generateNewProblem}
+            onRetryFetch={handleRetryFetch}
+            onUpdateProblem={updateProblem}
+            getPreviousField={getPreviousField}
+          />
         )}
       </main>
 

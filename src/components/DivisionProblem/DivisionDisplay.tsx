@@ -4,6 +4,7 @@ import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import ProblemComplete from '../UI/ProblemComplete';
+import { useKeyboardNav } from '../../hooks/useKeyboardNav';
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
@@ -19,7 +20,7 @@ interface DivisionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
-    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
+    onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
@@ -27,6 +28,7 @@ interface DivisionDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (dividend: number, divisor: number) => void;
+    getPreviousField?: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number) => CurrentFocus | null;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -50,7 +52,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     fetchError,
     onRetryFetch,
     onUpdateProblem,
-    isComplete
+    isComplete,
+    getPreviousField
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -155,8 +158,11 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
+        console.log('🔄 handleInputChange called with value:', { value, stepNumber, fieldType, position });
+
         if (value === '') {
             // Clear the answer when value is empty
+            console.log('🧹 handleInputChange: Clearing answer via onAnswerClear');
             onAnswerClear(stepNumber, fieldType, position);
             return;
         }
@@ -293,10 +299,71 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 ref={currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position ? activeInputRef : undefined}
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
-                onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onChange={(value) => {
+                    // If value is empty string, clear the answer
+                    if (value === '') {
+                        console.log('📝 DivisionDisplay: Clearing answer via onAnswerClear', { stepNumber, fieldType, position });
+                        onAnswerClear(stepNumber, fieldType, position);
+                    } else {
+                        handleInputChange(stepNumber, fieldType, position, value);
+                    }
+                }}
+                onKeyDown={(e) => onKeyDown(e)}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
+                onBackspace={() => {
+                    // Use the getPreviousField function to get the previous field in the navigation order
+                    if (getPreviousField) {
+                        const prevField = getPreviousField(stepNumber, fieldType, position);
+                        if (prevField) {
+                            // Move to the previous field
+                            onFieldClick(prevField.stepNumber, prevField.fieldType, prevField.fieldPosition);
+                            return;
+                        }
+                    }
+
+                    // Fallback to the old logic if getPreviousField is not available or returns null
+                    let prevStepNumber = stepNumber;
+                    let prevFieldType = fieldType;
+                    let prevPosition = position;
+
+                    // If we're at the beginning of a position, move to the previous field type or step
+                    if (position === 0) {
+                        if (fieldType === 'bringDown') {
+                            // From bringDown to the last subtract position
+                            prevFieldType = 'subtract';
+                            const subtractDigits = getDigitCount(problem.steps[stepNumber].subtract);
+                            prevPosition = subtractDigits - 1;
+                        } else if (fieldType === 'subtract') {
+                            // From subtract to the last multiply position
+                            prevFieldType = 'multiply';
+                            const multiplyDigits = getDigitCount(problem.steps[stepNumber].multiply);
+                            prevPosition = multiplyDigits - 1;
+                        } else if (fieldType === 'multiply') {
+                            // From multiply to quotient
+                            prevFieldType = 'quotient';
+                            prevPosition = 0;
+                        } else if (fieldType === 'quotient' && stepNumber > 0) {
+                            // From quotient to the previous step's bringDown or subtract
+                            prevStepNumber = stepNumber - 1;
+                            const prevStep = problem.steps[prevStepNumber];
+                            if (prevStep.bringDown !== undefined) {
+                                prevFieldType = 'bringDown';
+                                prevPosition = 0;
+                            } else {
+                                prevFieldType = 'subtract';
+                                const subtractDigits = getDigitCount(prevStep.subtract);
+                                prevPosition = subtractDigits - 1;
+                            }
+                        }
+                    } else {
+                        // Just move to the previous position in the same field type
+                        prevPosition = position - 1;
+                    }
+
+                    // Move to the previous field using the fallback logic
+                    onFieldClick(prevStepNumber, prevFieldType, prevPosition);
+                }}
                 readOnly={isSubmitted}
                 placeholder="?"
             />

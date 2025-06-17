@@ -63,6 +63,25 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         );
     }, [currentFocus, getAllFieldsInOrder]);
 
+    // Get the previous field for a given field
+    const getPreviousField = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number): CurrentFocus | null => {
+        const allFields = getAllFieldsInOrder();
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === stepNumber &&
+            field.fieldType === fieldType &&
+            field.fieldPosition === fieldPosition
+        );
+
+        if (currentIndex > 0) {
+            return allFields[currentIndex - 1];
+        } else if (allFields.length > 0) {
+            // Wrap around to the last field if at the beginning
+            return allFields[allFields.length - 1];
+        }
+
+        return null;
+    }, [getAllFieldsInOrder]);
+
     // Check if all fields have answers
     const areAllFieldsFilled = useCallback(() => {
         if (!problem) return false;
@@ -163,6 +182,9 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
                 e.preventDefault();
                 movePrevious();
                 break;
+            // Note: Backspace handling for empty fields is now done in the Input component
+            // with the onBackspace callback. This allows for more flexible handling of
+            // backspace events in different contexts (division, addition, multiplication).
         }
     }, [moveNext, movePrevious, isLastField, areAllFieldsFilled, isSubmitted]);
 
@@ -180,5 +202,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         jumpToField,
         handleKeyDown,
         isFieldFocused,
+        getAllFieldsInOrder,
+        getPreviousField,
     };
 } 
