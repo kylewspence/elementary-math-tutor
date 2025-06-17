@@ -460,7 +460,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         ✏️ Edit the numbers above - click elsewhere when done
                     </div>
                 ) : (
-                    <div className="text-sm text-gray-500 mt-2">
+                    <div className="text-sm text-gray-500 mt-2 mb-30">
                         💡 Click the problem above to edit it
                     </div>
                 )}
@@ -574,7 +574,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Button layout in triangle formation */}
-            <div className="flex flex-col items-center mt-6">
+            <div className="flex flex-col items-center mt-[-2rem]">
                 {/* Submit button */}
                 {!isSubmitted && (
                     <button
