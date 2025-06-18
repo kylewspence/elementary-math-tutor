@@ -463,7 +463,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             )}
 
             {/* Main content with problem work */}
-            <div className="relative mt-16">
+            <div className="relative">
                 {/* Multiplication layout - centered */}
                 <div className="flex justify-center">
                     <div className="multiplication-workspace relative">
@@ -474,7 +474,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             </div>
 
             {/* Submit controls using shared component */}
-            <div className="flex flex-col items-center mt-[-2rem]">
+            <div className="flex flex-col items-center mt-6">
                 <SubmitControls
                     isSubmitted={isSubmitted}
                     isComplete={isComplete}

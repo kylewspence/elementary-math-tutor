@@ -367,7 +367,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             )}
 
             {/* Main content with problem work */}
-            <div className="relative mt-16">
+            <div className="relative">
                 {/* Addition layout - centered */}
                 <div className="flex justify-center">
                     <div className="addition-workspace relative">
@@ -446,7 +446,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             </div>
 
             {/* Submit Controls - unified triangle layout with completion handling */}
-            <div className="flex flex-col items-center mt-[-2rem]">
+            <div className="flex flex-col items-center mt-6">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
                     isComplete={areAllAnswersCorrect()}
