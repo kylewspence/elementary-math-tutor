@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -120,27 +120,43 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Get all required fields for this problem
-    const getAllRequiredFields = () => {
-        if (!problem) return [];
+    // Helper function to determine if a position needs a carry
+    const shouldShowCarry = useCallback((position: number): boolean => {
+        if (!problem) return false;
 
-        const fields: { fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number }[] = [];
-        const multiplicandStr = problem.multiplicand.toString();
+        // For single-digit multiplier
+        if (problem.multiplier < 10) {
+            const multiplicandStr = problem.multiplicand.toString();
 
-        // Add product fields (all digit positions in the product)
-        for (let i = 0; i < multiplicandStr.length; i++) {
-            fields.push({ fieldType: 'product', fieldPosition: i });
-        }
+            // Position is from right to left, so we need to adjust the index
+            if (position >= multiplicandStr.length + 1) return false; // +1 to allow for leftmost carry
 
-        // Add carry fields for positions that need them
-        for (let i = 0; i < multiplicandStr.length; i++) {
-            if (shouldShowCarry(i)) {
-                fields.push({ fieldType: 'carry', fieldPosition: i });
+            // Special case for leftmost position
+            if (position === multiplicandStr.length) {
+                // Check if the leftmost digit multiplication generates a carry
+                const leftmostDigit = parseInt(multiplicandStr[0], 10);
+                const product = leftmostDigit * problem.multiplier;
+                // If the product is 10 or greater, we need an extra carry box
+                return product >= 10;
             }
+
+            // For the rightmost digit, we don't need a carry box
+            if (position === 0) return false;
+
+            // Check if the digit to the right generates a carry
+            const rightPosition = position - 1;
+            if (rightPosition < 0) return false;
+
+            const rightDigit = parseInt(multiplicandStr[multiplicandStr.length - 1 - rightPosition], 10);
+            const product = rightDigit * problem.multiplier;
+
+            // If the product is 10 or greater, it generates a carry
+            return product >= 10;
         }
 
-        return fields;
-    };
+        // For multi-digit multipliers (not implemented yet)
+        return false;
+    }, [problem]);
 
     // Check if all input fields have answers
     useEffect(() => {
@@ -148,6 +164,28 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             setAllFieldsFilled(false);
             return;
         }
+
+        // Get all required fields - moved inside useEffect to avoid dependency issues
+        const getAllRequiredFields = () => {
+            if (!problem) return [];
+
+            const fields: { fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number }[] = [];
+            const multiplicandStr = problem.multiplicand.toString();
+
+            // Add product fields (all digit positions in the product)
+            for (let i = 0; i < multiplicandStr.length; i++) {
+                fields.push({ fieldType: 'product', fieldPosition: i });
+            }
+
+            // Add carry fields for positions that need them
+            for (let i = 0; i < multiplicandStr.length; i++) {
+                if (shouldShowCarry(i)) {
+                    fields.push({ fieldType: 'carry', fieldPosition: i });
+                }
+            }
+
+            return fields;
+        };
 
         // Get all required fields
         const requiredFields = getAllRequiredFields();
@@ -164,10 +202,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             )
         );
 
-
-
         setAllFieldsFilled(allFilled);
-    }, [problem, userAnswers]);
+    }, [problem, userAnswers, shouldShowCarry]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
@@ -229,44 +265,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 aria-label={`${fieldType} input for position ${position}`}
             />
         );
-    };
-
-    // Helper function to determine if a position needs a carry
-    const shouldShowCarry = (position: number): boolean => {
-        if (!problem) return false;
-
-        // For single-digit multiplier
-        if (problem.multiplier < 10) {
-            const multiplicandStr = problem.multiplicand.toString();
-
-            // Position is from right to left, so we need to adjust the index
-            if (position >= multiplicandStr.length + 1) return false; // +1 to allow for leftmost carry
-
-            // Special case for leftmost position
-            if (position === multiplicandStr.length) {
-                // Check if the leftmost digit multiplication generates a carry
-                const leftmostDigit = parseInt(multiplicandStr[0], 10);
-                const product = leftmostDigit * problem.multiplier;
-                // If the product is 10 or greater, we need an extra carry box
-                return product >= 10;
-            }
-
-            // For the rightmost digit, we don't need a carry box
-            if (position === 0) return false;
-
-            // Check if the digit to the right generates a carry
-            const rightPosition = position - 1;
-            if (rightPosition < 0) return false;
-
-            const rightDigit = parseInt(multiplicandStr[multiplicandStr.length - 1 - rightPosition], 10);
-            const product = rightDigit * problem.multiplier;
-
-            // If the product is 10 or greater, it generates a carry
-            return product >= 10;
-        }
-
-        // For multi-digit multipliers (not implemented yet)
-        return false;
     };
 
     // Handle problem editing
@@ -456,7 +454,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     }
 
     return (
-        <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="multiplication-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -520,25 +518,23 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
             </div>
 
-            {/* Submit controls using shared component */}
-            <div className="flex flex-col items-center mt-6">
-                <SubmitControls
-                    isSubmitted={isSubmitted || false}
-                    isComplete={isComplete || false}
-                    allFieldsFilled={allFieldsFilled}
-                    onSubmit={onProblemSubmit || (() => { })}
-                    onReset={onResetProblem || (() => { })}
-                    onGenerateNew={onNewProblem || (() => { })}
-                    onNextProblem={onNextProblem || (() => { })}
-                    operation="multiplication"
-                    variant="triangle"
-                    problemData={{
-                        multiplicand: problem?.multiplicand,
-                        multiplier: problem?.multiplier,
-                        product: problem?.product
-                    }}
-                />
-            </div>
+            {/* Submit controls - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                onSubmit={onProblemSubmit || (() => { })}
+                onReset={onResetProblem || (() => { })}
+                onGenerateNew={onNewProblem || (() => { })}
+                onNextProblem={onNextProblem || (() => { })}
+                operation="multiplication"
+                variant="triangle"
+                problemData={{
+                    multiplicand: problem?.multiplicand,
+                    multiplier: problem?.multiplier,
+                    product: problem?.product
+                }}
+            />
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

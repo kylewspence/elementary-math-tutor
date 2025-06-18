@@ -316,7 +316,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
 
     return (
-        <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="addition-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -448,25 +448,23 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 {/* ProblemComplete now handled by SubmitControls component */}
             </div>
 
-            {/* Submit Controls - unified triangle layout with completion handling */}
-            <div className="flex flex-col items-center mt-6">
-                <SubmitControls
-                    isSubmitted={isSubmitted || false}
-                    isComplete={isComplete || false}
-                    allFieldsFilled={allFieldsFilled}
-                    onSubmit={onProblemSubmit || (() => { })}
-                    onReset={onResetProblem || (() => { })}
-                    onGenerateNew={onNewProblem || (() => { })}
-                    onNextProblem={onNextProblem || (() => { })}
-                    operation="addition"
-                    variant="triangle"
-                    problemData={{
-                        addend1: problem?.addend1,
-                        addend2: problem?.addend2,
-                        sum: problem?.sum
-                    }}
-                />
-            </div>
+            {/* Submit Controls - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                onSubmit={onProblemSubmit || (() => { })}
+                onReset={onResetProblem || (() => { })}
+                onGenerateNew={onNewProblem || (() => { })}
+                onNextProblem={onNextProblem || (() => { })}
+                operation="addition"
+                variant="triangle"
+                problemData={{
+                    addend1: problem?.addend1,
+                    addend2: problem?.addend2,
+                    sum: problem?.sum
+                }}
+            />
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

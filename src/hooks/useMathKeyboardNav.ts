@@ -15,7 +15,7 @@ export function useMathKeyboardNav<Field>(
         fieldEquals?: (a: Field, b: Field) => boolean;
     }
 ) {
-    const { isSubmitted = false, onProblemSubmit, fieldEquals } = options || {};
+    const { isSubmitted = false, fieldEquals } = options || {};
 
     // Default field equality: shallow compare all keys
     const defaultFieldEquals = (a: Field, b: Field) => {
@@ -100,7 +100,7 @@ export function useMathKeyboardNav<Field>(
                 // Allow numbers, backspace, delete, etc.
                 break;
         }
-    }, [moveNext, movePrevious, isSubmitted, onProblemSubmit, getCurrentFieldIndex, allFields.length]);
+    }, [moveNext, movePrevious, isSubmitted]);
 
     return {
         currentFocus,

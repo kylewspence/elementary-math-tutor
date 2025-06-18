@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from '../UI/Button';
-import ProblemComplete from '../UI/ProblemComplete';
 import type { MathOperation } from '../../types/math';
 import { UI_CONSTANTS } from '../../utils/constants';
 
@@ -48,12 +47,10 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
     onNextProblem,
     onReset,
     onGenerateNew,
-    operation,
     disabled = false,
     variant = 'triangle',
     showValidation = true,
     className = '',
-    problemData = {}
 }) => {
     // No global keyboard shortcuts - let the shared keyboard navigation handle everything
 
@@ -178,8 +175,8 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
         }
     };
 
-    // Main render logic
-    const baseClasses = `submit-controls ${className}`.trim();
+    // Main render logic with mobile sticky positioning
+    const baseClasses = `submit-controls fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 ${className}`.trim();
 
     return (
         <div className={baseClasses}>

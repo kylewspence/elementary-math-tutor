@@ -425,7 +425,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     };
 
     return (
-        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="division-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -570,26 +570,24 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 {/* ProblemComplete now handled by SubmitControls component */}
             </div>
 
-            {/* Shared SubmitControls Component */}
-            <div className="flex flex-col items-center mt-2">
-                <SubmitControls
-                    isSubmitted={isSubmitted || false}
-                    isComplete={isComplete || false}
-                    allFieldsFilled={allFieldsFilled}
-                    operation="division"
-                    variant="triangle"
-                    onSubmit={() => onProblemSubmit?.()}
-                    onNextProblem={() => onNextProblem?.()}
-                    onReset={() => onResetProblem?.()}
-                    onGenerateNew={() => onNewProblem?.()}
-                    problemData={problem ? {
-                        dividend: problem.dividend,
-                        divisor: problem.divisor,
-                        quotient: problem.quotient,
-                        remainder: problem.remainder
-                    } : undefined}
-                />
-            </div>
+            {/* Shared SubmitControls Component - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                operation="division"
+                variant="triangle"
+                onSubmit={() => onProblemSubmit?.()}
+                onNextProblem={() => onNextProblem?.()}
+                onReset={() => onResetProblem?.()}
+                onGenerateNew={() => onNewProblem?.()}
+                problemData={problem ? {
+                    dividend: problem.dividend,
+                    divisor: problem.divisor,
+                    quotient: problem.quotient,
+                    remainder: problem.remainder
+                } : undefined}
+            />
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

@@ -250,7 +250,7 @@ export function shouldAutoAdvanceFocus(
  * @param requiredFields - Array of required field descriptors
  * @returns true if all required fields have answers
  */
-export function areAllFieldsFilled<T extends Record<string, any>>(
+export function areAllFieldsFilled<T extends { fieldType: string;[key: string]: unknown }>(
     userAnswers: T[],
     requiredFields: Array<{ fieldType: string; fieldPosition: number; partialIndex?: number }>
 ): boolean {
