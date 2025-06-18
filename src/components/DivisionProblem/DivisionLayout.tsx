@@ -261,11 +261,6 @@ const DivisionLayout: React.FC<DivisionLayoutProps> = ({
                     </div>
                 </div>
             </div>
-
-            {/* Helpful Tips */}
-            <div className="mt-6 text-center text-sm text-gray-500">
-                💡 <strong>Tip:</strong> Use your numpad to type numbers, Tab to move forward, Shift+Tab to go back
-            </div>
         </div>
     );
 };

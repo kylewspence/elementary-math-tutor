@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { DivisionProblem, UserAnswer } from '../types/game';
 import { KEYBOARD_KEYS } from '../utils/constants';
+import { useSharedValidation } from './useSharedValidation';
 
 export interface CurrentFocus {
     stepNumber: number;
@@ -9,6 +10,8 @@ export interface CurrentFocus {
 }
 
 export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: UserAnswer[] = [], isSubmitted: boolean = false) {
+    const { areAllFieldsFilled: checkAllFieldsFilled } = useSharedValidation();
+
     const [currentFocus, setCurrentFocus] = useState<CurrentFocus>({
         stepNumber: 0,
         fieldType: 'quotient',
@@ -82,21 +85,28 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         return null;
     }, [getAllFieldsInOrder]);
 
-    // Check if all fields have answers
+    // Check if all fields have answers using shared validation
     const areAllFieldsFilled = useCallback(() => {
         if (!problem) return false;
 
         const allFields = getAllFieldsInOrder();
 
-        // Check if we have an answer for each field
-        return allFields.every(field => {
-            return userAnswers.some(answer =>
-                answer.stepNumber === field.stepNumber &&
-                answer.fieldType === field.fieldType &&
-                answer.fieldPosition === field.fieldPosition
-            );
-        });
-    }, [problem, userAnswers, getAllFieldsInOrder]);
+        // Convert to validation format
+        const validationFields = allFields.map(field => ({
+            stepNumber: field.stepNumber,
+            fieldType: field.fieldType,
+            fieldPosition: field.fieldPosition
+        }));
+
+        const validationAnswers = userAnswers.map(answer => ({
+            stepNumber: answer.stepNumber,
+            fieldType: answer.fieldType,
+            fieldPosition: answer.fieldPosition,
+            value: answer.value
+        }));
+
+        return checkAllFieldsFilled(validationFields, validationAnswers);
+    }, [problem, userAnswers, getAllFieldsInOrder, checkAllFieldsFilled]);
 
     // Move to next field
     const moveNext = useCallback(() => {
@@ -137,16 +147,6 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         });
     }, [problem]);
 
-    // Check if we're at the last field
-    const isLastField = useCallback(() => {
-        if (!problem) return false;
-
-        const allFields = getAllFieldsInOrder();
-        const currentIndex = getCurrentFieldIndex();
-
-        return currentIndex === allFields.length - 1;
-    }, [problem, getAllFieldsInOrder, getCurrentFieldIndex]);
-
     // Handle keyboard events
     const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void) => {
         switch (e.key) {
@@ -164,13 +164,11 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
                     // If problem is already submitted, don't auto-advance
                     // Let the user manually click "Next Problem" in the ProblemComplete dialog
                     return;
-                } else if (onProblemSubmit && (isLastField() || areAllFieldsFilled())) {
-                    // Submit the problem if we're at the last field or all fields are filled
+                } else if (onProblemSubmit && areAllFieldsFilled()) {
+                    // Only submit the problem if ALL fields are filled
                     onProblemSubmit();
-                } else {
-                    // Otherwise just move to next field
-                    moveNext();
                 }
+                // If not all fields are filled, do nothing (don't advance to next field)
                 break;
             case KEYBOARD_KEYS.ARROW_RIGHT:
             case KEYBOARD_KEYS.ARROW_DOWN:
@@ -186,7 +184,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             // with the onBackspace callback. This allows for more flexible handling of
             // backspace events in different contexts (division, addition, multiplication).
         }
-    }, [moveNext, movePrevious, isLastField, areAllFieldsFilled, isSubmitted]);
+    }, [moveNext, movePrevious, areAllFieldsFilled, isSubmitted]);
 
     // Check if a field is currently focused
     const isFieldFocused = useCallback((stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number = 0) => {

@@ -23,27 +23,22 @@ const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
     // Use the keyboard navigation hook
     const {
         currentFocus,
-        setCurrentFocus,
-        handleKeyDown
+        handleKeyDown,
+        jumpToField
     } = useMultiplicationKeyboardNav(
         props.problem,
         props.userAnswers,
-        props.onSubmitAnswer,
-        props.onSubmitProblem
+        props.isSubmitted
     );
 
     // Handle field click to set focus
     const handleFieldClick = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-        setCurrentFocus({
-            fieldType,
-            fieldPosition: position,
-            partialIndex
-        });
+        jumpToField(fieldType, position, partialIndex);
     };
 
     // Handle keyboard events
     const handleKeyboardEvents = (e: React.KeyboardEvent) => {
-        handleKeyDown(e as unknown as KeyboardEvent);
+        handleKeyDown(e, props.onSubmitProblem);
     };
 
     return (
@@ -64,7 +59,7 @@ const MultiplicationLayout: React.FC<MultiplicationLayoutProps> = (props) => {
             onEnableEditing={props.onEnableEditing}
             onDisableEditing={props.onDisableEditing}
             onUpdateProblem={props.onUpdateProblem}
-            setCurrentFocus={setCurrentFocus}
+
         />
     );
 };

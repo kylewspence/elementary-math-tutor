@@ -4,14 +4,16 @@ import Header from './components/Header/Header';
 import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
 import AdditionDisplay from './components/AdditionProblem/AdditionDisplay';
+import MultiplicationDisplay from './components/MultiplicationProblem/MultiplicationDisplay';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useAdditionGameState } from './hooks/useAdditionGameState';
 import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
 import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
+import { useMultiplicationKeyboardNav } from './hooks/useMultiplicationKeyboardNav';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
-import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
+import type { MultiplicationUserAnswer, MultiplicationProblem } from './types/multiplication';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
@@ -110,13 +112,36 @@ function App() {
     currentFocus: additionCurrentFocus,
     handleKeyDown: handleAdditionKeyDown,
     jumpToField: jumpToAdditionField,
+    areAllFieldsFilled: areAllAdditionFieldsFilled,
   } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted);
 
   // Multiplication game state
   const {
     gameState: multiplicationGameState,
+    submitAnswer: submitMultiplicationAnswer,
+    submitProblem: submitMultiplicationProblem,
+    clearAnswer: clearMultiplicationAnswer,
+    nextProblem: nextMultiplicationProblem,
     jumpToLevel: jumpToMultiplicationLevel,
+    resetProblem: resetMultiplicationProblem,
+    initializeGame: initializeMultiplicationGame,
+    updateProblem: updateMultiplicationProblem,
+    enableEditing: enableMultiplicationEditing,
+    disableEditing: disableMultiplicationEditing,
+    generateNewProblem: generateNewMultiplicationProblem,
+    isLoading: isMultiplicationLoading,
+    fetchError: multiplicationFetchError,
+    loadProblemsForLevel: loadMultiplicationProblemsForLevel,
   } = useMultiplicationGameState();
+
+  // Multiplication keyboard navigation
+  const {
+    currentFocus: multiplicationCurrentFocus,
+    handleKeyDown: handleMultiplicationKeyDown,
+    jumpToField: jumpToMultiplicationField,
+    moveToNextField: moveToNextMultiplicationField,
+    areAllFieldsFilled: areAllMultiplicationFieldsFilled,
+  } = useMultiplicationKeyboardNav(multiplicationGameState.problem, multiplicationGameState.userAnswers, multiplicationGameState.isSubmitted);
 
   // Initialize the appropriate game on mount and when mode changes
   useEffect(() => {
@@ -124,8 +149,10 @@ function App() {
       initializeGame();
     } else if (gameMode === 'addition') {
       initializeAdditionGame();
+    } else if (gameMode === 'multiplication') {
+      initializeMultiplicationGame();
     }
-  }, [gameMode, initializeGame, initializeAdditionGame]);
+  }, [gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
@@ -140,6 +167,13 @@ function App() {
       generateNewAdditionProblem();
     }
   }, [gameMode, additionGameState.problem, generateNewAdditionProblem]);
+
+  // Generate new problem when needed for multiplication
+  useEffect(() => {
+    if (gameMode === 'multiplication' && !multiplicationGameState.problem) {
+      generateNewMultiplicationProblem();
+    }
+  }, [gameMode, multiplicationGameState.problem, generateNewMultiplicationProblem]);
 
   // Always set initial focus to the first input field when a new division problem is generated
   useEffect(() => {
@@ -156,6 +190,14 @@ function App() {
       jumpToAdditionField(0, 'sum');
     }
   }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
+
+  // Always set initial focus to the first input field when a new multiplication problem is generated
+  useEffect(() => {
+    if (gameMode === 'multiplication' && multiplicationGameState.problem && multiplicationGameState.userAnswers.length === 0) {
+      // Reset focus to the rightmost product digit (position 0)
+      jumpToMultiplicationField('product', 0, undefined);
+    }
+  }, [gameMode, multiplicationGameState.problem, multiplicationGameState.userAnswers.length, jumpToMultiplicationField]);
 
   // Addition handlers
   const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
@@ -177,7 +219,7 @@ function App() {
   };
 
   const handleAdditionKeyboardNav = (e: React.KeyboardEvent) => {
-    handleAdditionKeyDown(e, handleAdditionProblemSubmit, handleNextAdditionProblem);
+    handleAdditionKeyDown(e, handleAdditionProblemSubmit);
   };
 
   const handleAdditionFieldClick = (columnPosition: number, fieldType: 'sum' | 'carry') => {
@@ -194,6 +236,44 @@ function App() {
 
   const handleRetryAdditionFetch = () => {
     loadAdditionProblemsForLevel(additionGameState.currentLevel);
+  };
+
+  // Multiplication handlers
+  const handleMultiplicationAnswerSubmit = (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+    submitMultiplicationAnswer(value, fieldType, position, partialIndex);
+  };
+
+  const handleMultiplicationAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+    clearMultiplicationAnswer(fieldType, position, partialIndex);
+  };
+
+  const handleMultiplicationProblemSubmit = () => {
+    submitMultiplicationProblem();
+
+    // Clear focus by setting it to a non-existent field after submission
+    if (multiplicationGameState.problem) {
+      jumpToMultiplicationField('product', -1, undefined);
+    }
+  };
+
+  const handleMultiplicationKeyboardNav = (e: React.KeyboardEvent) => {
+    handleMultiplicationKeyDown(e, handleMultiplicationProblemSubmit);
+  };
+
+  const handleMultiplicationFieldClick = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+    jumpToMultiplicationField(fieldType, position, partialIndex);
+  };
+
+  const handleNextMultiplicationProblem = () => {
+    nextMultiplicationProblem();
+  };
+
+  const handleMultiplicationUpdateProblem = (multiplicand: number, multiplier: number) => {
+    updateMultiplicationProblem(multiplicand, multiplier);
+  };
+
+  const handleRetryMultiplicationFetch = () => {
+    loadMultiplicationProblemsForLevel(multiplicationGameState.currentLevel);
   };
 
   const handleMultiplicationLevelSelect = (levelId: number) => {
@@ -313,11 +393,34 @@ function App() {
             onDisableEditing={disableAdditionEditing}
             onUpdateProblem={updateAdditionProblem}
             onNewProblem={generateNewAdditionProblem}
+            areAllFieldsFilled={areAllAdditionFieldsFilled}
           />
         )}
 
         {gameMode === 'multiplication' && (
-          <MultiplicationTutorPage />
+          <MultiplicationDisplay
+            problem={multiplicationGameState.problem as MultiplicationProblem}
+            userAnswers={multiplicationGameState.userAnswers}
+            currentFocus={multiplicationCurrentFocus}
+            isSubmitted={multiplicationGameState.isSubmitted}
+            isComplete={multiplicationGameState.isComplete}
+            isLoading={isMultiplicationLoading}
+            fetchError={typeof multiplicationFetchError === 'string' ? new Error(multiplicationFetchError) : multiplicationFetchError}
+            onAnswerSubmit={handleMultiplicationAnswerSubmit}
+            onAnswerClear={handleMultiplicationAnswerClear}
+            onProblemSubmit={handleMultiplicationProblemSubmit}
+            onNextProblem={handleNextMultiplicationProblem}
+            onFieldClick={handleMultiplicationFieldClick}
+            onKeyDown={handleMultiplicationKeyboardNav}
+            onRetryFetch={handleRetryMultiplicationFetch}
+            onResetProblem={resetMultiplicationProblem}
+            onEnableEditing={enableMultiplicationEditing}
+            onDisableEditing={disableMultiplicationEditing}
+            onUpdateProblem={handleMultiplicationUpdateProblem}
+            onNewProblem={generateNewMultiplicationProblem}
+            moveToNextField={moveToNextMultiplicationField}
+            areAllFieldsFilled={areAllMultiplicationFieldsFilled}
+          />
         )}
       </main>
 

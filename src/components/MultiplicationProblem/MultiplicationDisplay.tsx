@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -28,6 +28,8 @@ interface MultiplicationDisplayProps {
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
     setCurrentFocus?: (focus: MultiplicationCurrentFocus) => void;
+    moveToNextField?: (fieldType?: 'product' | 'partial' | 'carry', position?: number, partialIndex?: number) => void;
+    areAllFieldsFilled?: () => boolean;
 }
 
 const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
@@ -50,11 +52,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     onRetryFetch,
     onUpdateProblem,
     isComplete = false,
-    setCurrentFocus
+    setCurrentFocus,
+    moveToNextField,
+    areAllFieldsFilled
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    // Removed unused allFieldsFilled state
+    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
     const firstRenderRef = useRef(true);
 
     // Set initial focus on first render
@@ -117,7 +121,27 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Removed unused allFieldsFilled effect
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // For basic multiplication, we need answers for all product positions
+        const productStr = (problem.multiplicand * problem.multiplier).toString();
+
+        // Check if every product position has an answer
+        let allFilled = true;
+        for (let pos = 0; pos < productStr.length; pos++) {
+            if (!userAnswers.find(a => a.fieldType === 'product' && a.fieldPosition === pos)) {
+                allFilled = false;
+                break;
+            }
+        }
+
+        setAllFieldsFilled(allFilled);
+    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
@@ -171,7 +195,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             const numValue = parseInt(value, 10);
             if (!isNaN(numValue)) {
                 onAnswerSubmit(numValue, fieldType, position, partialIndex);
-                // Don't auto-advance here - let the Input component handle it
+
+                // Auto-advance to next field after successful input
+                if (moveToNextField) {
+                    setTimeout(() => {
+                        moveToNextField();
+                    }, 0);
+                }
             }
         };
 
@@ -184,12 +214,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 onKeyDown={onKeyDown}
                 onChange={handleChange}
                 // Remove onAutoAdvance to prevent unwanted navigation
-                onEnter={() => {
-                    // Move to the next field on Enter
-                    if (onProblemSubmit) {
-                        onProblemSubmit();
-                    }
-                }}
+                onEnter={isSubmitted ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
                 onBackspace={() => {
                     // The keyboard navigation hook handles the backspace logic
                     // This callback is called by the Input component when backspace is pressed on an empty field
@@ -428,7 +453,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     }
 
     return (
-        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono pb-32">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -491,67 +516,64 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 </div>
             </div>
 
-            {/* Button layout in triangle formation */}
-            <div className="flex flex-col items-center mt-6">
-                {/* Submit/Next Problem button */}
-                {!isSubmitted ? (
-                    <button
-                        onClick={() => onProblemSubmit?.()}
-                        disabled={!userAnswers.length}
-                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!userAnswers.length
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                            } transition-colors`}
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Submit Answers
-                        </span>
-                    </button>
-                ) : isComplete ? (
-                    <button
-                        onClick={() => onNextProblem?.()}
-                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        autoFocus
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            Next Problem →
-                        </span>
-                    </button>
-                ) : null}
+            {/* Button layout - Mobile sticky at bottom */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+                <div className="flex flex-col items-center">
+                    {/* Submit/Next Problem button */}
+                    {!isSubmitted ? (
+                        <button
+                            onClick={() => onProblemSubmit?.()}
+                            disabled={!areAllFieldsFilled?.()}
+                            className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                } transition-colors`}
+                        >
+                            <span className="flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                Submit Answers
+                            </span>
+                        </button>
+                    ) : isComplete ? (
+                        <button
+                            onClick={() => onNextProblem?.()}
+                            className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                            autoFocus
+                        >
+                            <span className="flex items-center justify-center gap-1">
+                                Next Problem →
+                            </span>
+                        </button>
+                    ) : null}
 
-                {/* Reset and New Problem buttons */}
-                <div className="flex justify-center space-x-4">
-                    <button
-                        onClick={onResetProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                            </svg>
-                            Reset Problem
-                        </span>
-                    </button>
-                    <button
-                        onClick={onNewProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Problem
-                        </span>
-                    </button>
+                    {/* Reset and New Problem buttons */}
+                    <div className="flex justify-center space-x-4">
+                        <button
+                            onClick={onResetProblem}
+                            className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                        >
+                            <span className="flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                </svg>
+                                Reset Problem
+                            </span>
+                        </button>
+                        <button
+                            onClick={onNewProblem}
+                            className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                        >
+                            <span className="flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                </svg>
+                                New Problem
+                            </span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-
-            {/* Help text as footnote outside the main container */}
-            <div className="text-center text-xs text-gray-500 mt-4">
-                Tab to move forward, Shift+Tab to go back, Enter to move/submit, Backspace to delete
             </div>
         </div>
     );

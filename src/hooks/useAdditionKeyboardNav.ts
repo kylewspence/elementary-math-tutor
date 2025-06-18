@@ -1,13 +1,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { AdditionProblem, AdditionUserAnswer } from '../types/addition';
 import { KEYBOARD_KEYS } from '../utils/constants';
+import { useSharedValidation } from './useSharedValidation';
 
 export interface AdditionCurrentFocus {
     columnPosition: number;
     fieldType: 'sum' | 'carry';
 }
 
-export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAnswers?: AdditionUserAnswer[], isSubmitted: boolean = false) {
+export function useAdditionKeyboardNav(problem: AdditionProblem | null, userAnswers: AdditionUserAnswer[] = [], isSubmitted: boolean = false) {
+    const { areAllFieldsFilled: checkAllFieldsFilled } = useSharedValidation();
     // Initialize with focus on the rightmost sum digit (position 0)
     const [currentFocus, setCurrentFocus] = useState<AdditionCurrentFocus>({
         columnPosition: 0,
@@ -115,8 +117,27 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAns
         }
     }, [problem, allFields, currentFocus]);
 
+    // Check if all fields are filled using shared validation
+    const areAllFieldsFilled = useCallback(() => {
+        if (!problem) return false;
+
+        // Convert to validation format
+        const validationFields = allFields.map(field => ({
+            columnPosition: field.columnPosition,
+            fieldType: field.fieldType
+        }));
+
+        const validationAnswers = userAnswers.map(answer => ({
+            columnPosition: answer.columnPosition,
+            fieldType: answer.fieldType,
+            value: answer.value
+        }));
+
+        return checkAllFieldsFilled(validationFields, validationAnswers);
+    }, [problem, allFields, userAnswers, checkAllFieldsFilled]);
+
     // Handle keyboard navigation
-    const handleKeyDown = useCallback((e: React.KeyboardEvent, onSubmitAnswer?: () => void, onSubmitProblem?: () => void) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void) => {
         if (e.key === KEYBOARD_KEYS.ARROW_RIGHT || e.key === KEYBOARD_KEYS.TAB && !e.shiftKey) {
             e.preventDefault();
             moveToNextField();
@@ -124,13 +145,18 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAns
             e.preventDefault();
             moveToPreviousField();
         } else if (e.key === KEYBOARD_KEYS.ENTER) {
-            if (isSubmitted && onSubmitProblem) {
-                onSubmitProblem();
-            } else if (onSubmitAnswer) {
-                onSubmitAnswer();
+            e.preventDefault();
+            if (isSubmitted) {
+                // If problem is already submitted, don't auto-advance
+                // Let the user manually click "Next Problem" in the ProblemComplete dialog
+                return;
+            } else if (onProblemSubmit && areAllFieldsFilled()) {
+                // Only submit the problem if ALL fields are filled
+                onProblemSubmit();
             }
+            // If not all fields are filled, do nothing (don't advance to next field)
         }
-    }, [moveToNextField, moveToPreviousField, isSubmitted]);
+    }, [moveToNextField, moveToPreviousField, isSubmitted, areAllFieldsFilled]);
 
     // Jump to a specific field
     const jumpToField = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
@@ -146,6 +172,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAns
         jumpToField,
         moveToNextField,
         moveToPreviousField,
-        allFields
+        allFields,
+        areAllFieldsFilled
     };
 } 

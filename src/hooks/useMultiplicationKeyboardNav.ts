@@ -1,95 +1,22 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../types/multiplication';
 import { KEYBOARD_KEYS } from '../utils/constants';
+import { useSharedValidation } from './useSharedValidation';
 
-/**
- * Custom hook to manage keyboard navigation for multiplication problems
- * Follows the natural flow of solving multiplication problems
- */
 export function useMultiplicationKeyboardNav(
     problem: MultiplicationProblem | null,
     userAnswers: MultiplicationUserAnswer[],
-    onSubmitAnswer: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void,
-    onSubmitProblem: () => void,
-    onClearAnswer?: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void
+    isSubmitted: boolean = false
 ) {
-    // Current focus state - start with rightmost product digit (position 0)
+    const { areAllFieldsFilled: checkAllFieldsFilled } = useSharedValidation();
+
+    // Initialize with focus on the rightmost product digit (position 0)
     const [currentFocus, setCurrentFocus] = useState<MultiplicationCurrentFocus>({
         fieldType: 'product',
         fieldPosition: 0,
-        partialIndex: undefined
     });
 
-    // Handle keyboard navigation
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (!problem) return;
-
-        // Handle number keys (0-9)
-        if (/^[0-9]$/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            e.preventDefault();
-            const value = parseInt(e.key, 10);
-
-            // Submit the answer
-            onSubmitAnswer(
-                value,
-                currentFocus.fieldType,
-                currentFocus.fieldPosition,
-                currentFocus.partialIndex
-            );
-
-            // Auto-advance to the next field
-            moveToNextField();
-            return;
-        }
-
-        // Handle navigation keys
-        switch (e.key) {
-            case KEYBOARD_KEYS.TAB:
-                e.preventDefault();
-                if (e.shiftKey) {
-                    moveToPreviousField();
-                } else {
-                    moveToNextField(true); // Allow wrap-around for manual Tab navigation
-                }
-                break;
-
-            case KEYBOARD_KEYS.ENTER:
-                e.preventDefault();
-                if (userAnswers.length > 0) {
-                    onSubmitProblem();
-                }
-                break;
-
-            case KEYBOARD_KEYS.BACKSPACE:
-            case KEYBOARD_KEYS.DELETE:
-                e.preventDefault();
-                handleBackspace();
-                break;
-
-            case KEYBOARD_KEYS.ARROW_RIGHT:
-                e.preventDefault();
-                moveToPreviousField(); // Right moves to previous (right-to-left input)
-                break;
-
-            case KEYBOARD_KEYS.ARROW_LEFT:
-                e.preventDefault();
-                moveToNextField(true); // Left moves to next (right-to-left input), allow wrap-around
-                break;
-
-            case KEYBOARD_KEYS.ARROW_UP:
-                e.preventDefault();
-                moveUp();
-                break;
-
-            case KEYBOARD_KEYS.ARROW_DOWN:
-                e.preventDefault();
-                moveDown();
-                break;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [problem, currentFocus, userAnswers.length, onSubmitAnswer, onSubmitProblem]);
-
-    // Helper function to determine if a position needs a carry
+    // Helper function to determine if a position needs a carry (from original implementation)
     const shouldShowCarry = useCallback((position: number): boolean => {
         if (!problem) return false;
 
@@ -127,25 +54,25 @@ export function useMultiplicationKeyboardNav(
         return false;
     }, [problem]);
 
-    // Get all fields in order for navigation (similar to division tab)
-    const getAllFieldsInOrder = useCallback((): MultiplicationCurrentFocus[] => {
+    // Get all fields in the order they should be navigated (similar to Addition pattern)
+    const allFields = useMemo(() => {
         if (!problem) return [];
 
-        const allFields: MultiplicationCurrentFocus[] = [];
-        const productDigits = problem.product.toString().length;
+        const fields: MultiplicationCurrentFocus[] = [];
+        const productStr = (problem.multiplicand * problem.multiplier).toString();
 
         // Build fields in the natural solving order: right to left, interleaving product and carry fields
-        for (let pos = 0; pos < productDigits; pos++) {
+        for (let pos = 0; pos < productStr.length; pos++) {
             // Add the product field at this position
-            allFields.push({
+            fields.push({
                 fieldType: 'product',
                 fieldPosition: pos,
                 partialIndex: undefined
             });
 
             // If this position needs a carry (and it's not the rightmost position), add it next
-            if (pos < productDigits - 1 && shouldShowCarry(pos + 1)) {
-                allFields.push({
+            if (pos < productStr.length - 1 && shouldShowCarry(pos + 1)) {
+                fields.push({
                     fieldType: 'carry',
                     fieldPosition: pos + 1,
                     partialIndex: 0
@@ -153,144 +80,112 @@ export function useMultiplicationKeyboardNav(
             }
         }
 
-        return allFields;
+        return fields;
     }, [problem, shouldShowCarry]);
 
-    // Get the previous field for backspace navigation
-    const getPreviousField = useCallback((
-        fieldType: 'product' | 'partial' | 'carry',
-        fieldPosition: number,
-        partialIndex?: number
-    ): MultiplicationCurrentFocus | null => {
-        const allFields = getAllFieldsInOrder();
-        const currentIndex = allFields.findIndex(field =>
-            field.fieldType === fieldType &&
-            field.fieldPosition === fieldPosition &&
-            field.partialIndex === partialIndex
+    // Move to the next field in the navigation order (matching Addition pattern)
+    const moveToNextField = useCallback(() => {
+        if (!problem || allFields.length === 0) return;
+
+        // Find the current field in the ordered list
+        const currentIndex = allFields.findIndex(
+            field => field.fieldType === currentFocus.fieldType &&
+                field.fieldPosition === currentFocus.fieldPosition &&
+                field.partialIndex === currentFocus.partialIndex
         );
 
-        if (currentIndex > 0) {
-            return allFields[currentIndex - 1];
+        // If found and not the last field, move to the next one
+        if (currentIndex !== -1 && currentIndex < allFields.length - 1) {
+            const nextField = allFields[currentIndex + 1];
+            setCurrentFocus({
+                fieldType: nextField.fieldType,
+                fieldPosition: nextField.fieldPosition,
+                partialIndex: nextField.partialIndex
+            });
         }
+    }, [problem, allFields, currentFocus]);
 
-        return null; // No previous field if we're at the first field
-    }, [getAllFieldsInOrder]);
-
-    // Handle backspace navigation
-    const handleBackspace = useCallback(() => {
-        const { fieldType, fieldPosition, partialIndex } = currentFocus;
-
-        // Check if current field has a value
-        const hasValue = userAnswers.some(answer =>
-            answer.fieldType === fieldType &&
-            answer.fieldPosition === fieldPosition &&
-            answer.partialIndex === partialIndex
-        );
-
-        if (hasValue && onClearAnswer) {
-            // Clear the current field first
-            onClearAnswer(fieldType, fieldPosition, partialIndex);
-        } else {
-            // Field is empty, move to previous field
-            const previousField = getPreviousField(fieldType, fieldPosition, partialIndex);
-            if (previousField) {
-                setCurrentFocus(previousField);
-            }
-        }
-    }, [currentFocus, userAnswers, onClearAnswer, getPreviousField]);
-
-    // Move to the next field in the tab order (with wrap-around for manual navigation)
-    const moveToNextField = useCallback((allowWrapAround: boolean = false) => {
-        const allFields = getAllFieldsInOrder();
-        const currentIndex = allFields.findIndex(field =>
-            field.fieldType === currentFocus.fieldType &&
-            field.fieldPosition === currentFocus.fieldPosition &&
-            field.partialIndex === currentFocus.partialIndex
-        );
-
-        // Move to next field in the ordered list
-        if (currentIndex < allFields.length - 1 && currentIndex !== -1) {
-            setCurrentFocus(allFields[currentIndex + 1]);
-        } else if (allowWrapAround && allFields.length > 0) {
-            // Wrap around to the first field only if explicitly allowed (for Tab navigation)
-            setCurrentFocus(allFields[0]);
-        }
-        // If we're at the last field and wrap-around is not allowed, stay there
-    }, [currentFocus, getAllFieldsInOrder]);
-
-    // Move to the previous field in the tab order
+    // Move to the previous field in the navigation order (matching Addition pattern)
     const moveToPreviousField = useCallback(() => {
-        const allFields = getAllFieldsInOrder();
-        const currentIndex = allFields.findIndex(field =>
-            field.fieldType === currentFocus.fieldType &&
-            field.fieldPosition === currentFocus.fieldPosition &&
-            field.partialIndex === currentFocus.partialIndex
+        if (!problem || allFields.length === 0) return;
+
+        // Find the current field in the ordered list
+        const currentIndex = allFields.findIndex(
+            field => field.fieldType === currentFocus.fieldType &&
+                field.fieldPosition === currentFocus.fieldPosition &&
+                field.partialIndex === currentFocus.partialIndex
         );
 
-        // Move to previous field in the ordered list
+        // If found and not the first field, move to the previous one
         if (currentIndex > 0) {
-            setCurrentFocus(allFields[currentIndex - 1]);
-        } else if (allFields.length > 0) {
-            // Wrap around to the last field if we're at the beginning
-            setCurrentFocus(allFields[allFields.length - 1]);
+            const prevField = allFields[currentIndex - 1];
+            setCurrentFocus({
+                fieldType: prevField.fieldType,
+                fieldPosition: prevField.fieldPosition,
+                partialIndex: prevField.partialIndex
+            });
         }
-    }, [currentFocus, getAllFieldsInOrder]);
+    }, [problem, allFields, currentFocus]);
 
-    // Move up (to carry box)
-    const moveUp = useCallback(() => {
-        if (!problem) return;
+    // Check if all fields are filled using shared validation
+    const areAllFieldsFilled = useCallback(() => {
+        if (!problem) return false;
 
-        const { fieldType, fieldPosition } = currentFocus;
+        // Convert to validation format
+        const validationFields = allFields.map(field => ({
+            fieldType: field.fieldType,
+            fieldPosition: field.fieldPosition,
+            partialIndex: field.partialIndex
+        }));
 
-        // New focus to be calculated
-        let newFocus: MultiplicationCurrentFocus;
+        const validationAnswers = userAnswers.map(answer => ({
+            fieldType: answer.fieldType,
+            fieldPosition: answer.fieldPosition,
+            partialIndex: answer.partialIndex,
+            value: answer.value
+        }));
 
-        if (fieldType === 'product' && shouldShowCarry(fieldPosition)) {
-            // Move to carry above product - only if this position has a carry
-            newFocus = {
-                fieldType: 'carry',
-                fieldPosition,
-                partialIndex: 0
-            };
-            setCurrentFocus(newFocus);
+        return checkAllFieldsFilled(validationFields, validationAnswers);
+    }, [problem, allFields, userAnswers, checkAllFieldsFilled]);
+
+    // Handle keyboard navigation (matching Division pattern exactly)
+    const handleKeyDown = useCallback((e: React.KeyboardEvent, onProblemSubmit?: () => void) => {
+        if (e.key === KEYBOARD_KEYS.ARROW_RIGHT || e.key === KEYBOARD_KEYS.TAB && !e.shiftKey) {
+            e.preventDefault();
+            moveToNextField();
+        } else if (e.key === KEYBOARD_KEYS.ARROW_LEFT || (e.key === KEYBOARD_KEYS.TAB && e.shiftKey)) {
+            e.preventDefault();
+            moveToPreviousField();
+        } else if (e.key === KEYBOARD_KEYS.ENTER) {
+            e.preventDefault();
+            if (isSubmitted) {
+                // If problem is already submitted, don't auto-advance
+                // Let the user manually click "Next Problem" in the ProblemComplete dialog
+                return;
+            } else if (onProblemSubmit && areAllFieldsFilled()) {
+                // Only submit the problem if ALL fields are filled
+                onProblemSubmit();
+            }
+            // If not all fields are filled, do nothing (don't advance to next field)
         }
-        // If already at a carry or no carry needed, do nothing
-    }, [problem, currentFocus, shouldShowCarry]);
+    }, [moveToNextField, moveToPreviousField, isSubmitted, areAllFieldsFilled]);
 
-    // Move down (from carry to product)
-    const moveDown = useCallback(() => {
-        if (!problem) return;
-
-        const { fieldType, fieldPosition } = currentFocus;
-
-        // New focus to be calculated
-        let newFocus: MultiplicationCurrentFocus;
-
-        if (fieldType === 'carry') {
-            // Move from carry to product below
-            newFocus = {
-                fieldType: 'product',
-                fieldPosition,
-                partialIndex: undefined
-            };
-            setCurrentFocus(newFocus);
-        }
-        // If already at product, do nothing
-    }, [problem, currentFocus]);
-
-    // Add event listener for keyboard navigation
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [handleKeyDown]);
+    // Jump to a specific field (matching Addition pattern)
+    const jumpToField = useCallback((fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number) => {
+        setCurrentFocus({
+            fieldType,
+            fieldPosition,
+            partialIndex,
+        });
+    }, []);
 
     return {
         currentFocus,
-        setCurrentFocus,
         handleKeyDown,
-        getAllFieldsInOrder,
-        getPreviousField
+        jumpToField,
+        moveToNextField,
+        moveToPreviousField,
+        allFields,
+        areAllFieldsFilled
     };
 } 
