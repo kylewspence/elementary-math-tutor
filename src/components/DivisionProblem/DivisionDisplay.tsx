@@ -20,7 +20,7 @@ interface DivisionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
-    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
+    onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
@@ -296,7 +296,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
                 onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
-                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
+                onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
                 readOnly={isSubmitted}
@@ -471,7 +471,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Main content with problem work */}
-            <div className="relative mt-16">
+            <div className="relative mt-8">
                 {/* Division layout - centered */}
                 <div className="flex justify-center">
                     <div className="division-workspace relative">
@@ -563,7 +563,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Shared SubmitControls Component */}
-            <div className="flex flex-col items-center mt-8">
+            <div className="flex flex-col items-center mt-4">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
                     isComplete={isComplete || false}
