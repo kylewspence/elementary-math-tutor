@@ -409,7 +409,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     return (
         <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
-            <div className="text-center mb-16" ref={problemRef}>
+            <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
                     {problem.isEditable ? (
                         <>
