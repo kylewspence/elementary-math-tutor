@@ -446,14 +446,14 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         ✏️ Edit the numbers above - click elsewhere when done
                     </div>
                 ) : (
-                    <div className="text-sm text-gray-500 mt-2 mb-30">
+                    <div className="text-sm text-gray-500 mt-2">
                         💡 Click the problem above to edit it
                     </div>
                 )}
             </div>
 
             {/* Main content with problem work */}
-            <div className="relative">
+            <div className="relative mt-16">
                 {/* Division layout - centered */}
                 <div className="flex justify-center">
                     <div className="division-workspace relative">
@@ -545,7 +545,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Shared SubmitControls Component */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center mt-[-2rem]">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
                     isComplete={isComplete || false}
