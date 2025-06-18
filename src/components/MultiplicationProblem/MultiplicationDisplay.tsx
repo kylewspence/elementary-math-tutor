@@ -523,8 +523,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             {/* Submit controls using shared component */}
             <div className="flex flex-col items-center mt-6">
                 <SubmitControls
-                    isSubmitted={isSubmitted}
-                    isComplete={isComplete}
+                    isSubmitted={isSubmitted || false}
+                    isComplete={isComplete || false}
                     allFieldsFilled={allFieldsFilled}
                     onSubmit={onProblemSubmit || (() => { })}
                     onReset={onResetProblem || (() => { })}

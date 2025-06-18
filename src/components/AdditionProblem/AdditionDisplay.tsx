@@ -43,6 +43,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
+    isComplete,
     onKeyDown,
     onFieldClick,
     onNextProblem,
@@ -451,7 +452,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             <div className="flex flex-col items-center mt-6">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
-                    isComplete={areAllAnswersCorrect()}
+                    isComplete={isComplete || false}
                     allFieldsFilled={allFieldsFilled}
                     onSubmit={onProblemSubmit || (() => { })}
                     onReset={onResetProblem || (() => { })}
