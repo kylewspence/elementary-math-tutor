@@ -89,8 +89,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     }, [variant, ref]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let raw = e.target.value;
-        let parsed = parseValue ? parseValue(raw) : raw;
+        const raw = e.target.value;
+        const parsed = parseValue ? parseValue(raw) : raw;
         if (onChange) onChange(parsed);
         // Do NOT auto-advance here; only in handleKeyDown
     };

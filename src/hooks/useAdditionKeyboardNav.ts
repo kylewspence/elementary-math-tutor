@@ -1,13 +1,19 @@
+import { useCallback } from 'react';
 import { useMathKeyboardNav } from './useMathKeyboardNav';
 import type { AdditionProblem, AdditionUserAnswer } from '../types/addition';
-import { KEYBOARD_KEYS } from '../utils/constants';
+
 
 export interface AdditionCurrentFocus {
     columnPosition: number;
     fieldType: 'sum' | 'carry';
 }
 
-export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAnswers?: AdditionUserAnswer[], isSubmitted: boolean = false) {
+export function useAdditionKeyboardNav(
+    problem: AdditionProblem | null,
+    _userAnswers?: AdditionUserAnswer[],
+    isSubmitted: boolean = false,
+    onProblemSubmit?: () => void
+) {
     // Check if we need an extra box for the final carry
     const hasExtraBox = (() => {
         if (!problem) return false;
@@ -19,7 +25,7 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAns
     })();
 
     // Get all fields in the order they should be navigated
-    const getAllFields = () => {
+    const getAllFields = useCallback(() => {
         if (!problem) return [];
         const fields: AdditionCurrentFocus[] = [];
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
@@ -34,15 +40,20 @@ export function useAdditionKeyboardNav(problem: AdditionProblem | null, _userAns
             fields.push({ columnPosition: problem.steps.length, fieldType: 'sum' });
         }
         return fields;
-    };
+    }, [problem, hasExtraBox]);
 
     // Use the shared hook
     const nav = useMathKeyboardNav<AdditionCurrentFocus>(getAllFields, {
         isSubmitted,
+        onProblemSubmit,
         fieldEquals: (a, b) =>
             a.columnPosition === b.columnPosition &&
             a.fieldType === b.fieldType,
     });
 
-    return nav;
+    // Override moveNext with moveNextNoWrap for auto-advance
+    return {
+        ...nav,
+        moveNext: nav.moveNextNoWrap, // Use no-wrap version for auto-advance
+    };
 } 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /**
  * Shared keyboard navigation hook for math problem UIs (Division, Addition, Multiplication).
@@ -23,15 +23,16 @@ export function useMathKeyboardNav<Field>(
     };
     const eq = fieldEquals || defaultFieldEquals;
 
-    const allFields = getAllFields();
-    const [currentFocus, setCurrentFocus] = useState<Field>(allFields[0]);
+    const allFields = useMemo(() => getAllFields(), [getAllFields]);
+    const [currentFocus, setCurrentFocus] = useState<Field | null>(allFields[0] || null);
 
     // Find index of current field
     const getCurrentFieldIndex = useCallback(() => {
+        if (!currentFocus) return -1;
         return allFields.findIndex(f => eq(f, currentFocus));
     }, [allFields, currentFocus, eq]);
 
-    // Move to next field
+    // Move to next field (with wrapping for Tab navigation)
     const moveNext = useCallback(() => {
         const idx = getCurrentFieldIndex();
         if (idx < allFields.length - 1 && idx !== -1) {
@@ -39,6 +40,15 @@ export function useMathKeyboardNav<Field>(
         } else if (allFields.length > 0) {
             setCurrentFocus(allFields[0]); // wrap
         }
+    }, [allFields, getCurrentFieldIndex]);
+
+    // Move to next field (without wrapping for auto-advance)
+    const moveNextNoWrap = useCallback(() => {
+        const idx = getCurrentFieldIndex();
+        if (idx < allFields.length - 1 && idx !== -1) {
+            setCurrentFocus(allFields[idx + 1]);
+        }
+        // Don't wrap - stay on current field if at end
     }, [allFields, getCurrentFieldIndex]);
 
     // Move to previous field
@@ -58,6 +68,7 @@ export function useMathKeyboardNav<Field>(
 
     // Check if a field is focused
     const isFieldFocused = useCallback((field: Field) => {
+        if (!currentFocus) return false;
         return eq(field, currentFocus);
     }, [currentFocus, eq]);
 
@@ -98,6 +109,7 @@ export function useMathKeyboardNav<Field>(
         currentFocus,
         setCurrentFocus,
         moveNext,
+        moveNextNoWrap,
         movePrevious,
         jumpToField,
         isFieldFocused,

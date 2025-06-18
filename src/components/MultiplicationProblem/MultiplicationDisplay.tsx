@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
-import ProblemComplete from '../UI/ProblemComplete';
+import { SubmitControls } from '../Shared';
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -11,7 +11,7 @@ import ProblemComplete from '../UI/ProblemComplete';
 interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
-    currentFocus: MultiplicationCurrentFocus;
+    currentFocus: MultiplicationCurrentFocus | null;
     onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
@@ -28,7 +28,8 @@ interface MultiplicationDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
-    setCurrentFocus?: (focus: MultiplicationCurrentFocus) => void;
+    setCurrentFocus?: (focus: MultiplicationCurrentFocus | null) => void;
+    moveNext?: () => void;
 }
 
 const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
@@ -51,7 +52,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     onRetryFetch,
     onUpdateProblem,
     isComplete = false,
-    setCurrentFocus
+    setCurrentFocus,
+    moveNext
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -133,9 +135,9 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     const getInputVariant = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
         const userAnswer = getUserAnswer(fieldType, position, partialIndex);
         const isActive =
-            currentFocus.fieldType === fieldType &&
-            currentFocus.fieldPosition === position &&
-            currentFocus.partialIndex === partialIndex;
+            currentFocus?.fieldType === fieldType &&
+            currentFocus?.fieldPosition === position &&
+            currentFocus?.partialIndex === partialIndex;
 
         // After submission, prioritize validation colors over active state
         if (isSubmitted && userAnswer) {
@@ -153,9 +155,9 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Helper function to create an input with robust navigation and clearing
     const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
         const isActive =
-            currentFocus.fieldType === fieldType &&
-            currentFocus.fieldPosition === position &&
-            currentFocus.partialIndex === partialIndex;
+            currentFocus?.fieldType === fieldType &&
+            currentFocus?.fieldPosition === position &&
+            currentFocus?.partialIndex === partialIndex;
         const userAnswer = getUserAnswer(fieldType, position, partialIndex);
         return (
             <Input
@@ -171,7 +173,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 }}
                 onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
-                onAutoAdvance={() => {/* parent handles focus movement */ }}
+                onAutoAdvance={moveNext}
                 onEnter={isSubmitted ? onNextProblem : undefined}
                 placeholder="?"
                 maxLength={1}
@@ -369,7 +371,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Loading state
     if (isLoading) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg">Loading problem...</p>
             </div>
         );
@@ -378,7 +380,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Error state
     if (fetchError) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg text-red-500 mb-4">Error loading problem</p>
                 <p className="mb-4">{fetchError.message}</p>
                 <button
@@ -394,7 +396,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // No problem state
     if (!problem) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg">No problem available</p>
                 <button
                     onClick={onNewProblem}
@@ -407,7 +409,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     }
 
     return (
-        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -460,73 +462,26 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                     </div>
                 </div>
 
-                {/* Problem complete notification using the new component */}
-                {/* Debug info: isSubmitted={isSubmitted.toString()}, isComplete={isComplete.toString()} */}
-                {isSubmitted && isComplete && (
-                    <ProblemComplete
-                        type="multiplication"
-                        problem={{
-                            multiplicand: problem?.multiplicand,
-                            multiplier: problem?.multiplier,
-                            product: problem?.product
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-                )}
             </div>
 
-            {/* Tab to move forward help text - now as a footnote */}
-            <div className="text-center text-sm text-gray-500 mt-8">
-                Press Tab to move to the next field
-            </div>
-
-            {/* Button layout in triangle formation */}
-            <div className="flex flex-col items-center mt-6">
-                {/* Submit button */}
-                {!isSubmitted && (
-                    <button
-                        onClick={() => onProblemSubmit?.()}
-                        disabled={!userAnswers.length}
-                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!userAnswers.length
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                            } transition-colors`}
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Submit Answers
-                        </span>
-                    </button>
-                )}
-
-                {/* Reset and New Problem buttons */}
-                <div className="flex justify-center space-x-4">
-                    <button
-                        onClick={onResetProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                            </svg>
-                            Reset Problem
-                        </span>
-                    </button>
-                    <button
-                        onClick={onNewProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Problem
-                        </span>
-                    </button>
-                </div>
+            {/* Submit controls using shared component */}
+            <div className="flex flex-col items-center">
+                <SubmitControls
+                    isSubmitted={isSubmitted}
+                    isComplete={isComplete}
+                    allFieldsFilled={userAnswers.length > 0}
+                    onSubmit={onProblemSubmit || (() => { })}
+                    onReset={onResetProblem || (() => { })}
+                    onGenerateNew={onNewProblem || (() => { })}
+                    onNextProblem={onNextProblem || (() => { })}
+                    operation="multiplication"
+                    variant="triangle"
+                    problemData={{
+                        multiplicand: problem?.multiplicand,
+                        multiplier: problem?.multiplier,
+                        product: problem?.product
+                    }}
+                />
             </div>
 
             {/* Help text as footnote outside the main container */}

@@ -1,6 +1,6 @@
 import { useMathKeyboardNav } from './useMathKeyboardNav';
-import type { DivisionProblem, UserAnswer } from '../types/game';
-import { KEYBOARD_KEYS } from '../utils/constants';
+import type { DivisionProblem } from '../types/game';
+
 
 export interface CurrentFocus {
     stepNumber: number;
@@ -10,7 +10,7 @@ export interface CurrentFocus {
 
 export function useKeyboardNav(
     problem: DivisionProblem | null,
-    userAnswers: UserAnswer[] = [],
+
     isSubmitted: boolean = false,
     onProblemSubmit?: () => void
 ) {

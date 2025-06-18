@@ -112,11 +112,25 @@ function App() {
     loadProblemsForLevel: loadAdditionProblemsForLevel,
   } = useAdditionGameState();
 
+  // Addition handlers
+  const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
+    submitAdditionAnswer(answer);
+  };
+
+  const handleAdditionAnswerClear = (columnPosition: number, fieldType: 'sum' | 'carry') => {
+    clearAdditionAnswer((a: AdditionUserAnswer) => a.columnPosition === columnPosition && a.fieldType === fieldType);
+  };
+
+  const handleAdditionProblemSubmit = () => {
+    submitAdditionProblem();
+  };
+
   const {
     currentFocus: additionCurrentFocus,
     handleKeyDown: handleAdditionKeyDown,
     jumpToField: jumpToAdditionField,
-  } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted);
+    moveNext: moveNextAddition,
+  } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted, handleAdditionProblemSubmit);
 
   // Always set initial focus to the first input field when a new division problem is generated
   useEffect(() => {
@@ -133,24 +147,6 @@ function App() {
       jumpToAdditionField({ columnPosition: 0, fieldType: 'sum' });
     }
   }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
-
-  // Addition handlers
-  const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
-    submitAdditionAnswer(answer);
-  };
-
-  const handleAdditionAnswerClear = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-    clearAdditionAnswer((a: AdditionUserAnswer) => a.columnPosition === columnPosition && a.fieldType === fieldType);
-  };
-
-  const handleAdditionProblemSubmit = () => {
-    submitAdditionProblem();
-    // Clear focus by setting it to a non-existent field after submission
-    if (additionGameState.problem) {
-      // Use a field position that's guaranteed not to exist
-      jumpToAdditionField({ columnPosition: -1, fieldType: 'sum' });
-    }
-  };
 
   const handleAdditionKeyboardNav = (e: React.KeyboardEvent) => {
     handleAdditionKeyDown(e);
@@ -175,6 +171,11 @@ function App() {
   const toggleGameMode = (mode: GameMode) => {
     setGameMode(mode);
   };
+
+  // Initialize games on first load
+  useEffect(() => {
+    initializeAdditionGame();
+  }, [initializeAdditionGame]);
 
   const getCurrentLevelInfo = () => {
     if (gameMode === 'division') {
@@ -242,6 +243,7 @@ function App() {
             onAnswerClear={handleAdditionAnswerClear}
             onProblemSubmit={handleAdditionProblemSubmit}
             onNextProblem={handleNextAdditionProblem}
+            moveNext={moveNextAddition}
             onFieldClick={handleAdditionFieldClick}
             onKeyDown={handleAdditionKeyboardNav}
             onRetryFetch={handleRetryAdditionFetch}

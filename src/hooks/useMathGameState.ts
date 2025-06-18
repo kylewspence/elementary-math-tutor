@@ -29,8 +29,8 @@ export function useMathGameState<ProblemType, AnswerType>(config: {
         score: 0,
         isEditable: false,
     }));
-    const [isLoading, setIsLoading] = useState(false);
-    const [fetchError, setFetchError] = useState<Error | null>(null);
+    const [isLoading] = useState(false);
+    const [fetchError] = useState<Error | null>(null);
 
     // Generate/load a new problem
     const generateNewProblem = useCallback(() => {

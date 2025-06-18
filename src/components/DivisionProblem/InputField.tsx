@@ -6,7 +6,7 @@ import Input from '../UI/Input';
 
 const InputField: React.FC<InputFieldProps> = ({
     value,
-    position,
+
     isActive,
     isCorrect,
     isError,

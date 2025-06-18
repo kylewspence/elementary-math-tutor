@@ -1,5 +1,5 @@
 import React from 'react';
-import type { BaseProblem, MathOperation } from '../../types/math';
+import type { MathOperation } from '../../types/math';
 import Input from '../UI/Input';
 import Button from '../UI/Button';
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ProblemInput, ValidationFeedback } from '../Shared';
 import type { ProblemField, ValidationResult } from '../Shared';
-import type { DivisionProblem } from '../../types/division';
+
 import { validateDivisor, validateDividend } from '../../utils/validation';
 
 const TestDivisionIntegration: React.FC = () => {

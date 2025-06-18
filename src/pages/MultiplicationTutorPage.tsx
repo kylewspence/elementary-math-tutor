@@ -23,11 +23,13 @@ const MultiplicationTutorPage: React.FC = () => {
     // Keyboard navigation
     const {
         currentFocus,
-        setCurrentFocus
+        setCurrentFocus,
+        handleKeyDown: handleKeyboardNav,
+        moveNext: moveNextMultiplication
     } = useMultiplicationKeyboardNav(
         gameState.problem,
         gameState.userAnswers,
-        submitAnswer,
+        gameState.isSubmitted,
         submitProblem
     );
 
@@ -53,9 +55,8 @@ const MultiplicationTutorPage: React.FC = () => {
     };
 
     // Handle keyboard navigation
-    const handleKeyDown = () => {
-        // Let the keyboard navigation hook handle it
-        // This is just a pass-through function to match the division interface
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        handleKeyboardNav(e);
     };
 
     // Handle retry fetch
@@ -99,6 +100,7 @@ const MultiplicationTutorPage: React.FC = () => {
             onDisableEditing={disableEditing}
             onUpdateProblem={handleUpdateProblem}
             setCurrentFocus={setCurrentFocus}
+            moveNext={moveNextMultiplication}
         />
     );
 };
