@@ -1,5 +1,5 @@
 import { useMathKeyboardNav } from './useMathKeyboardNav';
-import type { DivisionProblem } from '../types/game';
+import type { DivisionProblem, UserAnswer } from '../types/game';
 
 
 export interface CurrentFocus {
@@ -10,7 +10,7 @@ export interface CurrentFocus {
 
 export function useKeyboardNav(
     problem: DivisionProblem | null,
-    userAnswers: any[],
+    userAnswers: UserAnswer[],
     isSubmitted: boolean = false,
     onProblemSubmit?: () => void
 ) {

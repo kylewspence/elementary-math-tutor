@@ -8,7 +8,6 @@ const MultiplicationTutorPage: React.FC = () => {
     const {
         gameState,
         submitAnswer,
-        clearAnswer,
         submitProblem,
         nextProblem,
         resetProblem,
