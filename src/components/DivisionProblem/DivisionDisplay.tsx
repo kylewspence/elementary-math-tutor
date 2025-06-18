@@ -104,26 +104,42 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             return;
         }
 
-        // Count total required fields
-        let totalFields = 0;
-        for (const step of problem.steps) {
-            // Quotient (1)
-            totalFields += 1;
+        // Get all required fields (similar to Addition's approach)
+        const requiredFields = [];
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
 
-            // Multiply digits
-            totalFields += getDigitCount(step.multiply);
+            // Quotient field
+            requiredFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
 
-            // Subtract digits
-            totalFields += getDigitCount(step.subtract);
+            // Multiply digit fields
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = 0; pos < multiplyDigits; pos++) {
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
+            }
 
-            // Bring down (if exists)
+            // Subtract digit fields
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = 0; pos < subtractDigits; pos++) {
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+
+            // Bring down field (if exists)
             if (step.bringDown !== undefined) {
-                totalFields += 1;
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
             }
         }
 
-        // Check if we have answers for all fields
-        setAllFieldsFilled(userAnswers.length >= totalFields);
+        // Check if we have an answer for each required field (same logic as Addition)
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.stepNumber === field.stepNumber &&
+                answer.fieldType === field.fieldType &&
+                answer.fieldPosition === field.fieldPosition
+            )
+        );
+
+        setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
