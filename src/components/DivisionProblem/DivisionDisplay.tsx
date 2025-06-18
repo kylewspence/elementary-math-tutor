@@ -278,7 +278,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
                 onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
-                onKeyDown={onKeyDown}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
                 readOnly={isSubmitted}

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React from 'react';
 import Button from '../UI/Button';
 import ProblemComplete from '../UI/ProblemComplete';
 import type { MathOperation } from '../../types/math';
@@ -55,54 +55,7 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
     className = '',
     problemData = {}
 }) => {
-    // Keyboard shortcuts handler
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        // Don't interfere with input fields
-        if (e.target instanceof HTMLInputElement) {
-            return;
-        }
-
-        switch (e.key) {
-            case 'Enter':
-                if (!isSubmitted && allFieldsFilled && !disabled) {
-                    e.preventDefault();
-                    onSubmit();
-                } else if (isComplete) {
-                    e.preventDefault();
-                    onNextProblem();
-                }
-                break;
-            case 'r':
-            case 'R':
-                if (isSubmitted && !disabled) {
-                    e.preventDefault();
-                    onReset();
-                }
-                break;
-            case 'g':
-            case 'G':
-                if (isSubmitted && !disabled) {
-                    e.preventDefault();
-                    onGenerateNew();
-                }
-                break;
-            case 'n':
-            case 'N':
-                if (isComplete && !disabled) {
-                    e.preventDefault();
-                    onNextProblem();
-                }
-                break;
-        }
-    }, [isSubmitted, isComplete, allFieldsFilled, disabled, onSubmit, onNextProblem, onReset, onGenerateNew]);
-
-    // Set up keyboard event listeners
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [handleKeyDown]);
+    // No global keyboard shortcuts - let the shared keyboard navigation handle everything
 
     // Render pre-submit state (submit button only)
     const renderPreSubmitState = () => {
@@ -124,6 +77,56 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
 
     // Render post-submit state (action buttons)
     const renderPostSubmitState = () => {
+        // If complete, show Next Problem button prominently, then other actions
+        if (isComplete) {
+            return (
+                <div className="flex flex-col gap-3 items-center">
+                    {/* Next Problem button - primary action */}
+                    <Button
+                        onClick={onNextProblem}
+                        disabled={disabled}
+                        variant="primary"
+                        size="md"
+                        className={`flex items-center justify-center gap-2 ${UI_CONSTANTS.LAYOUT.BUTTON_HEIGHT} min-w-[140px]`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        Next Problem
+                    </Button>
+
+                    {/* Secondary actions */}
+                    <div className="flex flex-row gap-3 items-center justify-center">
+                        <Button
+                            onClick={onReset}
+                            disabled={disabled}
+                            variant="secondary"
+                            size="md"
+                            className={`flex items-center justify-center gap-2 ${UI_CONSTANTS.LAYOUT.BUTTON_HEIGHT} min-w-[120px]`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                            <span className="hidden sm:inline">Reset</span>
+                        </Button>
+                        <Button
+                            onClick={onGenerateNew}
+                            disabled={disabled}
+                            variant="neutral"
+                            size="md"
+                            className={`flex items-center justify-center gap-2 ${UI_CONSTANTS.LAYOUT.BUTTON_HEIGHT} min-w-[120px]`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="hidden sm:inline">Generate</span>
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+
+        // If submitted but not complete, show standard action buttons
         const buttons = (
             <>
                 <Button
@@ -137,7 +140,6 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
                         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                     </svg>
                     <span className="hidden sm:inline">Reset</span>
-                    <span className="text-xs opacity-75">(R)</span>
                 </Button>
                 <Button
                     onClick={onGenerateNew}
@@ -150,7 +152,6 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                     </svg>
                     <span className="hidden sm:inline">Generate</span>
-                    <span className="text-xs opacity-75">(G)</span>
                 </Button>
             </>
         );
@@ -182,18 +183,6 @@ const SubmitControls: React.FC<SubmitControlsProps> = ({
 
     return (
         <div className={baseClasses}>
-            {/* Show completion celebration if problem is complete */}
-            {isSubmitted && isComplete && problemData && (
-                <div className="relative mb-6">
-                    <ProblemComplete
-                        type={operation}
-                        problem={problemData}
-                        onNextProblem={onNextProblem}
-                        variant="card"
-                    />
-                </div>
-            )}
-
             {/* Control buttons layout */}
             <div className={`control-buttons flex flex-col items-center ${UI_CONSTANTS.TRANSITIONS.NORMAL}`}>
                 {!isSubmitted ? (
