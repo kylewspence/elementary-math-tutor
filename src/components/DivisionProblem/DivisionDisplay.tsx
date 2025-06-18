@@ -299,6 +299,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 readOnly={isSubmitted}
                 placeholder="?"
                 aria-label={`${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} digit ${position + 1}`}
@@ -471,7 +472,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Main content with problem work */}
-            <div className="relative mt-8">
+            <div className="relative mt-16">
                 {/* Division layout - centered */}
                 <div className="flex justify-center">
                     <div className="division-workspace relative">
@@ -563,7 +564,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Shared SubmitControls Component */}
-            <div className="flex flex-col items-center mt-4">
+            <div className="flex flex-col items-center mt-2">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
                     isComplete={isComplete || false}

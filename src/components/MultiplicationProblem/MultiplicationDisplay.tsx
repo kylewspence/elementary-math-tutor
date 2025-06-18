@@ -221,7 +221,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
                 onAutoAdvance={moveNext}
-                onEnter={isSubmitted ? onNextProblem : undefined}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 placeholder="?"
                 maxLength={1}
                 inputMode="numeric"
