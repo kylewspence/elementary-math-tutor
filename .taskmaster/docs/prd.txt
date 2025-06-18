@@ -1,272 +1,209 @@
-# Long Division Tutor - Integration Project PRD
+# Math Tutor UI Refactor - Product Requirements Document
 
-## 🎯 Project Overview
+## Executive Summary
 
-The Long Division Tutor is an interactive educational web application built with React, TypeScript, Vite, and Tailwind CSS. It provides a step-by-step guided experience for learning long division through a clean, keyboard-optimized interface with progressive difficulty levels. The application currently features a robust division component with 10 difficulty levels, advanced keyboard navigation, and real-time validation.
+Refactor the Math Tutor application's UI architecture to provide shared logic across all operations (Division, Addition, Multiplication) while maintaining operation-specific display components. The current implementation has good individual components but lacks cohesive shared architecture, causing changes to break other operations.
 
-This PRD outlines the plan to integrate a separately developed multiplication component into the existing Long Division Tutor, creating a comprehensive Math Tutor application that maintains consistency in user experience, code quality, and educational approach.
+## Current State Analysis
 
-## 🌟 Integration Goals
+### Working Components (To Preserve)
+- `useMathGameState`: Excellent shared state management hook with proper generic typing
+- `useMathKeyboardNav`: Good shared navigation logic with configurable field equality
+- Division components: Well-structured with `DivisionDisplay`, `DivisionLayout`, `ProblemInput`, `ValidationFeedback`
+- Multiplication components: `MultiplicationDisplay`, `MultiplicationLayout` with good structure
+- Addition components: `AdditionDisplay` with functional logic
+- Header with tab switching and level management
+- UI components: `Input`, `Button`, `Card`, `ProblemComplete`, `StatusBar`
 
-1. **Seamless User Experience**: Integrate the multiplication component while maintaining the look, feel, and UX patterns of the existing division tutor.
-2. **Code Consistency**: Ensure the integrated multiplication code follows the same architectural patterns, naming conventions, and code quality standards as the division component.
-3. **Unified Navigation**: Maintain the advanced keyboard navigation system (Tab/Shift+Tab, Enter key workflow) across both components.
-4. **Visual Cohesion**: Create a unified visual design that treats both components as part of a single application.
-5. **Minimal Disruption**: Preserve all existing division functionality without regression.
+### Problem Areas (To Fix)
+- `MathDisplay` component tries to be "all-in-one" but loses operation-specific capabilities
+- App.tsx contains too much operation-specific field generation logic
+- Changes to shared logic (submit, navigation) break other tabs
+- Inconsistent component reuse across operations
+- Complex conditional rendering based on operation type
 
-## 📊 Current Application Structure
+## Goals
 
-The current Long Division Tutor features:
+### Primary Goals
+1. **Shared Architecture**: All operations use the same hooks and subcomponents for input handling, keyboard navigation, submit flow, and level progression
+2. **Break-Safe Changes**: Modifications to shared logic must not break other operations
+3. **Operation-Specific UI**: Each operation maintains its unique display/layout while sharing underlying logic
+4. **Future Extensibility**: Architecture supports easy addition of Subtraction operation
 
-- **10-Level Progressive Difficulty**: From simple single-digit division to complex multi-digit problems
-- **Traditional Visual Layout**: Familiar long division format matching classroom teaching
-- **Advanced Keyboard Navigation**: Complete Tab/Shift+Tab navigation with Enter key workflow
-- **Real-Time Validation**: Immediate feedback with color-coded visual indicators
-- **Problem Editing**: Click-to-edit functionality for custom problems
+### Success Criteria
+- Changes to submit button behavior affect all operations consistently
+- Cursor movement works identically across all tabs
+- Level progression logic is unified
+- Adding new operations requires minimal code duplication
+- All existing functionality is preserved
 
-## 🔄 Integration Requirements
+## Technical Architecture
 
-### 1. Application Structure
+### Shared Components
+- **useMathGameState**: Already excellent, keep as-is with minor enhancements
+- **useMathKeyboardNav**: Good foundation, may need operation-specific configurations
+- **ProblemInput**: Shared input component (extract from Division components)
+- **ValidationFeedback**: Shared feedback component (extract from Division components)
+- **StatusBar**: Shared progress/level display
+- **SubmitControls**: Shared submit button and next problem controls
 
-- **New Navigation System**: Create a top-level operation selector (Division/Multiplication) in the header or sidebar
-- **Shared Components**: Identify and refactor UI components that can be shared between both operations
-- **Route-Based Navigation**: Implement routing to switch between division and multiplication modes
-- **State Separation**: Ensure each operation maintains its own state while sharing common UI elements
+### Operation-Specific Components
+- **DivisionDisplay**: Handles step-by-step division layout and unique logic
+- **AdditionDisplay**: Handles column-based addition layout and carry logic
+- **MultiplicationDisplay**: Handles partial products and multiplication layout
+- **[Future] SubtractionDisplay**: Will handle borrowing and subtraction layout
 
-### 2. Component Integration
-
-- **Multiplication Component**: Integrate the external multiplication component while:
-  - Maintaining the same folder structure and naming conventions
-  - Adapting its styling to match the division component
-  - Ensuring it follows the same keyboard navigation patterns
-  - Preserving its core functionality
-
-- **Required Modifications to Multiplication Component**:
-  - Rename components and files to match division naming conventions
-  - Refactor styling to use the same Tailwind patterns
-  - Update keyboard navigation to match division's Tab/Shift+Tab behavior
-  - Ensure cursor positioning and auto-focus behavior is consistent
-  - Adapt validation and feedback mechanisms to match division component
-
-### 3. UI/UX Requirements
-
-- **Consistent Header**: Maintain the current "Math Tutor" header with added operation selection
-- **Level Selector**: Adapt the level selector to work with both operations
-- **Keyboard Navigation**: Ensure Tab/Shift+Tab and Enter key behaviors work identically in both components
-- **Input Behavior**: Maintain consistent auto-select, auto-advance, and validation feedback
-- **Visual Styling**: Use the same color scheme, input styles, and layout patterns
-
-### 4. Technical Requirements
-
-- **TypeScript Consistency**: Ensure all integrated code maintains strict TypeScript typing
-- **State Management**: Adapt the multiplication component to use the same state management pattern
-- **Hook Structure**: Refactor multiplication hooks to match division hook patterns
-- **Error Handling**: Implement consistent error handling across both components
-- **Performance**: Maintain the zero-delay response time for all interactions
-
-## 🔍 Specific Integration Tasks
-
-### 1. Code Analysis and Preparation
-
-- **Component Analysis**: Compare division and multiplication components to identify structural differences
-- **Hook Analysis**: Compare state management and keyboard navigation hooks
-- **Type Definition Analysis**: Compare type systems and identify consolidation opportunities
-- **Utility Function Analysis**: Identify shared and operation-specific utility functions
-
-### 2. Structural Changes
-
-- **Create Operation Selector**: Add UI element to switch between division and multiplication
-- **Implement Routing**: Set up routes for division and multiplication modes
-- **Refactor Shared Components**: Extract and standardize shared UI components
-- **Update Layout Component**: Modify layout to accommodate both operations
-
-### 3. Multiplication Component Adaptation
-
-- **File Structure Alignment**: Reorganize multiplication files to match division structure
-- **Component Renaming**: Update component names to follow division naming conventions
-- **Style Refactoring**: Update styling to match division component
-- **Keyboard Navigation Update**: Modify keyboard handling to match division behavior
-- **Validation Alignment**: Ensure validation provides consistent feedback
-
-### 4. State Management Integration
-
-- **Hook Refactoring**: Adapt multiplication hooks to match division hook patterns
-- **State Structure Alignment**: Ensure state objects follow consistent patterns
-- **Type Definition Consolidation**: Create shared types where appropriate
-- **Event Handler Standardization**: Ensure event handlers follow consistent patterns
-
-### 5. Testing and Validation
-
-- **Cross-Component Testing**: Verify consistent behavior between division and multiplication
-- **Keyboard Navigation Testing**: Ensure Tab/Shift+Tab works identically in both components
-- **Responsive Testing**: Verify layout consistency across screen sizes
-- **Edge Case Testing**: Test boundary conditions in both components
-
-## 🎮 User Experience Flow
-
-### 1. App Launch
-
-- User sees the "Math Tutor" header with operation selector (Division/Multiplication)
-- Default operation is set to Division (maintaining current behavior)
-- Level selector shows appropriate levels for the selected operation
-- Clean, distraction-free interface is maintained
-
-### 2. Operation Selection
-
-- User can switch between Division and Multiplication operations
-- Level selection is preserved when possible or reset to appropriate default
-- UI smoothly transitions between operations
-- Current operation is clearly indicated
-
-### 3. Problem Solving Experience
-
-- Consistent keyboard-first navigation across both operations
-- Tab/Shift+Tab behavior works identically
-- Enter key functionality maintains context-awareness
-- Auto-advance and auto-select behaviors are consistent
-
-### 4. Validation & Feedback
-
-- Both operations provide consistent visual feedback
-- Color-coding for correct/incorrect answers is standardized
-- Submit button behavior is identical
-- Completion messages follow the same format
-
-## 📱 Technical Implementation Details
-
-### 1. Component Structure Updates
-
+### Component Hierarchy
 ```
-src/
-├── components/
-│   ├── Header/
-│   │   └── Header.tsx                 # Updated with operation selector
-│   ├── LevelSelector/
-│   │   └── LevelSelector.tsx          # Modified to support both operations
-│   ├── OperationSelector/
-│   │   └── OperationSelector.tsx      # New component for switching operations
-│   ├── DivisionProblem/               # Existing division components
-│   │   ├── DivisionDisplay.tsx
-│   │   ├── InputField.tsx
-│   │   └── ProblemInput.tsx
-│   ├── MultiplicationProblem/         # New multiplication components
-│   │   ├── MultiplicationDisplay.tsx
-│   │   ├── InputField.tsx
-│   │   └── ProblemInput.tsx
-│   └── UI/                           # Shared UI components
-│       ├── Input.tsx
-│       └── Button.tsx
-├── hooks/
-│   ├── useDivisionGameState.ts        # Renamed from useGameState.ts
-│   ├── useMultiplicationGameState.ts  # New hook for multiplication
-│   ├── useDivisionKeyboardNav.ts      # Renamed from useKeyboardNav.ts
-│   ├── useMultiplicationKeyboardNav.ts # New hook for multiplication
-│   └── useAppState.ts                 # New hook for managing operation selection
-├── utils/
-│   ├── divisionProblemGenerator.ts    # Renamed from problemGenerator.ts
-│   ├── multiplicationProblemGenerator.ts # New utility for multiplication
-│   ├── divisionAlgorithms.ts
-│   ├── multiplicationAlgorithms.ts
-│   └── constants.ts                   # Expanded with multiplication constants
-└── types/
-    ├── division.ts                    # Renamed from game.ts
-    ├── multiplication.ts              # New types for multiplication
-    └── app.ts                         # Shared application types
+App.tsx (tab management, shared hook orchestration)
+├── Header (tab switching, level display)
+├── LevelSelectorDrawer
+└── Operation Display (DivisionDisplay | AdditionDisplay | MultiplicationDisplay)
+    ├── Operation Layout (operation-specific rendering)
+    ├── Shared Subcomponents (ProblemInput, ValidationFeedback, etc.)
+    └── SubmitControls (shared submit/next logic)
 ```
 
-### 2. Routing Implementation
+### Data Flow
+1. App.tsx manages current operation tab and creates shared hook instances
+2. Shared hooks (useMathGameState, useMathKeyboardNav) provide consistent state and actions
+3. Operation displays consume shared hooks and render operation-specific layouts
+4. Shared subcomponents handle input, validation, and controls uniformly
 
-```typescript
-// Example App.tsx with routing
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout/Layout';
-import DivisionGame from './pages/DivisionGame';
-import MultiplicationGame from './pages/MultiplicationGame';
+## Implementation Requirements
 
-const App = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/division" replace />} />
-          <Route path="division" element={<DivisionGame />} />
-          <Route path="multiplication" element={<MultiplicationGame />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
-};
-```
+### Phase 1: Extract Shared Subcomponents
+- Extract ProblemInput from DivisionProblem folder to components/Shared/
+- Extract ValidationFeedback from DivisionProblem folder to components/Shared/
+- Create SubmitControls component for shared submit/next button logic
+- Ensure StatusBar is properly shared
 
-### 3. State Management Approach
+### Phase 2: Refactor Operation Displays
+- Keep DivisionDisplay but refactor to use shared subcomponents
+- Keep AdditionDisplay but refactor to use shared subcomponents  
+- Keep MultiplicationDisplay but refactor to use shared subcomponents
+- Remove the monolithic MathDisplay component
 
-- Create separate state hooks for division and multiplication
-- Implement a parent app state for operation selection
-- Ensure consistent state structure between operations
-- Maintain separate problem generators for each operation
+### Phase 3: Simplify App.tsx
+- Move operation-specific field generation logic into operation displays
+- Simplify App.tsx to focus on tab management and shared hook orchestration
+- Ensure all operations use identical submit/navigation/progression flows
 
-### 4. Keyboard Navigation Integration
+### Phase 4: Enhance Shared Hooks
+- Add operation-specific configuration options to useMathKeyboardNav if needed
+- Ensure useMathGameState handles all operation types consistently
+- Add any missing shared logic for level progression and problem advancement
 
-- Ensure both operations use the same keyboard navigation patterns
-- Standardize focus management across components
-- Maintain consistent auto-advance behavior
-- Preserve Enter key workflow in both operations
+### Phase 5: Testing and Validation
+- Verify all operations work identically for shared behaviors
+- Test that changes to shared logic don't break any operation
+- Validate keyboard navigation works consistently
+- Ensure submit and level progression flows are uniform
 
-## 🚀 Implementation Plan
+## Technical Constraints
 
-### Phase 1: Analysis and Preparation
+### Preserve Existing Functionality
+- All current division step-by-step logic must be maintained
+- Addition column and carry logic must be preserved
+- Multiplication partial products logic must work unchanged
+- Keyboard navigation patterns must remain consistent
+- Level progression and problem generation must work as before
 
-1. **Code Analysis**: Compare both codebases to identify integration points
-2. **Component Extraction**: Identify shared components to be refactored
-3. **Architecture Planning**: Design the updated application structure
-4. **Test Plan Creation**: Develop a comprehensive test plan for the integration
+### Technology Stack
+- React + TypeScript + Tailwind CSS (current stack)
+- Maintain current hook patterns and state management approaches
+- Preserve existing input validation and feedback mechanisms
+- Keep current problem generation and validation utilities
 
-### Phase 2: Core Structure Updates
+### Code Quality Requirements
+- All shared logic must be properly typed with TypeScript generics
+- Components must follow existing patterns and naming conventions
+- No console logging (per user preference)
+- Maintain existing accessibility patterns and ARIA labels
+- Follow existing CSS class naming and Tailwind usage
 
-1. **Project Restructuring**: Update folder structure and file naming
-2. **Routing Implementation**: Add routes for different operations
-3. **Header Update**: Modify header to include operation selector
-4. **Level Selector Adaptation**: Update level selector to support both operations
+## User Experience Requirements
 
-### Phase 3: Multiplication Integration
+### Consistent Behavior Across Operations
+- Tab switching preserves current problem state
+- Submit button behavior identical across all operations
+- Keyboard navigation (Tab, Arrow keys, Enter) works the same way
+- Validation feedback appears consistently
+- Level progression animations and feedback are uniform
 
-1. **Component Migration**: Integrate multiplication components
-2. **Style Alignment**: Update styling to match division components
-3. **State Hook Creation**: Implement multiplication state hooks
-4. **Keyboard Navigation**: Adapt keyboard navigation for multiplication
+### Operation-Specific Features
+- Division: Step-by-step breakdown with quotient, multiply, subtract, bring-down
+- Addition: Column-based input with carry handling
+- Multiplication: Partial products with final product calculation
+- All operations: Right-to-left input patterns where appropriate
 
-### Phase 4: Testing and Refinement
+### Performance Requirements
+- No degradation in current performance
+- Tab switching should be instantaneous
+- Input responsiveness must remain excellent
+- Problem generation should not be slower
 
-1. **Component Testing**: Verify each component functions correctly
-2. **Integration Testing**: Test the interaction between components
-3. **Keyboard Navigation Testing**: Ensure consistent navigation experience
-4. **Visual Consistency Check**: Verify styling consistency across the application
+## Success Metrics
 
-### Phase 5: Finalization
+### Functional Metrics
+- All three operations work without breaking when shared logic is modified
+- Keyboard navigation works identically across all tabs
+- Submit and level progression logic is uniform
+- Zero regression in existing functionality
 
-1. **Performance Optimization**: Ensure the application maintains performance standards
-2. **Documentation Update**: Update technical documentation
-3. **Final Testing**: Comprehensive testing of the entire application
-4. **Deployment**: Deploy the updated application
+### Code Quality Metrics
+- Reduced code duplication across operations
+- Clear separation between shared logic and operation-specific UI
+- Easy addition of new operations (proven by Subtraction implementation readiness)
+- Maintainable and readable component structure
 
-## 📋 Success Criteria
+### Developer Experience
+- Changes to shared behaviors require modification in only one place
+- Adding new operations follows clear, documented patterns
+- Component boundaries are clear and logical
+- Testing shared logic is straightforward
 
-1. **Functional Integration**: Both division and multiplication components function correctly
-2. **Visual Consistency**: UI elements maintain consistent styling and behavior
-3. **Keyboard Navigation**: Tab/Shift+Tab and Enter key workflows function identically in both components
-4. **Performance**: Application maintains sub-second response times for all interactions
-5. **Type Safety**: Zero TypeScript errors across the integrated codebase
-6. **Code Quality**: Consistent patterns and conventions across all components
+## Future Considerations
 
-## 🔮 Future Enhancements
+### Subtraction Operation
+- Architecture must support adding Subtraction with borrowing logic
+- Should reuse all shared components and hooks
+- Unique display for borrowing visualization
+- Integration should require minimal changes to existing code
 
-1. **Additional Operations**: Framework for adding subtraction and other operations
-2. **Progress Tracking**: Cross-operation progress tracking and analytics
-3. **User Accounts**: Save progress across browser sessions
-4. **Teacher Dashboard**: Monitoring student progress across operations
-5. **Customizable Difficulty**: Allow teachers to customize problem parameters
+### Additional Features
+- Architecture should support future features like:
+  - Hints and step-by-step guidance
+  - Progress tracking and analytics
+  - Different difficulty levels per operation
+  - Custom problem creation
+  - Performance statistics
 
-This PRD outlines the comprehensive plan for integrating the multiplication component into the existing Long Division Tutor, creating a unified Math Tutor application while maintaining the high standards of code quality, user experience, and educational value established in the original application. 
+### Scalability
+- Component structure should support growth to more operations
+- Shared logic should handle increasing complexity
+- Performance should scale with additional operations
+- Maintenance burden should decrease over time
+
+## Technical Implementation Notes
+
+### Hook Configuration Patterns
+- useMathGameState should accept operation-specific problem generators and validators
+- useMathKeyboardNav should accept operation-specific field definition functions
+- All hooks should support operation-specific options while maintaining shared core logic
+
+### Component Communication
+- Operation displays should be responsible for their own field definitions
+- Shared subcomponents should accept props for operation-specific customization
+- Parent App component should orchestrate shared hooks but delegate specifics to operation displays
+
+### Type Safety
+- Maintain strong TypeScript typing throughout refactor
+- Use generics appropriately for shared hooks and components
+- Ensure operation-specific types are properly defined and used
+- Preserve existing type definitions where they work well
+
+This refactor will create a robust, maintainable architecture that preserves all existing functionality while enabling future growth and preventing the current issue of cross-operation breakage when making changes.
 
 # Multiplication Tab Integration PRD
 
