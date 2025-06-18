@@ -3,11 +3,16 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
+<<<<<<< HEAD
+=======
+import { SubmitControls } from '../Shared';
+
+>>>>>>> mobile-refactor
 
 interface AdditionDisplayProps {
     problem: AdditionProblem | null;
     userAnswers: AdditionUserAnswer[];
-    currentFocus: AdditionCurrentFocus;
+    currentFocus: AdditionCurrentFocus | null;
     onAnswerSubmit: (answer: AdditionUserAnswer) => void;
     onAnswerClear: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     onProblemSubmit?: () => void;
@@ -25,6 +30,7 @@ interface AdditionDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (addend1: number, addend2: number) => void;
+    moveNext?: () => void;
 }
 
 /**
@@ -40,6 +46,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
+    isComplete,
     onKeyDown,
     onFieldClick,
     onNextProblem,
@@ -48,7 +55,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     isLoading,
     fetchError,
     onRetryFetch,
-    onUpdateProblem
+    onUpdateProblem,
+    moveNext
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -93,6 +101,11 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> mobile-refactor
     // Get all required fields for this problem
     const getAllRequiredFields = useCallback(() => {
         if (!problem) return [];
@@ -128,31 +141,18 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         return userAnswers.find(a => a.columnPosition === columnPosition && a.fieldType === fieldType);
     }, [userAnswers]);
 
-    // Handle auto-advance to next field
+    // Handle auto-advance to next field using shared navigation
     const handleAutoAdvance = useCallback(() => {
-        // Small delay to ensure current input is processed
-        setTimeout(() => {
-            // Use the getAllRequiredFields function to get the fields
-            const fields = getAllRequiredFields();
-
-            // Find the next field to focus
-            const currentIndex = fields.findIndex(
-                (field) =>
-                    field.columnPosition === currentFocus.columnPosition &&
-                    field.fieldType === currentFocus.fieldType
-            );
-
-            if (currentIndex < fields.length - 1) {
-                const nextField = fields[currentIndex + 1];
-                onFieldClick(nextField.columnPosition, nextField.fieldType);
-            }
-        }, 0);
-    }, [currentFocus, onFieldClick, getAllRequiredFields]);
+        // Use the shared hook's moveNext function for consistent behavior
+        if (moveNext) {
+            moveNext();
+        }
+    }, [moveNext]);
 
     // Helper to determine input variant (only show colors after submission)
     const getInputVariant = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
         const userAnswer = getUserAnswer(columnPosition, fieldType);
-        const isActive = currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType;
+        const isActive = currentFocus?.columnPosition === columnPosition && currentFocus?.fieldType === fieldType;
 
         // After submission, prioritize validation colors over active state
         if (isSubmitted && userAnswer) {
@@ -203,12 +203,14 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         }
     }, [onUpdateProblem, problem]);
 
-    // Helper function to create an input with consistent keyboard event handling
+    // Helper function to create an input with robust navigation and clearing
     const createInput = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
+        const isActive = currentFocus?.columnPosition === columnPosition && currentFocus?.fieldType === fieldType;
+        const userAnswer = getUserAnswer(columnPosition, fieldType);
         return (
             <Input
-                ref={currentFocus.columnPosition === columnPosition && currentFocus.fieldType === fieldType ? activeInputRef : undefined}
-                value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
+                ref={isActive ? activeInputRef : undefined}
+                value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(columnPosition, fieldType)}
                 onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
                 onKeyDown={(e) => onKeyDown(e)}
@@ -233,8 +235,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 }}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 placeholder="?"
+                maxLength={1}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-label={`${fieldType} input for column ${columnPosition}`}
             />
         );
+<<<<<<< HEAD
     }, [
         activeInputRef,
         allFieldsFilled,
@@ -250,6 +257,9 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         onProblemSubmit,
         getAllRequiredFields
     ]);
+=======
+    }, [activeInputRef, allFieldsFilled, currentFocus, getInputVariant, getUserAnswer, handleAutoAdvance, handleInputChange, isSubmitted, onFieldClick, onKeyDown, onNextProblem, onProblemSubmit]);
+>>>>>>> mobile-refactor
 
     // Check if all input fields have answers
     useEffect(() => {
@@ -268,6 +278,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 answer.fieldType === field.fieldType
             )
         );
+
+
 
         setAllFieldsFilled(allFilled);
     }, [problem, userAnswers, getAllRequiredFields]);
@@ -342,9 +354,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
     const ROW_HEIGHT = BOX_TOTAL_WIDTH;
     const CARRY_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for carry boxes
+<<<<<<< HEAD
+=======
+
+>>>>>>> mobile-refactor
 
     return (
-        <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="addition-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -473,6 +489,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </div>
                 </div>
 
+<<<<<<< HEAD
             </div>
 
             {/* Button layout in triangle formation */}
@@ -532,6 +549,28 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </button>
                 </div>
             </div>
+=======
+                {/* ProblemComplete now handled by SubmitControls component */}
+            </div>
+
+            {/* Submit Controls - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                onSubmit={onProblemSubmit || (() => { })}
+                onReset={onResetProblem || (() => { })}
+                onGenerateNew={onNewProblem || (() => { })}
+                onNextProblem={onNextProblem || (() => { })}
+                operation="addition"
+                variant="triangle"
+                problemData={{
+                    addend1: problem?.addend1,
+                    addend2: problem?.addend2,
+                    sum: problem?.sum
+                }}
+            />
+>>>>>>> mobile-refactor
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

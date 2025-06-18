@@ -1,11 +1,37 @@
 # Task ID: 3
-# Title: Create Operation Selector Component
+# Title: Create SubmitControls Component
 # Status: pending
-# Dependencies: 1
-# Priority: medium
-# Description: Develop a new component for switching between division and multiplication operations.
+# Dependencies: 2
+# Priority: high
+# Description: Develop a shared SubmitControls component for submit and next button logic.
 # Details:
-Implement the OperationSelector component in the header or sidebar to allow users to switch between operations. Ensure it follows the same styling and UX patterns as existing components.
+Create a SubmitControls component that handles the submit and next problem logic. Ensure it is styled consistently with existing buttons and integrates with the shared state management.
 
 # Test Strategy:
-Test the operation selector for correct rendering and functionality.
+Test the SubmitControls component across all operations to ensure consistent behavior.
+
+# Subtasks:
+## 1. Design Component Architecture [pending]
+### Dependencies: None
+### Description: Create a detailed design for the new component, ensuring it aligns with the existing system architecture.
+### Details:
+Review the architectural blueprint and existing components to design a new component that fits seamlessly. Document the component's structure, interfaces, and interactions with other components.
+
+## 2. Implement Component Logic [pending]
+### Dependencies: 3.1
+### Description: Develop the core logic for the new component based on the design specifications.
+### Details:
+Using the design document, write the necessary code to implement the component's functionality. Ensure the logic is efficient and integrates well with existing code.
+
+## 3. Style the Component [pending]
+### Dependencies: 3.2
+### Description: Apply styling to the component to ensure it matches the application's design guidelines.
+### Details:
+Use the existing style guide to apply consistent styling to the new component. Ensure responsiveness and accessibility are considered in the styling process.
+
+## 4. Conduct Integration Testing [pending]
+### Dependencies: 3.3
+### Description: Perform integration testing to ensure the new component works correctly within the existing system.
+### Details:
+Develop and execute test cases that cover all interactions between the new component and the existing system. Verify that the component meets all functional and non-functional requirements.
+

@@ -1,11 +1,37 @@
 # Task ID: 8
-# Title: Adapt Level Selector for Both Operations
+# Title: Simplify App.tsx for Tab Management
 # Status: pending
-# Dependencies: 6
-# Priority: medium
-# Description: Modify the level selector to support both division and multiplication operations.
+# Dependencies: 7
+# Priority: high
+# Description: Refactor App.tsx to focus on tab management and shared hook orchestration.
 # Details:
-Ensure the level selector dynamically updates based on the selected operation and maintains consistency in UX.
+Move operation-specific logic out of App.tsx and into their respective components. Ensure App.tsx handles tab switching and shared hook orchestration efficiently.
 
 # Test Strategy:
-Test the level selector for correct operation-specific behavior.
+Test tab switching and shared hook functionality to ensure no regressions.
+
+# Subtasks:
+## 1. Extract Logic from App.tsx [pending]
+### Dependencies: None
+### Description: Identify and extract business logic from App.tsx into separate modules to improve maintainability.
+### Details:
+Review the App.tsx file to identify sections of code that handle business logic. Create new modules or services to encapsulate this logic, ensuring that the extracted code is well-documented and tested.
+
+## 2. Refactor for Tab Management [pending]
+### Dependencies: 8.1
+### Description: Refactor the application to implement a more efficient tab management system.
+### Details:
+Utilize the extracted logic to refactor the tab management system. Ensure that the new system aligns with the architectural blueprint and supports dynamic tab creation and destruction.
+
+## 3. Test Tab Functionality [pending]
+### Dependencies: 8.2
+### Description: Develop and execute a comprehensive test suite to verify the functionality of the new tab management system.
+### Details:
+Create unit and integration tests to cover all aspects of tab functionality, including edge cases. Ensure that the tests are automated and can be run as part of the CI/CD pipeline.
+
+## 4. Optimize Performance [pending]
+### Dependencies: 8.3
+### Description: Analyze and optimize the performance of the refactored application, focusing on the tab management system.
+### Details:
+Use profiling tools to identify performance bottlenecks in the tab management system. Implement optimizations to reduce load times and improve responsiveness, ensuring that changes do not introduce new bugs.
+

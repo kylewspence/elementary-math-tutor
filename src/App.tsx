@@ -4,63 +4,70 @@ import Header from './components/Header/Header';
 import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer';
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
 import AdditionDisplay from './components/AdditionProblem/AdditionDisplay';
-import { useGameState } from './hooks/useGameState';
+import { useMathGameState } from './hooks/useMathGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useAdditionGameState } from './hooks/useAdditionGameState';
 import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
 import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
 import type { UserAnswer, DivisionProblem } from './types/game';
-import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
-import MultiplicationTutorPage from './pages/MultiplicationTutorPage';
+import type { AdditionUserAnswer } from './types/addition';
+import { generateProblem, validateAnswer, isProblemComplete } from './utils/problemGenerator';
+import { generateAdditionProblem, validateAdditionAnswer, isAdditionProblemComplete } from './utils/additionProblemGenerator';
+import { generateMultiplicationProblem, validateMultiplicationAnswer, isMultiplicationProblemComplete } from './utils/multiplicationProblemGenerator';
+import MultiplicationDisplay from './components/MultiplicationProblem/MultiplicationDisplay';
 
-type GameMode = 'division' | 'addition' | 'multiplication';
+type MathOperation = 'division' | 'addition' | 'multiplication';
 
 function App() {
-  const [gameMode, setGameMode] = useState<GameMode>('division');
+  const [selectedOperation, setSelectedOperation] = useState<MathOperation>('division');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Division game state
   const {
     gameState,
     generateNewProblem,
     submitAnswer,
-    submitProblem,
     clearAnswer,
+    submitProblem: handleProblemSubmit,
     nextProblem,
-    jumpToLevel,
     resetProblem,
-    initializeGame,
-    updateProblem,
+    jumpToLevel,
     enableEditing,
-    disableEditing,
-    isLoading,
-    fetchError,
-    loadProblemsForLevel,
-  } = useGameState();
+    disableEditing
+  } = useMathGameState<DivisionProblem, UserAnswer>({
+    generateProblem,
+    validateAnswer,
+    isProblemComplete,
+    initialLevel: 1,
+  });
 
-  // Division handlers
-  const handleAnswerSubmit = (answer: UserAnswer) => {
-    submitAnswer(answer);
-  };
+  // Addition game state
+  const {
+    gameState: additionGameState,
+    generateNewProblem: generateNewAdditionProblem,
+    submitAnswer: submitAdditionAnswer,
+    submitProblem: handleAdditionProblemSubmit,
+    nextProblem: nextAdditionProblem,
+    resetProblem: resetAdditionProblem,
+    jumpToLevel: jumpToAdditionLevel,
+  } = useAdditionGameState();
 
-  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
-    clearAnswer(stepNumber, fieldType, position);
-  };
+  // Multiplication game state
+  const {
+    gameState: multiplicationGameState,
+    generateNewProblem: generateNewMultiplicationProblem,
+    submitAnswer: submitMultiplicationAnswer,
+    submitProblem: handleMultiplicationProblemSubmit,
+    nextProblem: nextMultiplicationProblem,
+    resetProblem: resetMultiplicationProblem,
+    jumpToLevel: jumpToMultiplicationLevel,
+  } = useMultiplicationGameState();
 
-  const handleProblemSubmit = () => {
-    submitProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (gameState.problem) {
-      // Use a step number that's guaranteed not to exist
-      jumpToField(-1, 'quotient', 0);
-    }
-  };
-
+  // Division keyboard navigation
   const {
     currentFocus,
     handleKeyDown,
     jumpToField,
-    getPreviousField,
   } = useKeyboardNav(
     gameState.problem as DivisionProblem | null,
     gameState.userAnswers,
@@ -68,269 +75,201 @@ function App() {
   );
 
   const handleKeyboardNav = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, handleProblemSubmit);
+    handleKeyDown(e);
   };
 
   const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
     jumpToField(stepNumber, fieldType, position);
   };
 
-  const handleNextProblem = () => {
-    nextProblem();
-  };
-
-  const handleLevelSelect = (levelId: number) => {
-    jumpToLevel(levelId);
-  };
-
-  const handleRetryFetch = () => {
-    loadProblemsForLevel(gameState.currentLevel);
-  };
-
-  // Addition game state
-  const {
-    gameState: additionGameState,
-    generateNewProblem: generateNewAdditionProblem,
-    submitAnswer: submitAdditionAnswer,
-    submitProblem: submitAdditionProblem,
-    clearAnswer: clearAdditionAnswer, // Uncommented
-    nextProblem: nextAdditionProblem,
-    jumpToLevel: jumpToAdditionLevel,
-    resetProblem: resetAdditionProblem,
-    initializeGame: initializeAdditionGame,
-    updateProblem: updateAdditionProblem,
-    enableEditing: enableAdditionEditing,
-    disableEditing: disableAdditionEditing,
-    isLoading: isAdditionLoading,
-    fetchError: additionFetchError,
-    loadProblemsForLevel: loadAdditionProblemsForLevel,
-  } = useAdditionGameState();
-
+  // Addition keyboard navigation  
   const {
     currentFocus: additionCurrentFocus,
     handleKeyDown: handleAdditionKeyDown,
     jumpToField: jumpToAdditionField,
-  } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted);
-
-  // Multiplication game state
-  const {
-    gameState: multiplicationGameState,
-    jumpToLevel: jumpToMultiplicationLevel,
-  } = useMultiplicationGameState();
-
-  // Initialize the appropriate game on mount and when mode changes
-  useEffect(() => {
-    if (gameMode === 'division') {
-      initializeGame();
-    } else if (gameMode === 'addition') {
-      initializeAdditionGame();
-    }
-  }, [gameMode, initializeGame, initializeAdditionGame]);
-
-  // Generate new problem when needed for division
-  useEffect(() => {
-    if (gameMode === 'division' && !gameState.problem) {
-      generateNewProblem();
-    }
-  }, [gameMode, gameState.problem, generateNewProblem]);
-
-  // Generate new problem when needed for addition
-  useEffect(() => {
-    if (gameMode === 'addition' && !additionGameState.problem) {
-      generateNewAdditionProblem();
-    }
-  }, [gameMode, additionGameState.problem, generateNewAdditionProblem]);
-
-  // Always set initial focus to the first input field when a new division problem is generated
-  useEffect(() => {
-    if (gameMode === 'division' && gameState.problem && gameState.userAnswers.length === 0) {
-      // Reset focus to the first quotient input
-      jumpToField(0, 'quotient', 0);
-    }
-  }, [gameMode, gameState.problem, gameState.userAnswers.length, jumpToField]);
-
-  // Always set initial focus to the first input field when a new addition problem is generated
-  useEffect(() => {
-    if (gameMode === 'addition' && additionGameState.problem && additionGameState.userAnswers.length === 0) {
-      // Reset focus to the rightmost sum input (ones place) - column 0 is the rightmost
-      jumpToAdditionField(0, 'sum');
-    }
-  }, [gameMode, additionGameState.problem, additionGameState.userAnswers.length, jumpToAdditionField]);
-
-  // Addition handlers
-  const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
-    submitAdditionAnswer(answer);
-  };
-
-  const handleAdditionAnswerClear = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-    clearAdditionAnswer(columnPosition, fieldType);
-  };
-
-  const handleAdditionProblemSubmit = () => {
-    submitAdditionProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (additionGameState.problem) {
-      // Use a field position that's guaranteed not to exist
-      jumpToAdditionField(-1, 'sum');
-    }
-  };
+  } = useAdditionKeyboardNav(
+    additionGameState.problem,
+    additionGameState.userAnswers,
+    additionGameState.isSubmitted
+  );
 
   const handleAdditionKeyboardNav = (e: React.KeyboardEvent) => {
-    handleAdditionKeyDown(e, handleAdditionProblemSubmit, handleNextAdditionProblem);
+    handleAdditionKeyDown(e);
   };
 
   const handleAdditionFieldClick = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-    jumpToAdditionField(columnPosition, fieldType);
+    jumpToAdditionField({ columnPosition, fieldType });
   };
 
-  const handleNextAdditionProblem = () => {
-    nextAdditionProblem();
+  // Handle tab changes
+  const handleTabChange = (operation: MathOperation) => {
+    setSelectedOperation(operation);
   };
 
-  const handleAdditionLevelSelect = (levelId: number) => {
-    jumpToAdditionLevel(levelId);
-  };
-
-  const handleRetryAdditionFetch = () => {
-    loadAdditionProblemsForLevel(additionGameState.currentLevel);
-  };
-
-  const handleMultiplicationLevelSelect = (levelId: number) => {
-    jumpToMultiplicationLevel(levelId);
-  };
-
-  const toggleGameMode = (mode: GameMode) => {
-    setGameMode(mode);
-  };
-
-  const getCurrentLevelInfo = () => {
-    if (gameMode === 'division') {
-      return {
-        currentLevel: gameState.currentLevel,
-        availableLevels: gameState.availableLevels,
-        completedLevels: gameState.completedLevels,
-      };
-    } else if (gameMode === 'addition') {
-      return {
-        currentLevel: additionGameState.currentLevel,
-        availableLevels: additionGameState.availableLevels,
-        completedLevels: additionGameState.completedLevels,
-      };
-    } else if (gameMode === 'multiplication') {
-      return {
-        currentLevel: multiplicationGameState.currentLevel,
-        availableLevels: multiplicationGameState.availableLevels,
-        completedLevels: multiplicationGameState.completedLevels,
-      };
+  // Handle level changes
+  const handleLevelChange = (level: number) => {
+    switch (selectedOperation) {
+      case 'division':
+        jumpToLevel(level);
+        break;
+      case 'addition':
+        jumpToAdditionLevel(level);
+        break;
+      case 'multiplication':
+        jumpToMultiplicationLevel(level);
+        break;
     }
-    // Default values if no game mode is active
-    return {
-      currentLevel: 1,
-      availableLevels: [1],
-      completedLevels: [],
-    };
+    setIsDrawerOpen(false);
   };
 
-  const getCurrentProblemInfo = () => {
-    if (gameMode === 'division') {
-      return {
-        currentProblem: gameState.currentProblemIndex + 1,
-        totalProblems: gameState.levelProblems.length,
-      };
-    } else if (gameMode === 'addition') {
-      return {
-        currentProblem: additionGameState.currentProblemIndex + 1,
-        totalProblems: additionGameState.levelProblems.length,
-      };
-    } else if (gameMode === 'multiplication') {
-      return {
-        currentProblem: multiplicationGameState.currentProblemIndex + 1,
-        totalProblems: multiplicationGameState.levelProblems.length,
-      };
+  // Handle generating new problems
+  const handleGenerateNew = () => {
+    switch (selectedOperation) {
+      case 'division':
+        generateNewProblem();
+        break;
+      case 'addition':
+        generateNewAdditionProblem();
+        break;
+      case 'multiplication':
+        generateNewMultiplicationProblem();
+        break;
     }
-    // Default values if no game mode is active
-    return {
-      currentProblem: 1,
-      totalProblems: 1,
-    };
   };
+
+  // Handle problem reset
+  const handleReset = () => {
+    switch (selectedOperation) {
+      case 'division':
+        resetProblem();
+        break;
+      case 'addition':
+        resetAdditionProblem();
+        break;
+      case 'multiplication':
+        resetMultiplicationProblem();
+        break;
+    }
+  };
+
+  // Handle moving to next problem
+  const handleNextProblem = () => {
+    switch (selectedOperation) {
+      case 'division':
+        nextProblem();
+        break;
+      case 'addition':
+        nextAdditionProblem();
+        break;
+      case 'multiplication':
+        nextMultiplicationProblem();
+        break;
+    }
+  };
+
+  // Get current level based on selected operation
+  const getCurrentLevel = () => {
+    switch (selectedOperation) {
+      case 'division':
+        return gameState.currentLevel;
+      case 'addition':
+        return additionGameState.currentLevel;
+      case 'multiplication':
+        return multiplicationGameState.currentLevel;
+      default:
+        return 1;
+    }
+  };
+
+  // Get current score based on selected operation
+  const getCurrentScore = () => {
+    switch (selectedOperation) {
+      case 'division':
+        return gameState.score;
+      case 'addition':
+        return additionGameState.score;
+      case 'multiplication':
+        return multiplicationGameState.score;
+      default:
+        return 0;
+    }
+  };
+
+  const currentLevel = getCurrentLevel();
+  const currentScore = getCurrentScore();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header
-        gameMode={gameMode}
-        onToggleGameMode={toggleGameMode}
-        currentLevel={getCurrentLevelInfo().currentLevel}
-        currentProblem={getCurrentProblemInfo().currentProblem}
-        totalProblems={getCurrentProblemInfo().totalProblems}
+        selectedTab={selectedOperation}
+        onTabChange={handleTabChange}
+        currentLevel={currentLevel}
+        score={currentScore}
+        onOpenLevelSelector={() => setIsDrawerOpen(true)}
       />
 
       <main className="container mx-auto px-4 py-8">
-        {gameMode === 'division' && (
+        {selectedOperation === 'division' && (
           <DivisionDisplay
-            problem={gameState.problem as DivisionProblem | null}
+            problem={gameState.problem}
             userAnswers={gameState.userAnswers}
             currentFocus={currentFocus}
             isSubmitted={gameState.isSubmitted}
             isComplete={gameState.isComplete}
-            isLoading={isLoading}
-            fetchError={typeof fetchError === 'string' ? new Error(fetchError) : fetchError}
-            onAnswerSubmit={handleAnswerSubmit}
-            onAnswerClear={handleAnswerClear}
+            isEditable={gameState.isEditable}
+            onAnswerSubmit={submitAnswer}
+            onAnswerClear={clearAnswer}
             onProblemSubmit={handleProblemSubmit}
-            onNextProblem={handleNextProblem}
             onFieldClick={handleFieldClick}
             onKeyDown={handleKeyboardNav}
-            onRetryFetch={handleRetryFetch}
-            onResetProblem={resetProblem}
+            onNextProblem={handleNextProblem}
+            onReset={handleReset}
+            onGenerateNew={handleGenerateNew}
             onEnableEditing={enableEditing}
             onDisableEditing={disableEditing}
-            onUpdateProblem={updateProblem}
-            onNewProblem={generateNewProblem}
-            getPreviousField={getPreviousField}
           />
         )}
 
-        {gameMode === 'addition' && (
+        {selectedOperation === 'addition' && (
           <AdditionDisplay
-            problem={additionGameState.problem as AdditionProblem}
+            problem={additionGameState.problem}
             userAnswers={additionGameState.userAnswers}
             currentFocus={additionCurrentFocus}
             isSubmitted={additionGameState.isSubmitted}
             isComplete={additionGameState.isComplete}
-            isLoading={isAdditionLoading}
-            fetchError={additionFetchError}
-            onAnswerSubmit={handleAdditionAnswerSubmit}
-            onAnswerClear={handleAdditionAnswerClear}
+            isEditable={additionGameState.isEditable}
+            onAnswerSubmit={submitAdditionAnswer}
             onProblemSubmit={handleAdditionProblemSubmit}
-            onNextProblem={handleNextAdditionProblem}
             onFieldClick={handleAdditionFieldClick}
             onKeyDown={handleAdditionKeyboardNav}
-            onRetryFetch={handleRetryAdditionFetch}
-            onResetProblem={resetAdditionProblem}
-            onEnableEditing={enableAdditionEditing}
-            onDisableEditing={disableAdditionEditing}
-            onUpdateProblem={updateAdditionProblem}
-            onNewProblem={generateNewAdditionProblem}
+            onNextProblem={handleNextProblem}
+            onReset={handleReset}
+            onGenerateNew={handleGenerateNew}
           />
         )}
 
-        {gameMode === 'multiplication' && (
-          <MultiplicationTutorPage />
+        {selectedOperation === 'multiplication' && (
+          <MultiplicationDisplay
+            problem={multiplicationGameState.problem}
+            userAnswers={multiplicationGameState.userAnswers}
+            isSubmitted={multiplicationGameState.isSubmitted}
+            isComplete={multiplicationGameState.isComplete}
+            isEditable={multiplicationGameState.isEditable}
+            onAnswerSubmit={submitMultiplicationAnswer}
+            onProblemSubmit={handleMultiplicationProblemSubmit}
+            onNextProblem={handleNextProblem}
+            onReset={handleReset}
+            onGenerateNew={handleGenerateNew}
+          />
         )}
       </main>
 
       <LevelSelectorDrawer
-        gameMode={gameMode}
-        currentLevel={getCurrentLevelInfo().currentLevel}
-        availableLevels={getCurrentLevelInfo().availableLevels}
-        completedLevels={getCurrentLevelInfo().completedLevels}
-        onLevelSelect={
-          gameMode === 'addition' ? handleAdditionLevelSelect :
-            gameMode === 'multiplication' ? handleMultiplicationLevelSelect :
-              handleLevelSelect
-        }
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        currentLevel={currentLevel}
+        onLevelSelect={handleLevelChange}
+        operation={selectedOperation}
       />
     </div>
   );

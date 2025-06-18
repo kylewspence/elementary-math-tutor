@@ -1,7 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+<<<<<<< HEAD
+=======
+import { SubmitControls } from '../Shared';
+>>>>>>> mobile-refactor
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -10,7 +14,7 @@ import { GRID_CONSTANTS } from '../../utils/constants';
 interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
-    currentFocus: MultiplicationCurrentFocus;
+    currentFocus: MultiplicationCurrentFocus | null;
     onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
@@ -27,7 +31,8 @@ interface MultiplicationDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
-    setCurrentFocus?: (focus: MultiplicationCurrentFocus) => void;
+    setCurrentFocus?: (focus: MultiplicationCurrentFocus | null) => void;
+    moveNext?: () => void;
 }
 
 const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
@@ -50,11 +55,12 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     onRetryFetch,
     onUpdateProblem,
     isComplete = false,
-    setCurrentFocus
+    setCurrentFocus,
+    moveNext
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    // Removed unused allFieldsFilled state
+    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
     const firstRenderRef = useRef(true);
 
     // Set initial focus on first render
@@ -117,6 +123,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
+<<<<<<< HEAD
     // Removed unused allFieldsFilled effect
 
     // Helper to get user's answer for a specific field
@@ -203,8 +210,10 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         );
     };
 
+=======
+>>>>>>> mobile-refactor
     // Helper function to determine if a position needs a carry
-    const shouldShowCarry = (position: number): boolean => {
+    const shouldShowCarry = useCallback((position: number): boolean => {
         if (!problem) return false;
 
         // For single-digit multiplier
@@ -239,6 +248,115 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
         // For multi-digit multipliers (not implemented yet)
         return false;
+    }, [problem]);
+
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // Get all required fields - moved inside useEffect to avoid dependency issues
+        const getAllRequiredFields = () => {
+            if (!problem) return [];
+
+            const fields: { fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number }[] = [];
+            const multiplicandStr = problem.multiplicand.toString();
+
+            // Add product fields (all digit positions in the product)
+            for (let i = 0; i < multiplicandStr.length; i++) {
+                fields.push({ fieldType: 'product', fieldPosition: i });
+            }
+
+            // Add carry fields for positions that need them
+            for (let i = 0; i < multiplicandStr.length; i++) {
+                if (shouldShowCarry(i)) {
+                    fields.push({ fieldType: 'carry', fieldPosition: i });
+                }
+            }
+
+            return fields;
+        };
+
+        // Get all required fields
+        const requiredFields = getAllRequiredFields();
+
+        // Check if we have an answer for each required field
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.fieldType === field.fieldType &&
+                answer.fieldPosition === field.fieldPosition &&
+                // Handle partialIndex matching: both undefined or both have same value
+                (field.partialIndex === undefined ?
+                    (answer.partialIndex === undefined || answer.partialIndex === 0) :
+                    answer.partialIndex === field.partialIndex)
+            )
+        );
+
+        setAllFieldsFilled(allFilled);
+    }, [problem, userAnswers, shouldShowCarry]);
+
+    // Helper to get user's answer for a specific field
+    const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
+        return userAnswers.find(a =>
+            a.fieldType === fieldType &&
+            a.fieldPosition === position &&
+            a.partialIndex === partialIndex
+        );
+    };
+
+    // Helper to determine input variant (only show colors after submission)
+    const getInputVariant = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        const userAnswer = getUserAnswer(fieldType, position, partialIndex);
+        const isActive =
+            currentFocus?.fieldType === fieldType &&
+            currentFocus?.fieldPosition === position &&
+            currentFocus?.partialIndex === partialIndex;
+
+        // After submission, prioritize validation colors over active state
+        if (isSubmitted && userAnswer) {
+            return userAnswer.isCorrect === true ? 'correct' : 'error';
+        }
+
+        // Only show active state if not submitted or when actively editing after submission
+        if (isActive) return 'active';
+
+        return 'default';
+    };
+
+    // Removed unused handleAutoAdvance function
+
+    // Helper function to create an input with robust navigation and clearing
+    const createInput = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
+        const isActive =
+            currentFocus?.fieldType === fieldType &&
+            currentFocus?.fieldPosition === position &&
+            currentFocus?.partialIndex === partialIndex;
+        const userAnswer = getUserAnswer(fieldType, position, partialIndex);
+        return (
+            <Input
+                ref={isActive ? activeInputRef : undefined}
+                value={userAnswer?.value?.toString() || ''}
+                variant={getInputVariant(fieldType, position, partialIndex)}
+                onChange={(value) => {
+                    if (value === '') onAnswerClear(fieldType, position, partialIndex);
+                    else {
+                        const numValue = parseInt(value, 10);
+                        if (!isNaN(numValue)) onAnswerSubmit(numValue, fieldType, position, partialIndex);
+                    }
+                }}
+                onKeyDown={onKeyDown}
+                onClick={() => onFieldClick(fieldType, position, partialIndex)}
+                onAutoAdvance={moveNext}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
+                placeholder="?"
+                maxLength={1}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-label={`${fieldType} input for position ${position}`}
+            />
+        );
     };
 
     // Handle problem editing
@@ -390,7 +508,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Loading state
     if (isLoading) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg">Loading problem...</p>
             </div>
         );
@@ -399,7 +517,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Error state
     if (fetchError) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg text-red-500 mb-4">Error loading problem</p>
                 <p className="mb-4">{fetchError.message}</p>
                 <button
@@ -415,7 +533,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // No problem state
     if (!problem) {
         return (
-            <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
+            <div className="multiplication-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono text-center">
                 <p className="text-lg">No problem available</p>
                 <button
                     onClick={onNewProblem}
@@ -428,7 +546,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     }
 
     return (
-        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="multiplication-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -489,6 +607,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         {renderMultiplicationGrid()}
                     </div>
                 </div>
+<<<<<<< HEAD
             </div>
 
             {/* Button layout in triangle formation */}
@@ -548,6 +667,28 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                     </button>
                 </div>
             </div>
+=======
+
+            </div>
+
+            {/* Submit controls - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                onSubmit={onProblemSubmit || (() => { })}
+                onReset={onResetProblem || (() => { })}
+                onGenerateNew={onNewProblem || (() => { })}
+                onNextProblem={onNextProblem || (() => { })}
+                operation="multiplication"
+                variant="triangle"
+                problemData={{
+                    multiplicand: problem?.multiplicand,
+                    multiplier: problem?.multiplier,
+                    product: problem?.product
+                }}
+            />
+>>>>>>> mobile-refactor
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

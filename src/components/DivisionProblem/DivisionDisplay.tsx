@@ -3,12 +3,13 @@ import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
-import ProblemComplete from '../UI/ProblemComplete';
+import { SubmitControls } from '../Shared';
+
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
     userAnswers: UserAnswer[];
-    currentFocus: CurrentFocus;
+    currentFocus: CurrentFocus | null;
     onAnswerSubmit: (answer: UserAnswer) => void;
     onAnswerClear: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => void;
     onProblemChange?: (dividend: number, divisor: number) => void;
@@ -105,29 +106,43 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             return;
         }
 
-        // Count total required fields
-        let totalFields = 0;
-        for (const step of problem.steps) {
-            // Quotient (1)
-            totalFields += 1;
+        // Get all required fields (similar to Addition's approach)
+        const requiredFields = [];
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
 
-            // Multiply digits
-            totalFields += getDigitCount(step.multiply);
+            // Quotient field
+            requiredFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
 
-            // Subtract digits
-            totalFields += getDigitCount(step.subtract);
+            // Multiply digit fields
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = 0; pos < multiplyDigits; pos++) {
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
+            }
 
-            // Bring down (if exists)
+            // Subtract digit fields
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = 0; pos < subtractDigits; pos++) {
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+
+            // Bring down field (if exists)
             if (step.bringDown !== undefined) {
-                totalFields += 1;
+                requiredFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
             }
         }
 
-        // Check if we have answers for all fields
-        setAllFieldsFilled(userAnswers.length >= totalFields);
+        // Check if we have an answer for each required field (same logic as Addition)
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.stepNumber === field.stepNumber &&
+                answer.fieldType === field.fieldType &&
+                answer.fieldPosition === field.fieldPosition
+            )
+        );
+
+        setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);
-
-
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -137,7 +152,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     // Helper to determine input variant (only show colors after submission)
     const getInputVariant = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
         const userAnswer = getUserAnswer(stepNumber, fieldType, position);
-        const isActive = currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position;
+        const isActive = currentFocus?.stepNumber === stepNumber && currentFocus?.fieldType === fieldType && currentFocus?.fieldPosition === position;
 
         // Only show validation colors after explicit submission by the user
         if (isSubmitted && userAnswer) {
@@ -184,48 +199,33 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle auto-advance to next field
     const handleAutoAdvance = () => {
-        if (!problem) return; // Early return if no problem
-
-        // Small delay to ensure current input is processed
-        setTimeout(() => {
-            if (currentFocus.fieldType === 'quotient') {
-                // Move to multiply - start with the leftmost digit
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                const multiplyDigits = getDigitCount(step.multiply);
-                onFieldClick(currentFocus.stepNumber, 'multiply', multiplyDigits - 1);
-            } else if (currentFocus.fieldType === 'multiply') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next multiply digit
-                    onFieldClick(currentFocus.stepNumber, 'multiply', currentFocus.fieldPosition - 1);
-                } else {
-                    // Move to subtract
-                    const subtractDigits = getDigitCount(step.subtract);
-                    onFieldClick(currentFocus.stepNumber, 'subtract', subtractDigits - 1);
-                }
-            } else if (currentFocus.fieldType === 'subtract') {
-                const step = problem.steps[currentFocus.stepNumber];
-                if (!step) return;
-
-                if (currentFocus.fieldPosition > 0) {
-                    // Move to next subtract digit
-                    onFieldClick(currentFocus.stepNumber, 'subtract', currentFocus.fieldPosition - 1);
-                } else if (step.bringDown !== undefined) {
-                    // Move to bring down
-                    onFieldClick(currentFocus.stepNumber, 'bringDown', 0);
-                } else if (currentFocus.stepNumber + 1 < problem.steps.length) {
-                    // Move to next step quotient
-                    onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
-                }
-            } else if (currentFocus.fieldType === 'bringDown' && currentFocus.stepNumber + 1 < problem.steps.length) {
-                // Move to next step quotient
-                onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
+        if (!problem) return;
+        // Find the current field in navigation order
+        const allFields = [];
+        for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
+            const step = problem.steps[stepIndex];
+            allFields.push({ stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 });
+            const multiplyDigits = getDigitCount(step.multiply);
+            for (let pos = multiplyDigits - 1; pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'multiply', fieldPosition: pos });
             }
-        }, 100);
+            const subtractDigits = getDigitCount(step.subtract);
+            for (let pos = Math.max(0, subtractDigits - 1); pos >= 0; pos--) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'subtract', fieldPosition: pos });
+            }
+            if (step.bringDown !== undefined) {
+                allFields.push({ stepNumber: stepIndex, fieldType: 'bringDown', fieldPosition: 0 });
+            }
+        }
+        const currentIndex = allFields.findIndex(field =>
+            field.stepNumber === currentFocus?.stepNumber &&
+            field.fieldType === currentFocus?.fieldType &&
+            field.fieldPosition === currentFocus?.fieldPosition
+        );
+        if (currentIndex >= 0 && currentIndex < allFields.length - 1) {
+            const next = allFields[currentIndex + 1];
+            onFieldClick(next.stepNumber, next.fieldType as 'quotient' | 'multiply' | 'subtract' | 'bringDown', next.fieldPosition);
+        }
     };
 
     // Handle problem editing
@@ -295,9 +295,10 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     const createInput = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
         return (
             <Input
-                ref={currentFocus.stepNumber === stepNumber && currentFocus.fieldType === fieldType && currentFocus.fieldPosition === position ? activeInputRef : undefined}
+                ref={currentFocus?.stepNumber === stepNumber && currentFocus?.fieldType === fieldType && currentFocus?.fieldPosition === position ? activeInputRef : undefined}
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
+<<<<<<< HEAD
                 onChange={(value) => {
                     // If value is empty string, clear the answer
                     if (value === '') {
@@ -363,8 +364,17 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     // Move to the previous field using the fallback logic
                     onFieldClick(prevStepNumber, prevFieldType, prevPosition);
                 }}
+=======
+                onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
+                onKeyDown={onKeyDown}
+                onClick={() => onFieldClick(stepNumber, fieldType, position)}
+                onAutoAdvance={handleAutoAdvance}
+                onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
+>>>>>>> mobile-refactor
                 readOnly={isSubmitted}
                 placeholder="?"
+                aria-label={`${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} digit ${position + 1}`}
+                maxLength={1}
             />
         );
     };
@@ -488,7 +498,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     };
 
     return (
-        <div className="division-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
+        <div className="division-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">
@@ -533,6 +543,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 )}
             </div>
 
+<<<<<<< HEAD
             {/* Problem complete notification - positioned below edit instruction, above division work */}
             {isSubmitted && isComplete && (
                 <div className="text-center mt-2 mb-4">
@@ -547,6 +558,14 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         onNextProblem={onNextProblem || (() => { })}
                         variant="card"
                     />
+=======
+            {/* Problem complete notification - compact inline message */}
+            {isSubmitted && isComplete && (
+                <div className="text-center mb-4">
+                    <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 font-semibold">
+                        Problem complete! 🎉
+                    </div>
+>>>>>>> mobile-refactor
                 </div>
             )}
 
@@ -639,6 +658,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     </div>
                 </div>
 
+<<<<<<< HEAD
 
 
                 {/* Completion card - positioned in the center of the workspace */}
@@ -701,6 +721,29 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     </button>
                 </div>
             </div>
+=======
+                {/* ProblemComplete now handled by SubmitControls component */}
+            </div>
+
+            {/* Shared SubmitControls Component - now positioned fixed */}
+            <SubmitControls
+                isSubmitted={isSubmitted || false}
+                isComplete={isComplete || false}
+                allFieldsFilled={allFieldsFilled}
+                operation="division"
+                variant="triangle"
+                onSubmit={() => onProblemSubmit?.()}
+                onNextProblem={() => onNextProblem?.()}
+                onReset={() => onResetProblem?.()}
+                onGenerateNew={() => onNewProblem?.()}
+                problemData={problem ? {
+                    dividend: problem.dividend,
+                    divisor: problem.divisor,
+                    quotient: problem.quotient,
+                    remainder: problem.remainder
+                } : undefined}
+            />
+>>>>>>> mobile-refactor
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

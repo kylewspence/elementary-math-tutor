@@ -238,4 +238,38 @@ export function shouldAutoAdvanceFocus(
     settings: { autoAdvance: boolean }
 ): boolean {
     return settings.autoAdvance && validation.isValid;
+}
+
+/**
+ * Shared utility functions for validation across math operations
+ */
+
+/**
+ * Generic function to check if all required fields have answers
+ * @param userAnswers - Array of user answers
+ * @param requiredFields - Array of required field descriptors
+ * @returns true if all required fields have answers
+ */
+export function areAllFieldsFilled<T extends { fieldType: string;[key: string]: unknown }>(
+    userAnswers: T[],
+    requiredFields: Array<{ fieldType: string; fieldPosition: number; partialIndex?: number }>
+): boolean {
+    if (!userAnswers.length) return false;
+
+    return requiredFields.every(field => {
+        return userAnswers.some(answer => {
+            // Handle different field matching patterns for different operations
+            if ('columnPosition' in answer) {
+                // Addition/Division style
+                return answer.columnPosition === field.fieldPosition &&
+                    answer.fieldType === field.fieldType;
+            } else if ('fieldPosition' in answer) {
+                // Multiplication style  
+                return answer.fieldPosition === field.fieldPosition &&
+                    answer.fieldType === field.fieldType &&
+                    answer.partialIndex === field.partialIndex;
+            }
+            return false;
+        });
+    });
 } 
