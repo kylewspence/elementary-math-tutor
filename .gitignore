@@ -33,6 +33,7 @@ dist-ssr
 .env.test.local
 .env.production.local
 .env.*.local
+mcp.json
 
 # Added by Task Master AI
 dev-debug.log
