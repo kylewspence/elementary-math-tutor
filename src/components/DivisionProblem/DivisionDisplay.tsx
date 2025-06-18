@@ -28,7 +28,6 @@ interface DivisionDisplayProps {
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (dividend: number, divisor: number) => void;
-    getPreviousField?: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number) => CurrentFocus | null;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -52,8 +51,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     fetchError,
     onRetryFetch,
     onUpdateProblem,
-    isComplete,
-    getPreviousField
+    isComplete
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
@@ -172,11 +170,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
-        console.log('🔄 handleInputChange called with value:', { value, stepNumber, fieldType, position });
-
         if (value === '') {
             // Clear the answer when value is empty
-            console.log('🧹 handleInputChange: Clearing answer via onAnswerClear');
             onAnswerClear(stepNumber, fieldType, position);
             return;
         }
@@ -298,79 +293,11 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 ref={currentFocus?.stepNumber === stepNumber && currentFocus?.fieldType === fieldType && currentFocus?.fieldPosition === position ? activeInputRef : undefined}
                 value={getUserAnswer(stepNumber, fieldType, position)?.value?.toString() || ''}
                 variant={getInputVariant(stepNumber, fieldType, position)}
-<<<<<<< HEAD
-                onChange={(value) => {
-                    // If value is empty string, clear the answer
-                    if (value === '') {
-                        console.log('📝 DivisionDisplay: Clearing answer via onAnswerClear', { stepNumber, fieldType, position });
-                        onAnswerClear(stepNumber, fieldType, position);
-                    } else {
-                        handleInputChange(stepNumber, fieldType, position, value);
-                    }
-                }}
-                onKeyDown={(e) => onKeyDown(e)}
-                onClick={() => onFieldClick(stepNumber, fieldType, position)}
-                onAutoAdvance={handleAutoAdvance}
-                onBackspace={() => {
-                    // Use the getPreviousField function to get the previous field in the navigation order
-                    if (getPreviousField) {
-                        const prevField = getPreviousField(stepNumber, fieldType, position);
-                        if (prevField) {
-                            // Move to the previous field
-                            onFieldClick(prevField.stepNumber, prevField.fieldType, prevField.fieldPosition);
-                            return;
-                        }
-                    }
-
-                    // Fallback to the old logic if getPreviousField is not available or returns null
-                    let prevStepNumber = stepNumber;
-                    let prevFieldType = fieldType;
-                    let prevPosition = position;
-
-                    // If we're at the beginning of a position, move to the previous field type or step
-                    if (position === 0) {
-                        if (fieldType === 'bringDown') {
-                            // From bringDown to the last subtract position
-                            prevFieldType = 'subtract';
-                            const subtractDigits = getDigitCount(problem.steps[stepNumber].subtract);
-                            prevPosition = subtractDigits - 1;
-                        } else if (fieldType === 'subtract') {
-                            // From subtract to the last multiply position
-                            prevFieldType = 'multiply';
-                            const multiplyDigits = getDigitCount(problem.steps[stepNumber].multiply);
-                            prevPosition = multiplyDigits - 1;
-                        } else if (fieldType === 'multiply') {
-                            // From multiply to quotient
-                            prevFieldType = 'quotient';
-                            prevPosition = 0;
-                        } else if (fieldType === 'quotient' && stepNumber > 0) {
-                            // From quotient to the previous step's bringDown or subtract
-                            prevStepNumber = stepNumber - 1;
-                            const prevStep = problem.steps[prevStepNumber];
-                            if (prevStep.bringDown !== undefined) {
-                                prevFieldType = 'bringDown';
-                                prevPosition = 0;
-                            } else {
-                                prevFieldType = 'subtract';
-                                const subtractDigits = getDigitCount(prevStep.subtract);
-                                prevPosition = subtractDigits - 1;
-                            }
-                        }
-                    } else {
-                        // Just move to the previous position in the same field type
-                        prevPosition = position - 1;
-                    }
-
-                    // Move to the previous field using the fallback logic
-                    onFieldClick(prevStepNumber, prevFieldType, prevPosition);
-                }}
-=======
                 onChange={(value) => handleInputChange(stepNumber, fieldType, position, value)}
                 onKeyDown={onKeyDown}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
->>>>>>> mobile-refactor
                 readOnly={isSubmitted}
                 placeholder="?"
                 aria-label={`${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} digit ${position + 1}`}
@@ -531,7 +458,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         </div>
                     )}
                 </div>
-
                 {problem.isEditable ? (
                     <div className="text-sm text-blue-600 mt-2">
                         ✏️ Edit the numbers above - click elsewhere when done
@@ -543,29 +469,12 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 )}
             </div>
 
-<<<<<<< HEAD
-            {/* Problem complete notification - positioned below edit instruction, above division work */}
-            {isSubmitted && isComplete && (
-                <div className="text-center mt-2 mb-4">
-                    <ProblemComplete
-                        type="division"
-                        problem={{
-                            dividend: problem.dividend,
-                            divisor: problem.divisor,
-                            quotient: problem.quotient,
-                            remainder: problem.remainder
-                        }}
-                        onNextProblem={onNextProblem || (() => { })}
-                        variant="card"
-                    />
-=======
             {/* Problem complete notification - compact inline message */}
             {isSubmitted && isComplete && (
                 <div className="text-center mb-4">
                     <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 font-semibold">
                         Problem complete! 🎉
                     </div>
->>>>>>> mobile-refactor
                 </div>
             )}
 
@@ -658,70 +567,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     </div>
                 </div>
 
-<<<<<<< HEAD
-
-
-                {/* Completion card - positioned in the center of the workspace */}
-            </div>
-
-            {/* Button layout in triangle formation */}
-            <div className="flex flex-col items-center mt-[-2rem]">
-                {/* Submit/Next Problem button */}
-                {!isSubmitted ? (
-                    <button
-                        onClick={() => onProblemSubmit?.()}
-                        disabled={!allFieldsFilled}
-                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!allFieldsFilled
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                            } transition-colors`}
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Submit Answers
-                        </span>
-                    </button>
-                ) : isComplete ? (
-                    <button
-                        onClick={() => onNextProblem?.()}
-                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        autoFocus
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            Next Problem →
-                        </span>
-                    </button>
-                ) : null}
-
-                {/* Reset and New Problem buttons */}
-                <div className="flex justify-center space-x-4">
-                    <button
-                        onClick={onResetProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                            </svg>
-                            Reset Problem
-                        </span>
-                    </button>
-                    <button
-                        onClick={onNewProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Problem
-                        </span>
-                    </button>
-                </div>
-            </div>
-=======
                 {/* ProblemComplete now handled by SubmitControls component */}
             </div>
 
@@ -743,7 +588,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     remainder: problem.remainder
                 } : undefined}
             />
->>>>>>> mobile-refactor
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

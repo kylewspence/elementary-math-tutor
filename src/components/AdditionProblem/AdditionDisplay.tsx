@@ -3,11 +3,8 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
-<<<<<<< HEAD
-=======
 import { SubmitControls } from '../Shared';
 
->>>>>>> mobile-refactor
 
 interface AdditionDisplayProps {
     problem: AdditionProblem | null;
@@ -22,7 +19,7 @@ interface AdditionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: string | null;
-    onKeyDown: (e: React.KeyboardEvent) => void;
+    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void, onNextProblem?: () => void) => void;
     onFieldClick: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     gameState?: AdditionGameState;
     onNextProblem?: () => void;
@@ -101,11 +98,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> mobile-refactor
     // Get all required fields for this problem
     const getAllRequiredFields = useCallback(() => {
         if (!problem) return [];
@@ -213,26 +207,9 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(columnPosition, fieldType)}
                 onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
-                onKeyDown={(e) => onKeyDown(e)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit, onNextProblem)}
                 onClick={() => onFieldClick(columnPosition, fieldType)}
                 onAutoAdvance={handleAutoAdvance}
-                onBackspace={() => {
-                    // Find previous field and move to it
-                    console.log('Backspace handler called in AdditionDisplay', { columnPosition, fieldType });
-                    const fields = getAllRequiredFields();
-                    console.log('All fields:', fields);
-                    const currentIndex = fields.findIndex(
-                        (field) => field.columnPosition === columnPosition && field.fieldType === fieldType
-                    );
-                    console.log('Current index:', currentIndex);
-                    if (currentIndex > 0) {
-                        const prevField = fields[currentIndex - 1];
-                        console.log('Moving to previous field:', prevField);
-                        onFieldClick(prevField.columnPosition, prevField.fieldType);
-                    } else {
-                        console.log('Already at first field, nowhere to go');
-                    }
-                }}
                 onEnter={isSubmitted ? onNextProblem : allFieldsFilled ? onProblemSubmit : undefined}
                 placeholder="?"
                 maxLength={1}
@@ -241,25 +218,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 aria-label={`${fieldType} input for column ${columnPosition}`}
             />
         );
-<<<<<<< HEAD
-    }, [
-        activeInputRef,
-        allFieldsFilled,
-        currentFocus,
-        getInputVariant,
-        getUserAnswer,
-        handleAutoAdvance,
-        handleInputChange,
-        isSubmitted,
-        onFieldClick,
-        onKeyDown,
-        onNextProblem,
-        onProblemSubmit,
-        getAllRequiredFields
-    ]);
-=======
     }, [activeInputRef, allFieldsFilled, currentFocus, getInputVariant, getUserAnswer, handleAutoAdvance, handleInputChange, isSubmitted, onFieldClick, onKeyDown, onNextProblem, onProblemSubmit]);
->>>>>>> mobile-refactor
 
     // Check if all input fields have answers
     useEffect(() => {
@@ -354,10 +313,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
     const ROW_HEIGHT = BOX_TOTAL_WIDTH;
     const CARRY_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for carry boxes
-<<<<<<< HEAD
-=======
 
->>>>>>> mobile-refactor
 
     return (
         <div className="addition-display bg-white p-8 pb-32 rounded-xl border-2 border-gray-200 font-mono">
@@ -489,67 +445,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     </div>
                 </div>
 
-<<<<<<< HEAD
-            </div>
-
-            {/* Button layout in triangle formation */}
-            <div className="flex flex-col items-center mt-6">
-                {/* Submit/Next Problem button */}
-                {!isSubmitted ? (
-                    <button
-                        onClick={onProblemSubmit}
-                        disabled={!allFieldsFilled}
-                        className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!allFieldsFilled
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                            } transition-colors`}
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Submit Answers
-                        </span>
-                    </button>
-                ) : areAllAnswersCorrect() ? (
-                    <button
-                        onClick={() => onNextProblem?.()}
-                        className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        autoFocus
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            Next Problem →
-                        </span>
-                    </button>
-                ) : null}
-
-                {/* Reset and New Problem buttons */}
-                <div className="flex justify-center space-x-4">
-                    <button
-                        onClick={onResetProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                            </svg>
-                            Reset Problem
-                        </span>
-                    </button>
-                    <button
-                        onClick={onNewProblem}
-                        className="px-6 py-2 rounded-lg font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                    >
-                        <span className="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Problem
-                        </span>
-                    </button>
-                </div>
-            </div>
-=======
                 {/* ProblemComplete now handled by SubmitControls component */}
             </div>
 
@@ -570,7 +465,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                     sum: problem?.sum
                 }}
             />
->>>>>>> mobile-refactor
 
             {/* Help text as footnote outside the main container */}
             <div className="text-center text-xs text-gray-500 mt-4">

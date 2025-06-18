@@ -30,14 +30,8 @@ const MultiplicationTutorPage: React.FC = () => {
     } = useMultiplicationKeyboardNav(
         gameState.problem,
         gameState.userAnswers,
-<<<<<<< HEAD
-        submitAnswer,
-        submitProblem,
-        clearAnswer
-=======
         gameState.isSubmitted,
         submitProblem
->>>>>>> mobile-refactor
     );
 
     // Ensure focus is set on initial page load
@@ -62,14 +56,8 @@ const MultiplicationTutorPage: React.FC = () => {
     };
 
     // Handle keyboard navigation
-<<<<<<< HEAD
-    const handleKeyDown = () => {
-        // The keyboard navigation hook handles events directly through document listeners
-        // This is just a pass-through function to match the interface
-=======
     const handleKeyDown = (e: React.KeyboardEvent) => {
         handleKeyboardNav(e);
->>>>>>> mobile-refactor
     };
 
     // Handle retry fetch
@@ -84,15 +72,11 @@ const MultiplicationTutorPage: React.FC = () => {
 
     // Handle answer clear
     const handleAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-<<<<<<< HEAD
-        clearAnswer(fieldType, position, partialIndex);
-=======
         // For now, this is not fully implemented in the game state
         // In a full implementation, we would call a clearAnswer function from the game state
         void fieldType;
         void position;
         void partialIndex;
->>>>>>> mobile-refactor
     };
 
     return (
