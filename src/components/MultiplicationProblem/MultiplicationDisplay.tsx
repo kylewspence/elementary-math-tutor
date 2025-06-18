@@ -157,9 +157,14 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             userAnswers.some(answer =>
                 answer.fieldType === field.fieldType &&
                 answer.fieldPosition === field.fieldPosition &&
-                answer.partialIndex === field.partialIndex
+                // Handle partialIndex matching: both undefined or both have same value
+                (field.partialIndex === undefined ?
+                    (answer.partialIndex === undefined || answer.partialIndex === 0) :
+                    answer.partialIndex === field.partialIndex)
             )
         );
+
+
 
         setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);

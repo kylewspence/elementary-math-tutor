@@ -237,6 +237,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             )
         );
 
+
+
         setAllFieldsFilled(allFilled);
     }, [problem, userAnswers, getAllRequiredFields]);
 

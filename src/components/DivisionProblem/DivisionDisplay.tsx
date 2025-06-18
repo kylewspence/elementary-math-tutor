@@ -139,6 +139,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             )
         );
 
+
+
         setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);
 
@@ -561,7 +563,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             </div>
 
             {/* Shared SubmitControls Component */}
-            <div className="flex flex-col items-center mt-[-2rem]">
+            <div className="flex flex-col items-center mt-8">
                 <SubmitControls
                     isSubmitted={isSubmitted || false}
                     isComplete={isComplete || false}
