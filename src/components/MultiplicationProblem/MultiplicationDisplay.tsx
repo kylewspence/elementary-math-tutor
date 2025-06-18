@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -57,7 +57,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    // Removed unused allFieldsFilled state
+    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
     const firstRenderRef = useRef(true);
 
     // Set initial focus on first render
@@ -120,7 +120,49 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Removed unused allFieldsFilled effect
+    // Get all required fields for this problem
+    const getAllRequiredFields = () => {
+        if (!problem) return [];
+
+        const fields: { fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number }[] = [];
+        const multiplicandStr = problem.multiplicand.toString();
+
+        // Add product fields (all digit positions in the product)
+        for (let i = 0; i < multiplicandStr.length; i++) {
+            fields.push({ fieldType: 'product', fieldPosition: i });
+        }
+
+        // Add carry fields for positions that need them
+        for (let i = 0; i < multiplicandStr.length; i++) {
+            if (shouldShowCarry(i)) {
+                fields.push({ fieldType: 'carry', fieldPosition: i });
+            }
+        }
+
+        return fields;
+    };
+
+    // Check if all input fields have answers
+    useEffect(() => {
+        if (!problem || !userAnswers.length) {
+            setAllFieldsFilled(false);
+            return;
+        }
+
+        // Get all required fields
+        const requiredFields = getAllRequiredFields();
+
+        // Check if we have an answer for each required field
+        const allFilled = requiredFields.every(field =>
+            userAnswers.some(answer =>
+                answer.fieldType === field.fieldType &&
+                answer.fieldPosition === field.fieldPosition &&
+                answer.partialIndex === field.partialIndex
+            )
+        );
+
+        setAllFieldsFilled(allFilled);
+    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
@@ -478,7 +520,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 <SubmitControls
                     isSubmitted={isSubmitted}
                     isComplete={isComplete}
-                    allFieldsFilled={userAnswers.length > 0}
+                    allFieldsFilled={allFieldsFilled}
                     onSubmit={onProblemSubmit || (() => { })}
                     onReset={onResetProblem || (() => { })}
                     onGenerateNew={onNewProblem || (() => { })}
