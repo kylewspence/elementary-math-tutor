@@ -139,8 +139,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             )
         );
 
-
-
         setAllFieldsFilled(allFilled);
     }, [problem, userAnswers]);
 

@@ -81,13 +81,10 @@ export function useMathKeyboardNav<Field>(
                 else moveNext();
                 break;
             case 'Enter':
-                e.preventDefault();
+                // Don't prevent default - let Input component handle Enter key
+                // This allows the Input's onEnter callback to work properly
                 if (isSubmitted) return;
-                if (onProblemSubmit && (getCurrentFieldIndex() === allFields.length - 1)) {
-                    onProblemSubmit();
-                } else {
-                    moveNext();
-                }
+                // Don't handle Enter here - let Input component's onEnter handle it
                 break;
             case 'ArrowRight':
             case 'ArrowDown':
