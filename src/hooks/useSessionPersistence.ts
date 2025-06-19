@@ -41,9 +41,11 @@ export function useSessionPersistence() {
     // Save progress to sessionStorage
     const saveProgress = useCallback((progress: GameProgress) => {
         try {
+            console.log('💾 Saving to sessionStorage:', progress);
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+            console.log('✅ Successfully saved to sessionStorage');
         } catch (error) {
-            console.warn('Failed to save progress:', error);
+            console.warn('❌ Failed to save progress:', error);
         }
     }, []);
 
@@ -52,9 +54,10 @@ export function useSessionPersistence() {
         try {
             const saved = sessionStorage.getItem(STORAGE_KEY);
             const result = saved ? JSON.parse(saved) : null;
+            console.log('📖 Loading from sessionStorage:', result);
             return result;
         } catch (error) {
-            console.warn('Failed to load progress:', error);
+            console.warn('❌ Failed to load progress:', error);
             return null;
         }
     }, []);
@@ -64,9 +67,11 @@ export function useSessionPersistence() {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
                 // Trigger auto-save event when tab is backgrounded
+                console.log('👁️ Visibility change: hidden - triggering auto-save');
                 window.dispatchEvent(new CustomEvent('autoSaveProgress'));
             } else if (document.visibilityState === 'visible') {
                 // Re-enable auto-restore to fix progress persistence
+                console.log('👁️ Visibility change: visible - triggering auto-restore');
                 window.dispatchEvent(new CustomEvent('autoRestoreProgress'));
             }
         };
@@ -78,6 +83,7 @@ export function useSessionPersistence() {
 
         const handlePageHide = () => {
             // Trigger auto-save event (mobile browsers - more reliable than beforeunload)
+            console.log('📱 Page hide event fired - triggering auto-save');
             window.dispatchEvent(new CustomEvent('autoSaveProgress'));
         };
 

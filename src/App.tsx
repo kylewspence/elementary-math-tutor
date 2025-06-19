@@ -190,6 +190,12 @@ function App() {
           levelProblems: multiplicationGameState.levelProblems,
         },
       };
+      console.log('💾 Auto-save triggered - saving progress:', {
+        gameMode,
+        divisionLevel: gameState.currentLevel,
+        additionLevel: additionGameState.currentLevel,
+        multiplicationLevel: multiplicationGameState.currentLevel
+      });
       saveProgress(currentProgress);
     };
 
