@@ -66,8 +66,8 @@ export function useSessionPersistence() {
                 // Trigger auto-save event
                 window.dispatchEvent(new CustomEvent('autoSaveProgress'));
             } else if (document.visibilityState === 'visible') {
-                // Trigger auto-restore event (temporarily disabled to debug API calls)
-                // window.dispatchEvent(new CustomEvent('autoRestoreProgress'));
+                // Re-enable auto-restore to fix progress persistence
+                window.dispatchEvent(new CustomEvent('autoRestoreProgress'));
             }
         };
 

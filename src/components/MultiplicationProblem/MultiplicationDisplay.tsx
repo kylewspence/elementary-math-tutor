@@ -270,10 +270,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         const needsLeftmostCarry = shouldShowCarry(multiplicandStr.length);
 
         // Total grid width based on product length (which should be the longest)
-        const gridWidth = Math.max(
+        // For single-digit problems, ensure minimum width for proper alignment
+        const minWidth = Math.max(2, productStr.length) * BOX_TOTAL_WIDTH;
+        const calculatedWidth = Math.max(
             multiplicandStr.length + multiplierStr.length,
             productStr.length
         ) * BOX_TOTAL_WIDTH;
+        const gridWidth = Math.max(minWidth, calculatedWidth);
 
         return (
             <div className="multiplication-grid relative" style={{ width: `${gridWidth}px` }}>
@@ -322,15 +325,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
                 {/* Multiplicand row */}
                 <div className="multiplicand-row flex justify-end">
-                    {/* Leftmost space for alignment if we have a leftmost carry */}
-                    {needsLeftmostCarry && (
-                        <div
-                            key="multiplicand-leftmost-space"
-                            className="flex items-center justify-center text-xl"
-                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
-                        >
-                        </div>
-                    )}
                     {multiplicandStr.split('').map((digit, index) => (
                         <div
                             key={`multiplicand-${index}`}
@@ -345,14 +339,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 {/* Multiplier row with multiplication symbol */}
                 <div className="multiplier-row flex justify-end items-center">
                     <div className="mr-2 font-bold">×</div>
-                    {needsLeftmostCarry && (
-                        <div
-                            key="multiplier-leftmost-space"
-                            className="flex items-center justify-center text-xl"
-                            style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${BOX_TOTAL_WIDTH}px` }}
-                        >
-                        </div>
-                    )}
                     {multiplierStr.split('').map((digit, index) => (
                         <div
                             key={`multiplier-${index}`}
