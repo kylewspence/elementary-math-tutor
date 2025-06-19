@@ -146,6 +146,30 @@ export function useMultiplicationGameState() {
         loadProblemsForLevel(levelId);
     }, [loadProblemsForLevel]);
 
+    // Restore exact game state without regenerating problems
+    const restoreGameState = useCallback((levelId: number, problemIndex: number, problems: MultiplicationProblem[]) => {
+        // Check if the level exists
+        if (!MULTIPLICATION_LEVELS.some(l => l.id === levelId)) {
+            return;
+        }
+
+        // Ensure problemIndex is within bounds
+        const safeIndex = Math.max(0, Math.min(problemIndex, problems.length - 1));
+        const currentProblem = problems[safeIndex] || null;
+
+        // Restore exact state
+        setGameState(prev => ({
+            ...prev,
+            currentLevel: levelId,
+            currentProblemIndex: safeIndex,
+            levelProblems: problems,
+            problem: currentProblem,
+            userAnswers: [], // Always clear user answers when restoring
+            isSubmitted: false,
+            isComplete: false,
+        }));
+    }, []);
+
     // Generate a new problem
     const generateNewProblem = useCallback(() => {
         setGameState(prev => {
@@ -364,8 +388,6 @@ export function useMultiplicationGameState() {
         });
     }, []);
 
-
-
     // Enable problem editing
     const enableEditing = useCallback(() => {
         setGameState(prev => {
@@ -406,6 +428,7 @@ export function useMultiplicationGameState() {
         submitProblem,
         nextProblem,
         jumpToLevel,
+        restoreGameState,
         enableEditing,
         disableEditing,
     };

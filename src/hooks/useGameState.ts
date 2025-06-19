@@ -3,7 +3,7 @@
 // that handles multiple game modes (division, addition, multiplication) in a single hook.
 // The functionality works correctly, but TypeScript cannot properly infer the return types.
 import { useState, useCallback } from 'react';
-import type { GameState, DivisionProblem, UserAnswer } from '../types/game';
+import type { DivisionProblem, DivisionGameState, UserAnswer } from '../types/game';
 import { GAME_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
 import { generateProblem } from '../utils/problemGenerator';
 import { validateAnswer, isProblemComplete } from '../utils/divisionValidator';
@@ -29,11 +29,11 @@ function generateLevelSpecificProblem(levelId: number): DivisionProblem {
 }
 
 /**
- * Custom hook to manage the game state
+ * Custom hook to manage the division game state
  */
 export function useGameState() {
     // Complete game state
-    const [gameState, setGameState] = useState<GameState>({
+    const [gameState, setGameState] = useState<DivisionGameState>({
         currentLevel: 1,
         completedLevels: [],
         availableLevels: [1],
@@ -79,17 +79,12 @@ export function useGameState() {
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
 
-            setGameState(prev => {
-                if (prev.gameMode === 'division') {
-                    return {
-                        ...prev,
-                        levelProblems: problems,
-                        currentProblemIndex: 0,
-                        problem: problems.length > 0 ? problems[0] : null,
-                    };
-                }
-                return prev;
-            });
+            setGameState(prev => ({
+                ...prev,
+                levelProblems: problems,
+                currentProblemIndex: 0,
+                problem: problems.length > 0 ? problems[0] : null,
+            }));
 
         } catch {
             setFetchError('Failed to load problems. Please try again.');
@@ -148,6 +143,30 @@ export function useGameState() {
         // Load problems for the selected level
         loadProblemsForLevel(levelId);
     }, [loadProblemsForLevel]);
+
+    // Restore exact game state without regenerating problems
+    const restoreGameState = useCallback((levelId: number, problemIndex: number, problems: DivisionProblem[]) => {
+        // Check if the level exists
+        if (!GAME_LEVELS.some(l => l.id === levelId)) {
+            return;
+        }
+
+        // Ensure problemIndex is within bounds
+        const safeIndex = Math.max(0, Math.min(problemIndex, problems.length - 1));
+        const currentProblem = problems[safeIndex] || null;
+
+        // Restore exact state
+        setGameState(prev => ({
+            ...prev,
+            currentLevel: levelId,
+            currentProblemIndex: safeIndex,
+            levelProblems: problems,
+            problem: currentProblem,
+            userAnswers: [], // Always clear user answers when restoring
+            isSubmitted: false,
+            isComplete: false,
+        }));
+    }, []);
 
     // Generate a new problem
     const generateNewProblem = useCallback(() => {
@@ -370,6 +389,7 @@ export function useGameState() {
         jumpToLevel,
         enableEditing,
         disableEditing,
+        restoreGameState,
     };
 }
 

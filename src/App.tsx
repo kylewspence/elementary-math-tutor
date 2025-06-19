@@ -14,11 +14,16 @@ import { useMultiplicationKeyboardNav } from './hooks/useMultiplicationKeyboardN
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import type { MultiplicationProblem } from './types/multiplication';
+import { useSessionPersistence } from './hooks/useSessionPersistence';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('division');
+  const [hasLoadedSavedState, setHasLoadedSavedState] = useState(false);
+
+  // Session persistence
+  const { saveProgress, loadProgress } = useSessionPersistence();
 
   // Division game state
   const {
@@ -29,7 +34,7 @@ function App() {
     clearAnswer,
     nextProblem,
     jumpToLevel,
-
+    restoreGameState,
     initializeGame,
     updateProblem,
     enableEditing,
@@ -39,25 +44,45 @@ function App() {
     loadProblemsForLevel,
   } = useGameState();
 
-  // Division handlers
-  const handleAnswerSubmit = (answer: UserAnswer) => {
-    submitAnswer(answer);
-  };
+  // Addition game state 
+  const {
+    gameState: additionGameState,
+    generateNewProblem: generateNewAdditionProblem,
+    submitAnswer: submitAdditionAnswer,
+    submitProblem: submitAdditionProblem,
+    clearAnswer: clearAdditionAnswer,
+    nextProblem: nextAdditionProblem,
+    jumpToLevel: jumpToAdditionLevel,
+    restoreGameState: restoreAdditionGameState,
+    initializeGame: initializeAdditionGame,
+    updateProblem: updateAdditionProblem,
+    enableEditing: enableAdditionEditing,
+    disableEditing: disableAdditionEditing,
+    isLoading: isAdditionLoading,
+    fetchError: additionFetchError,
+    loadProblemsForLevel: loadAdditionProblemsForLevel,
+  } = useAdditionGameState();
 
-  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
-    clearAnswer(stepNumber, fieldType, position);
-  };
+  // Multiplication game state
+  const {
+    gameState: multiplicationGameState,
+    generateNewProblem: generateNewMultiplicationProblem,
+    submitAnswer: submitMultiplicationAnswer,
+    submitProblem: submitMultiplicationProblem,
+    clearAnswer: clearMultiplicationAnswer,
+    nextProblem: nextMultiplicationProblem,
+    jumpToLevel: jumpToMultiplicationLevel,
+    restoreGameState: restoreMultiplicationGameState,
+    initializeGame: initializeMultiplicationGame,
+    updateProblem: updateMultiplicationProblem,
+    enableEditing: enableMultiplicationEditing,
+    disableEditing: disableMultiplicationEditing,
+    isLoading: isMultiplicationLoading,
+    fetchError: multiplicationFetchError,
+    loadProblemsForLevel: loadMultiplicationProblemsForLevel,
+  } = useMultiplicationGameState();
 
-  const handleProblemSubmit = () => {
-    submitProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (gameState.problem) {
-      // Use a step number that's guaranteed not to exist
-      jumpToField(-1, 'quotient', 0);
-    }
-  };
-
+  // Keyboard navigation hooks
   const {
     currentFocus,
     handleKeyDown,
@@ -70,45 +95,6 @@ function App() {
     gameState.isSubmitted
   );
 
-  const handleKeyboardNav = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, handleProblemSubmit);
-  };
-
-  const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
-    jumpToField(stepNumber, fieldType, position);
-  };
-
-  const handleNextProblem = () => {
-    nextProblem();
-  };
-
-  const handleLevelSelect = (levelId: number) => {
-    jumpToLevel(levelId);
-  };
-
-  const handleRetryFetch = () => {
-    loadProblemsForLevel(gameState.currentLevel);
-  };
-
-  // Addition game state
-  const {
-    gameState: additionGameState,
-    generateNewProblem: generateNewAdditionProblem,
-    submitAnswer: submitAdditionAnswer,
-    submitProblem: submitAdditionProblem,
-    clearAnswer: clearAdditionAnswer, // Uncommented
-    nextProblem: nextAdditionProblem,
-    jumpToLevel: jumpToAdditionLevel,
-
-    initializeGame: initializeAdditionGame,
-    updateProblem: updateAdditionProblem,
-    enableEditing: enableAdditionEditing,
-    disableEditing: disableAdditionEditing,
-    isLoading: isAdditionLoading,
-    fetchError: additionFetchError,
-    loadProblemsForLevel: loadAdditionProblemsForLevel,
-  } = useAdditionGameState();
-
   const {
     currentFocus: additionCurrentFocus,
     handleKeyDown: handleAdditionKeyDown,
@@ -116,26 +102,6 @@ function App() {
     areAllFieldsFilled: areAllAdditionFieldsFilled,
   } = useAdditionKeyboardNav(additionGameState.problem, additionGameState.userAnswers, additionGameState.isSubmitted);
 
-  // Multiplication game state
-  const {
-    gameState: multiplicationGameState,
-    submitAnswer: submitMultiplicationAnswer,
-    submitProblem: submitMultiplicationProblem,
-    clearAnswer: clearMultiplicationAnswer,
-    nextProblem: nextMultiplicationProblem,
-    jumpToLevel: jumpToMultiplicationLevel,
-
-    initializeGame: initializeMultiplicationGame,
-    updateProblem: updateMultiplicationProblem,
-    enableEditing: enableMultiplicationEditing,
-    disableEditing: disableMultiplicationEditing,
-    generateNewProblem: generateNewMultiplicationProblem,
-    isLoading: isMultiplicationLoading,
-    fetchError: multiplicationFetchError,
-    loadProblemsForLevel: loadMultiplicationProblemsForLevel,
-  } = useMultiplicationGameState();
-
-  // Multiplication keyboard navigation
   const {
     currentFocus: multiplicationCurrentFocus,
     handleKeyDown: handleMultiplicationKeyDown,
@@ -144,8 +110,148 @@ function App() {
     areAllFieldsFilled: areAllMultiplicationFieldsFilled,
   } = useMultiplicationKeyboardNav(multiplicationGameState.problem, multiplicationGameState.userAnswers, multiplicationGameState.isSubmitted);
 
-  // Initialize the appropriate game on mount and when mode changes
+  // Load saved state on startup (only once)
   useEffect(() => {
+    if (hasLoadedSavedState) return; // Prevent running multiple times
+
+    const saved = loadProgress();
+    setHasLoadedSavedState(true);
+
+    if (saved) {
+      setGameMode(saved.gameMode);
+
+      // Restore division state if it exists using exact state restoration
+      if (saved.divisionState && saved.divisionState.currentLevel > 0 && saved.divisionState.levelProblems) {
+        restoreGameState(
+          saved.divisionState.currentLevel,
+          saved.divisionState.currentProblemIndex,
+          saved.divisionState.levelProblems
+        );
+      }
+
+      // Restore addition state if it exists using exact state restoration
+      if (saved.additionState && saved.additionState.currentLevel > 0 && saved.additionState.levelProblems) {
+        restoreAdditionGameState(
+          saved.additionState.currentLevel,
+          saved.additionState.currentProblemIndex,
+          saved.additionState.levelProblems
+        );
+      }
+
+      // Restore multiplication state if it exists using exact state restoration
+      if (saved.multiplicationState && saved.multiplicationState.currentLevel > 0 && saved.multiplicationState.levelProblems) {
+        restoreMultiplicationGameState(
+          saved.multiplicationState.currentLevel,
+          saved.multiplicationState.currentProblemIndex,
+          saved.multiplicationState.levelProblems
+        );
+      }
+
+      // If no valid saved state exists for any game mode, initialize the current mode
+      if ((!saved.divisionState || !saved.divisionState.levelProblems) &&
+        (!saved.additionState || !saved.additionState.levelProblems) &&
+        (!saved.multiplicationState || !saved.multiplicationState.levelProblems)) {
+        if (gameMode === 'division') {
+          initializeGame();
+        } else if (gameMode === 'addition') {
+          initializeAdditionGame();
+        } else if (gameMode === 'multiplication') {
+          initializeMultiplicationGame();
+        }
+      }
+    } else {
+      // Only initialize if we don't have saved state
+      if (gameMode === 'division') {
+        initializeGame();
+      } else if (gameMode === 'addition') {
+        initializeAdditionGame();
+      } else if (gameMode === 'multiplication') {
+        initializeMultiplicationGame();
+      }
+    }
+  }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
+
+  // Save current state when auto-save is triggered
+  useEffect(() => {
+    const handleAutoSave = () => {
+      const currentProgress = {
+        gameMode,
+        divisionState: {
+          currentLevel: gameState.currentLevel,
+          currentProblemIndex: gameState.currentProblemIndex,
+          levelProblems: gameState.levelProblems,
+        },
+        additionState: {
+          currentLevel: additionGameState.currentLevel,
+          currentProblemIndex: additionGameState.currentProblemIndex,
+          levelProblems: additionGameState.levelProblems,
+        },
+        multiplicationState: {
+          currentLevel: multiplicationGameState.currentLevel,
+          currentProblemIndex: multiplicationGameState.currentProblemIndex,
+          levelProblems: multiplicationGameState.levelProblems,
+        },
+      };
+      console.log('Auto-saving progress:', currentProgress);
+      saveProgress(currentProgress);
+    };
+
+    window.addEventListener('autoSaveProgress', handleAutoSave);
+    return () => window.removeEventListener('autoSaveProgress', handleAutoSave);
+  }, [saveProgress, gameMode, gameState.currentLevel, gameState.currentProblemIndex, gameState.levelProblems,
+    additionGameState.currentLevel, additionGameState.currentProblemIndex, additionGameState.levelProblems,
+    multiplicationGameState.currentLevel, multiplicationGameState.currentProblemIndex, multiplicationGameState.levelProblems]);
+
+  // Handle auto-restore when tab becomes visible again
+  useEffect(() => {
+    const handleAutoRestore = () => {
+      console.log('Auto-restore triggered');
+      const saved = loadProgress();
+
+      if (saved) {
+        console.log('Restoring from saved state:', saved);
+
+        // Restore the appropriate game mode state based on current mode
+        if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) {
+          console.log('Auto-restoring division state');
+          restoreGameState(
+            saved.divisionState.currentLevel,
+            saved.divisionState.currentProblemIndex,
+            saved.divisionState.levelProblems
+          );
+        } else if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) {
+          console.log('Auto-restoring addition state');
+          restoreAdditionGameState(
+            saved.additionState.currentLevel,
+            saved.additionState.currentProblemIndex,
+            saved.additionState.levelProblems
+          );
+        } else if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) {
+          console.log('Auto-restoring multiplication state');
+          restoreMultiplicationGameState(
+            saved.multiplicationState.currentLevel,
+            saved.multiplicationState.currentProblemIndex,
+            saved.multiplicationState.levelProblems
+          );
+        }
+      } else {
+        console.log('No saved state found during auto-restore');
+      }
+    };
+
+    window.addEventListener('autoRestoreProgress', handleAutoRestore);
+    return () => window.removeEventListener('autoRestoreProgress', handleAutoRestore);
+  }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState]);
+
+  // Initialize the appropriate game ONLY when mode changes (after initial load)
+  useEffect(() => {
+    // Only run after we've loaded saved state
+    if (!hasLoadedSavedState) return;
+
+    // Don't re-initialize if we just loaded saved state for this mode
+    const saved = loadProgress();
+    if (saved && saved.gameMode === gameMode) return;
+
     if (gameMode === 'division') {
       initializeGame();
     } else if (gameMode === 'addition') {
@@ -153,7 +259,7 @@ function App() {
     } else if (gameMode === 'multiplication') {
       initializeMultiplicationGame();
     }
-  }, [gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
+  }, [gameMode, hasLoadedSavedState, loadProgress, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
@@ -199,6 +305,45 @@ function App() {
       jumpToMultiplicationField('product', 0, undefined);
     }
   }, [gameMode, multiplicationGameState.problem, multiplicationGameState.userAnswers.length, jumpToMultiplicationField]);
+
+  // Division handlers
+  const handleAnswerSubmit = (answer: UserAnswer) => {
+    submitAnswer(answer);
+  };
+
+  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
+    clearAnswer(stepNumber, fieldType, position);
+  };
+
+  const handleProblemSubmit = () => {
+    submitProblem();
+
+    // Clear focus by setting it to a non-existent field after submission
+    if (gameState.problem) {
+      // Use a step number that's guaranteed not to exist
+      jumpToField(-1, 'quotient', 0);
+    }
+  };
+
+  const handleKeyboardNav = (e: React.KeyboardEvent) => {
+    handleKeyDown(e, handleProblemSubmit);
+  };
+
+  const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
+    jumpToField(stepNumber, fieldType, position);
+  };
+
+  const handleNextProblem = () => {
+    nextProblem();
+  };
+
+  const handleLevelSelect = (levelId: number) => {
+    jumpToLevel(levelId);
+  };
+
+  const handleRetryFetch = () => {
+    loadProblemsForLevel(gameState.currentLevel);
+  };
 
   // Addition handlers
   const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
