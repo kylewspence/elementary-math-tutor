@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../../types/addition';
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -21,7 +21,6 @@ interface AdditionDisplayProps {
     onFieldClick: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     gameState?: AdditionGameState;
     onNextProblem?: () => void;
-    onResetProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (addend1: number, addend2: number) => void;
@@ -44,7 +43,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onKeyDown,
     onFieldClick,
     onNextProblem,
-    onResetProblem,
     onNewProblem,
     isLoading,
     fetchError,
@@ -268,7 +266,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         const requiredFields = getAllRequiredFields();
 
         // Check if we have an answer for each required field
-        const allFilled = requiredFields.every(field =>
+        requiredFields.every(field =>
             userAnswers.some(answer =>
                 answer.columnPosition === field.columnPosition &&
                 answer.fieldType === field.fieldType

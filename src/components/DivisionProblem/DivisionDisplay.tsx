@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
@@ -23,7 +23,6 @@ interface DivisionDisplayProps {
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
-    onResetProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (dividend: number, divisor: number) => void;
@@ -46,7 +45,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     onFieldClick,
     // gameState, // Unused prop
     onNextProblem,
-    onResetProblem,
     onNewProblem,
     isLoading,
     fetchError,

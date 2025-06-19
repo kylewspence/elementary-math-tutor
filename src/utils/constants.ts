@@ -154,7 +154,6 @@ export const ACCESSIBILITY = {
         SUBTRACT_RESULT: 'Subtraction result',
         BRING_DOWN_DIGIT: 'Bring down digit',
         SUBMIT_BUTTON: 'Submit current step',
-        RESET_BUTTON: 'Reset problem',
         NEW_PROBLEM_BUTTON: 'Generate new problem',
         HINT_BUTTON: 'Show hint for current step',
     },

@@ -13,7 +13,7 @@ import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
 import { useMultiplicationKeyboardNav } from './hooks/useMultiplicationKeyboardNav';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
-import type { MultiplicationUserAnswer, MultiplicationProblem } from './types/multiplication';
+import type { MultiplicationProblem } from './types/multiplication';
 
 type GameMode = 'division' | 'addition' | 'multiplication';
 
@@ -29,7 +29,7 @@ function App() {
     clearAnswer,
     nextProblem,
     jumpToLevel,
-    resetProblem,
+
     initializeGame,
     updateProblem,
     enableEditing,
@@ -99,7 +99,7 @@ function App() {
     clearAnswer: clearAdditionAnswer, // Uncommented
     nextProblem: nextAdditionProblem,
     jumpToLevel: jumpToAdditionLevel,
-    resetProblem: resetAdditionProblem,
+
     initializeGame: initializeAdditionGame,
     updateProblem: updateAdditionProblem,
     enableEditing: enableAdditionEditing,
@@ -124,7 +124,7 @@ function App() {
     clearAnswer: clearMultiplicationAnswer,
     nextProblem: nextMultiplicationProblem,
     jumpToLevel: jumpToMultiplicationLevel,
-    resetProblem: resetMultiplicationProblem,
+
     initializeGame: initializeMultiplicationGame,
     updateProblem: updateMultiplicationProblem,
     enableEditing: enableMultiplicationEditing,
@@ -364,7 +364,7 @@ function App() {
             onFieldClick={handleFieldClick}
             onKeyDown={handleKeyboardNav}
             onRetryFetch={handleRetryFetch}
-            onResetProblem={resetProblem}
+
             onEnableEditing={enableEditing}
             onDisableEditing={disableEditing}
             onUpdateProblem={updateProblem}
@@ -390,7 +390,7 @@ function App() {
             onFieldClick={handleAdditionFieldClick}
             onKeyDown={handleAdditionKeyboardNav}
             onRetryFetch={handleRetryAdditionFetch}
-            onResetProblem={resetAdditionProblem}
+
             onEnableEditing={enableAdditionEditing}
             onDisableEditing={disableAdditionEditing}
             onUpdateProblem={updateAdditionProblem}
@@ -415,7 +415,7 @@ function App() {
             onFieldClick={handleMultiplicationFieldClick}
             onKeyDown={handleMultiplicationKeyboardNav}
             onRetryFetch={handleRetryMultiplicationFetch}
-            onResetProblem={resetMultiplicationProblem}
+
             onEnableEditing={enableMultiplicationEditing}
             onDisableEditing={disableMultiplicationEditing}
             onUpdateProblem={handleMultiplicationUpdateProblem}

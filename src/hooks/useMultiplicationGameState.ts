@@ -364,15 +364,7 @@ export function useMultiplicationGameState() {
         });
     }, []);
 
-    // Reset the current problem
-    const resetProblem = useCallback(() => {
-        setGameState(prev => ({
-            ...prev,
-            userAnswers: [],
-            isSubmitted: false,
-            isComplete: false,
-        }));
-    }, []);
+
 
     // Enable problem editing
     const enableEditing = useCallback(() => {
@@ -413,7 +405,6 @@ export function useMultiplicationGameState() {
         clearAnswer,
         submitProblem,
         nextProblem,
-        resetProblem,
         jumpToLevel,
         enableEditing,
         disableEditing,
