@@ -278,15 +278,7 @@ export function useAdditionGameState() {
         });
     }, []);
 
-    // Reset the current problem
-    const resetProblem = useCallback(() => {
-        setGameState(prev => ({
-            ...prev,
-            userAnswers: [],
-            isSubmitted: false,
-            isComplete: false,
-        }));
-    }, []);
+
 
     // Enable problem editing
     const enableEditing = useCallback(() => {
@@ -320,7 +312,6 @@ export function useAdditionGameState() {
         clearAnswer,
         nextProblem,
         jumpToLevel,
-        resetProblem,
         initializeGame,
         updateProblem,
         enableEditing,

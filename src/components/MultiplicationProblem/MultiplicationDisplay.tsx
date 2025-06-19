@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -23,7 +23,6 @@ interface MultiplicationDisplayProps {
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFieldClick: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onNextProblem?: () => void;
-    onResetProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
@@ -45,7 +44,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     onKeyDown,
     onFieldClick,
     onNextProblem,
-    onResetProblem,
     onNewProblem,
     isLoading = false,
     fetchError,
@@ -58,7 +56,6 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
     const firstRenderRef = useRef(true);
 
     // Set initial focus on first render
@@ -121,27 +118,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         };
     }, [problem, onDisableEditing]);
 
-    // Check if all input fields have answers
-    useEffect(() => {
-        if (!problem || !userAnswers.length) {
-            setAllFieldsFilled(false);
-            return;
-        }
 
-        // For basic multiplication, we need answers for all product positions
-        const productStr = (problem.multiplicand * problem.multiplier).toString();
-
-        // Check if every product position has an answer
-        let allFilled = true;
-        for (let pos = 0; pos < productStr.length; pos++) {
-            if (!userAnswers.find(a => a.fieldType === 'product' && a.fieldPosition === pos)) {
-                allFilled = false;
-                break;
-            }
-        }
-
-        setAllFieldsFilled(allFilled);
-    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number): MultiplicationUserAnswer | undefined => {
