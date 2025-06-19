@@ -63,7 +63,7 @@ export function useSessionPersistence() {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
-                // Trigger auto-save event
+                // Trigger auto-save event when tab is backgrounded
                 window.dispatchEvent(new CustomEvent('autoSaveProgress'));
             } else if (document.visibilityState === 'visible') {
                 // Re-enable auto-restore to fix progress persistence
@@ -72,16 +72,24 @@ export function useSessionPersistence() {
         };
 
         const handleBeforeUnload = () => {
-            // Trigger auto-save event
+            // Trigger auto-save event (desktop browsers)
             window.dispatchEvent(new CustomEvent('autoSaveProgress'));
         };
 
+        const handlePageHide = () => {
+            // Trigger auto-save event (mobile browsers - more reliable than beforeunload)
+            window.dispatchEvent(new CustomEvent('autoSaveProgress'));
+        };
+
+        // Add all event listeners
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('pagehide', handlePageHide);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('pagehide', handlePageHide);
         };
     }, []);
 
