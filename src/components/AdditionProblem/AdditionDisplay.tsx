@@ -40,6 +40,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onEnableEditing,
     onDisableEditing,
     isSubmitted,
+    isComplete,
     onKeyDown,
     onFieldClick,
     onNextProblem,
@@ -230,7 +231,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         onFieldClick(prevField.columnPosition, prevField.fieldType);
                     }
                 }}
-                onEnter={isSubmitted ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
+                onEnter={isSubmitted && isComplete ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
                 placeholder="?"
             />
         );
@@ -501,7 +502,22 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                 Next Problem →
                             </span>
                         </button>
-                    ) : null}
+                    ) : (
+                        // Show helpful feedback when submitted but not complete (has wrong answers)
+                        <div className="text-center mb-4">
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
+                                <div className="flex items-center justify-center gap-2 text-orange-700 font-semibold mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Fix the red squares to continue
+                                </div>
+                                <p className="text-orange-600 text-sm">
+                                    Change any incorrect answers (shown in red) to the correct values, then press Enter to advance.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                 </div>
             </div>

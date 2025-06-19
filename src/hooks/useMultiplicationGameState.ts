@@ -296,10 +296,22 @@ export function useMultiplicationGameState() {
         }
 
         // Update the game state
-        setGameState(prev => ({
-            ...prev,
-            userAnswers: updatedAnswers,
-        }));
+        setGameState(prev => {
+            // If problem was already submitted, re-check completion
+            if (prev.isSubmitted && prev.problem) {
+                const complete = isMultiplicationProblemComplete(prev.problem, updatedAnswers);
+                return {
+                    ...prev,
+                    userAnswers: updatedAnswers,
+                    isComplete: complete,
+                };
+            }
+
+            return {
+                ...prev,
+                userAnswers: updatedAnswers,
+            };
+        });
     };
 
     // Clear an answer for a specific field
@@ -310,6 +322,16 @@ export function useMultiplicationGameState() {
                     a.fieldPosition === fieldPosition &&
                     a.partialIndex === partialIndex)
             );
+
+            // If problem was already submitted, re-check completion
+            if (prev.isSubmitted && prev.problem) {
+                const complete = isMultiplicationProblemComplete(prev.problem, filteredAnswers);
+                return {
+                    ...prev,
+                    userAnswers: filteredAnswers,
+                    isComplete: complete,
+                };
+            }
 
             return {
                 ...prev,
