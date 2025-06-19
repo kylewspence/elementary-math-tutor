@@ -455,10 +455,8 @@ export function useMultiplicationGameState() {
         });
     }, []);
 
-    // Initialize the game on first load
-    useEffect(() => {
-        initializeGame();
-    }, [initializeGame]);
+    // Note: Removed auto-initialization to prevent conflicts with state restoration
+    // The App component handles initialization when needed
 
     return {
         gameState,
