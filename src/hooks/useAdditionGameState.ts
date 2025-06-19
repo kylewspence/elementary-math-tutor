@@ -295,7 +295,26 @@ export function useAdditionGameState() {
                 };
             }
 
-            // Otherwise, generate a new problem
+            // If we've finished the last problem, advance to the next level if available
+            const nextLevelId = prev.currentLevel + 1;
+            if (prev.availableLevels.includes(nextLevelId)) {
+                // Advance to next level and load its problems
+                // Note: This will trigger async problem loading, but we set level immediately
+                // The loadProblemsForLevel call will update problems when async operation completes
+                setTimeout(() => loadProblemsForLevel(nextLevelId), 0);
+
+                return {
+                    ...prev,
+                    currentLevel: nextLevelId,
+                    currentProblemIndex: 0,
+                    problem: null, // Will be set by loadProblemsForLevel
+                    userAnswers: [],
+                    isSubmitted: false,
+                    isComplete: false,
+                };
+            }
+
+            // If no next level available, generate a new problem for current level
             const newProblem = generateLevelSpecificAdditionProblem(prev.currentLevel);
             return {
                 ...prev,
@@ -305,7 +324,7 @@ export function useAdditionGameState() {
                 isComplete: false,
             };
         });
-    }, []);
+    }, [loadProblemsForLevel]);
 
     // Enable problem editing
     const enableEditing = useCallback(() => {
