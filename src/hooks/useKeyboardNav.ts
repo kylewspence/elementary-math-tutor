@@ -159,16 +159,18 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
                 }
                 break;
             case KEYBOARD_KEYS.ENTER:
-                e.preventDefault();
                 if (isSubmitted) {
-                    // If problem is already submitted, don't auto-advance
-                    // Let the user manually click "Next Problem" in the ProblemComplete dialog
+                    // If problem is already submitted, don't prevent default
+                    // Let the Input component's onEnter handle it
                     return;
-                } else if (onProblemSubmit && areAllFieldsFilled()) {
-                    // Only submit the problem if ALL fields are filled
-                    onProblemSubmit();
+                } else {
+                    e.preventDefault();
+                    if (onProblemSubmit && areAllFieldsFilled()) {
+                        // Only submit the problem if ALL fields are filled
+                        onProblemSubmit();
+                    }
+                    // If not all fields are filled, do nothing (don't advance to next field)
                 }
-                // If not all fields are filled, do nothing (don't advance to next field)
                 break;
             case KEYBOARD_KEYS.ARROW_RIGHT:
             case KEYBOARD_KEYS.ARROW_DOWN:
@@ -202,5 +204,6 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         isFieldFocused,
         getAllFieldsInOrder,
         getPreviousField,
+        areAllFieldsFilled,
     };
 } 

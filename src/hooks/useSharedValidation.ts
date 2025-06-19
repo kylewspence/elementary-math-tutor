@@ -35,8 +35,8 @@ export function useSharedValidation() {
                         answer.fieldPosition === field.fieldPosition;
                 }
 
-                // Multiplication fields (fieldType + fieldPosition + partialIndex)
-                if (field.partialIndex !== undefined && field.fieldPosition !== undefined) {
+                // Multiplication fields (has fieldPosition but no stepNumber)
+                if (field.fieldPosition !== undefined && field.stepNumber === undefined) {
                     return answer.fieldType === field.fieldType &&
                         answer.fieldPosition === field.fieldPosition &&
                         answer.partialIndex === field.partialIndex;

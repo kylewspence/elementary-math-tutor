@@ -63,6 +63,7 @@ function App() {
     handleKeyDown,
     jumpToField,
     getPreviousField,
+    areAllFieldsFilled: areAllDivisionFieldsFilled,
   } = useKeyboardNav(
     gameState.problem as DivisionProblem | null,
     gameState.userAnswers,
@@ -369,6 +370,7 @@ function App() {
             onUpdateProblem={updateProblem}
             onNewProblem={generateNewProblem}
             getPreviousField={getPreviousField}
+            areAllFieldsFilled={areAllDivisionFieldsFilled}
           />
         )}
 

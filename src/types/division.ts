@@ -124,6 +124,7 @@ export interface InputFieldProps {
     onFocus: () => void;
     onBlur: () => void;
     onKeyDown: (event: KeyboardEvent) => boolean;
+    onEnter?: () => void;
 }
 
 export interface ValidationFeedbackProps {

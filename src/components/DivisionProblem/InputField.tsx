@@ -13,6 +13,7 @@ const InputField: React.FC<InputFieldProps> = ({
     onFocus,
     onBlur,
     onKeyDown,
+    onEnter,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -77,6 +78,7 @@ const InputField: React.FC<InputFieldProps> = ({
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={handleKeyDown}
+            onEnter={onEnter}
             variant={getVariant()}
             placeholder={placeholder || ''}
             maxLength={3}

@@ -94,35 +94,41 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
-    // Get all required fields for this problem
+    // Helper function to check if a column receives a carry - matches keyboard nav logic exactly
+    const receivesCarry = useCallback((columnPosition: number) => {
+        if (!problem) return false;
+        const previousStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
+        return previousStep !== undefined && previousStep.carry > 0;
+    }, [problem]);
+
+    // Get all required fields - matches keyboard navigation logic exactly
     const getAllRequiredFields = useCallback(() => {
         if (!problem) return [];
 
         const fields: { columnPosition: number; fieldType: 'sum' | 'carry' }[] = [];
 
-        // Sort steps by column position (right to left, starting with ones place)
+        // Sort steps by column position (right to left for navigation order)
         const orderedSteps = [...problem.steps].sort((a, b) => a.columnPosition - b.columnPosition);
 
-        // For each column position, add sum field and then any carry field
+        // Process each column - UI renders carry boxes first, then sum boxes
         for (const step of orderedSteps) {
-            // Add sum field for this column
+            // Add carry field if this column receives a carry (matches UI conditional rendering)
+            if (receivesCarry(step.columnPosition)) {
+                fields.push({
+                    columnPosition: step.columnPosition,
+                    fieldType: 'carry'
+                });
+            }
+
+            // Add sum field for this column (UI always renders sum boxes)
             fields.push({
                 columnPosition: step.columnPosition,
                 fieldType: 'sum'
             });
-
-            // If this column generates a carry, add the carry field immediately after
-            if (step.carry > 0) {
-                const nextColumnPosition = step.columnPosition + 1;
-                fields.push({
-                    columnPosition: nextColumnPosition,
-                    fieldType: 'carry'
-                });
-            }
         }
 
         return fields;
-    }, [problem]);
+    }, [problem, receivesCarry]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = useCallback((columnPosition: number, fieldType: 'sum' | 'carry'): AdditionUserAnswer | undefined => {
@@ -133,7 +139,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const handleAutoAdvance = useCallback(() => {
         // Small delay to ensure current input is processed
         setTimeout(() => {
-            // Use the getAllRequiredFields function to get the fields
+            // Use the local function that matches keyboard nav
             const fields = getAllRequiredFields();
 
             // Find the next field to focus
@@ -258,7 +264,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             return;
         }
 
-        // Get all required fields
+        // Get all required fields using local function that matches keyboard nav
         const requiredFields = getAllRequiredFields();
 
         // Check if we have an answer for each required field
@@ -271,22 +277,11 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     }, [problem, userAnswers, getAllRequiredFields]);
 
-    // Check if a column receives a carry
-    const receivesCarry = useCallback((columnPosition: number) => {
-        if (!problem) return false;
-
-        // Find the step for the previous column
-        const previousStep = problem.steps.find(s => s.columnPosition === columnPosition - 1);
-
-        // If there's a previous step and it generates a carry, this column receives it
-        return previousStep !== undefined && previousStep.carry > 0;
-    }, [problem]);
-
     // Check if all answers are correct
     const areAllAnswersCorrect = useCallback(() => {
         if (!problem || !userAnswers.length) return false;
 
-        // Get all required fields
+        // Get all required fields using local function that matches keyboard nav
         const requiredFields = getAllRequiredFields();
 
         // Check if we have a correct answer for each required field

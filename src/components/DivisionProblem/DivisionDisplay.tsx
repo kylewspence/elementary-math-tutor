@@ -28,6 +28,7 @@ interface DivisionDisplayProps {
     onRetryFetch?: () => void;
     onUpdateProblem?: (dividend: number, divisor: number) => void;
     getPreviousField?: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', fieldPosition: number) => CurrentFocus | null;
+    areAllFieldsFilled?: () => boolean;
 }
 
 const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
@@ -52,11 +53,11 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     onRetryFetch,
     onUpdateProblem,
     isComplete,
-    getPreviousField
+    getPreviousField,
+    areAllFieldsFilled
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    const [allFieldsFilled, setAllFieldsFilled] = useState<boolean>(false);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -98,53 +99,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
-    // Check if all input fields have answers
-    useEffect(() => {
-        if (!problem || !userAnswers.length) {
-            setAllFieldsFilled(false);
-            return;
-        }
 
-        // Check if every required field has an answer
-        let allFilled = true;
-        for (const step of problem.steps) {
-            // Check quotient
-            if (!userAnswers.find(a => a.stepNumber === step.stepNumber && a.fieldType === 'quotient' && a.fieldPosition === 0)) {
-                allFilled = false;
-                break;
-            }
-
-            // Check multiply digits
-            const multiplyDigits = getDigitCount(step.multiply);
-            for (let pos = 0; pos < multiplyDigits; pos++) {
-                if (!userAnswers.find(a => a.stepNumber === step.stepNumber && a.fieldType === 'multiply' && a.fieldPosition === pos)) {
-                    allFilled = false;
-                    break;
-                }
-            }
-            if (!allFilled) break;
-
-            // Check subtract digits
-            const subtractDigits = getDigitCount(step.subtract);
-            for (let pos = 0; pos < subtractDigits; pos++) {
-                if (!userAnswers.find(a => a.stepNumber === step.stepNumber && a.fieldType === 'subtract' && a.fieldPosition === pos)) {
-                    allFilled = false;
-                    break;
-                }
-            }
-            if (!allFilled) break;
-
-            // Check bring down (if exists)
-            if (step.bringDown !== undefined) {
-                if (!userAnswers.find(a => a.stepNumber === step.stepNumber && a.fieldType === 'bringDown' && a.fieldPosition === 0)) {
-                    allFilled = false;
-                    break;
-                }
-            }
-        }
-
-        setAllFieldsFilled(allFilled);
-    }, [problem, userAnswers]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -380,6 +335,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     // Move to the previous field using the fallback logic
                     onFieldClick(prevStepNumber, prevFieldType, prevPosition);
                 }}
+                onEnter={isSubmitted ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
                 readOnly={isSubmitted}
                 placeholder="?"
             />
@@ -666,8 +622,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {!isSubmitted ? (
                         <button
                             onClick={() => onProblemSubmit?.()}
-                            disabled={!allFieldsFilled}
-                            className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!allFieldsFilled
+                            disabled={!areAllFieldsFilled?.()}
+                            className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()
                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                 : 'bg-blue-500 text-white hover:bg-blue-600'
                                 } transition-colors`}
