@@ -97,8 +97,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
         };
     }, [problem, problem?.isEditable, onDisableEditing]);
 
-
-
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
         return userAnswers.find(a => a.stepNumber === stepNumber && a.fieldType === fieldType && a.fieldPosition === position);
@@ -127,11 +125,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
     // Handle input change - allow empty values
     const handleInputChange = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number, value: string) => {
-        console.log('🔄 handleInputChange called with value:', { value, stepNumber, fieldType, position });
-
         if (value === '') {
             // Clear the answer when value is empty
-            console.log('🧹 handleInputChange: Clearing answer via onAnswerClear');
             onAnswerClear(stepNumber, fieldType, position);
             return;
         }
@@ -271,7 +266,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 onChange={(value) => {
                     // If value is empty string, clear the answer
                     if (value === '') {
-                        console.log('📝 DivisionDisplay: Clearing answer via onAnswerClear', { stepNumber, fieldType, position });
                         onAnswerClear(stepNumber, fieldType, position);
                     } else {
                         handleInputChange(stepNumber, fieldType, position, value);
@@ -463,8 +457,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             {/* Problem source badge */}
             <div className="mb-4 flex justify-center">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${problem.source === 'api'
-                        ? 'bg-green-100 text-green-800 border border-green-200'
-                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    ? 'bg-green-100 text-green-800 border border-green-200'
+                    : 'bg-blue-100 text-blue-800 border border-blue-200'
                     }`}>
                     {problem.source === 'api' ? '🌐 Server Problem' : '💻 Local Problem'}
                 </span>

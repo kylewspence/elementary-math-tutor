@@ -41,9 +41,7 @@ export function useSessionPersistence() {
     // Save progress to sessionStorage
     const saveProgress = useCallback((progress: GameProgress) => {
         try {
-            console.log('Saving progress to sessionStorage:', progress);
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-            console.log('Progress saved successfully');
         } catch (error) {
             console.warn('Failed to save progress:', error);
         }
@@ -54,7 +52,6 @@ export function useSessionPersistence() {
         try {
             const saved = sessionStorage.getItem(STORAGE_KEY);
             const result = saved ? JSON.parse(saved) : null;
-            console.log('Loaded progress from sessionStorage:', result);
             return result;
         } catch (error) {
             console.warn('Failed to load progress:', error);
@@ -67,18 +64,15 @@ export function useSessionPersistence() {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
                 // Trigger auto-save event
-                console.log('Tab hidden, triggering auto-save');
                 window.dispatchEvent(new CustomEvent('autoSaveProgress'));
             } else if (document.visibilityState === 'visible') {
                 // Trigger auto-restore event
-                console.log('Tab visible, triggering auto-restore');
                 window.dispatchEvent(new CustomEvent('autoRestoreProgress'));
             }
         };
 
         const handleBeforeUnload = () => {
             // Trigger auto-save event
-            console.log('Before unload, triggering auto-save');
             window.dispatchEvent(new CustomEvent('autoSaveProgress'));
         };
 

@@ -57,32 +57,36 @@ export function useAdditionGameState() {
 
             // Only fetch from API if feature is enabled
             if (FEATURES.USE_API_PROBLEMS) {
-                // Pass the actual level ID to the API service for proper filtering
-                problems = await fetchAdditionProblems(levelId);
+                // Fetch from API first
+                const apiProblems = await fetchAdditionProblems(levelId);
+                problems = [...apiProblems];
             }
 
-            // If we didn't get enough problems from API, generate locally
-            if (problems.length < MIN_PROBLEMS_PER_LEVEL) {
-                // Generate enough additional problems
-                const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
-                for (let i = 0; i < neededProblems; i++) {
-                    problems.push(generateLevelSpecificAdditionProblem(levelId));
-                }
+            // If we don't have enough from the API, supplement with local generation
+            const MIN_PROBLEMS_FROM_API = 8;
+            if (problems.length < MIN_PROBLEMS_FROM_API) {
+                const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                const localProblems = Array.from({ length: localProblemsNeeded },
+                    () => generateLevelSpecificAdditionProblem(levelId));
+
+                problems = [...problems, ...localProblems];
             }
 
-            // Limit to maximum problems per level and shuffle
+            // Limit to 10 problems and shuffle
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
-            const shuffledProblems = shuffleArray(problems);
+            problems = shuffleArray(problems);
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: shuffledProblems,
+                levelProblems: problems,
                 currentProblemIndex: 0,
-                problem: shuffledProblems.length > 0 ? shuffledProblems[0] : null,
+                problem: problems.length > 0 ? problems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
-
-        } catch {
-            setFetchError('Failed to load addition problems. Please try again.');
+        } catch (error) {
+            console.error('Error loading addition problems:', error);
+            setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
             const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
@@ -93,6 +97,8 @@ export function useAdditionGameState() {
                 levelProblems: fallbackProblems,
                 currentProblemIndex: 0,
                 problem: fallbackProblems.length > 0 ? fallbackProblems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
         } finally {
             setIsLoading(false);
@@ -142,19 +148,14 @@ export function useAdditionGameState() {
 
     // Restore exact game state without regenerating problems
     const restoreGameState = useCallback((levelId: number, problemIndex: number, problems: AdditionProblem[]) => {
-        console.log('Addition restoreGameState called with:', { levelId, problemIndex, problemsLength: problems.length });
-
         // Check if the level exists
         if (!ADDITION_LEVELS.some(l => l.id === levelId)) {
-            console.log('Addition level not found:', levelId);
             return;
         }
 
         // Ensure problemIndex is within bounds
         const safeIndex = Math.max(0, Math.min(problemIndex, problems.length - 1));
         const currentProblem = problems[safeIndex] || null;
-
-        console.log('Addition restoring to:', { levelId, safeIndex, currentProblem: currentProblem ? 'exists' : 'null' });
 
         // Restore exact state
         setGameState(prev => ({

@@ -61,21 +61,22 @@ export function useGameState() {
 
             // Only fetch from API if feature is enabled
             if (FEATURES.USE_API_PROBLEMS) {
-                // Pass the actual level ID to the API service for proper filtering
-                // The API service will handle mapping to appropriate API difficulty levels internally
-                problems = await fetchDivisionProblems(levelId);
+                // Fetch from API first
+                const apiProblems = await fetchDivisionProblems(levelId);
+                problems = [...apiProblems];
             }
 
-            // If we didn't get enough problems from API, generate locally
-            if (problems.length < MIN_PROBLEMS_PER_LEVEL) {
-                // Generate enough additional problems
-                const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
-                for (let i = 0; i < neededProblems; i++) {
-                    problems.push(generateLevelSpecificProblem(levelId));
-                }
+            // If we don't have enough from the API, supplement with local generation
+            const MIN_PROBLEMS_FROM_API = 8;
+            if (problems.length < MIN_PROBLEMS_FROM_API) {
+                const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                const localProblems = Array.from({ length: localProblemsNeeded },
+                    () => generateLevelSpecificProblem(levelId));
+
+                problems = [...problems, ...localProblems];
             }
 
-            // Limit to maximum problems per level and shuffle
+            // Limit to 10 problems and shuffle
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
 
@@ -86,7 +87,8 @@ export function useGameState() {
                 problem: problems.length > 0 ? problems[0] : null,
             }));
 
-        } catch {
+        } catch (error) {
+            console.error('Error loading division problems:', error);
             setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
@@ -276,8 +278,6 @@ export function useGameState() {
 
             // Check if the problem is complete and all answers are correct
             const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
-
-
 
             // If complete and not previously submitted, update score and completed levels
             let updatedScore = prev.score;

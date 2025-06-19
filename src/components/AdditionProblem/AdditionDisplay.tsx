@@ -221,19 +221,13 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                 onAutoAdvance={handleAutoAdvance}
                 onBackspace={() => {
                     // Find previous field and move to it
-                    console.log('Backspace handler called in AdditionDisplay', { columnPosition, fieldType });
                     const fields = getAllRequiredFields();
-                    console.log('All fields:', fields);
                     const currentIndex = fields.findIndex(
                         (field) => field.columnPosition === columnPosition && field.fieldType === fieldType
                     );
-                    console.log('Current index:', currentIndex);
                     if (currentIndex > 0) {
                         const prevField = fields[currentIndex - 1];
-                        console.log('Moving to previous field:', prevField);
                         onFieldClick(prevField.columnPosition, prevField.fieldType);
-                    } else {
-                        console.log('Already at first field, nowhere to go');
                     }
                 }}
                 onEnter={isSubmitted ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
@@ -340,8 +334,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             {/* Problem source badge */}
             <div className="mb-4 flex justify-center">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${problem.source === 'api'
-                        ? 'bg-green-100 text-green-800 border border-green-200'
-                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    ? 'bg-green-100 text-green-800 border border-green-200'
+                    : 'bg-blue-100 text-blue-800 border border-blue-200'
                     }`}>
                     {problem.source === 'api' ? '🌐 Server Problem' : '💻 Local Problem'}
                 </span>

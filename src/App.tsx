@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import Header from './components/Header/Header';
 import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer';
@@ -148,28 +148,26 @@ function App() {
       }
 
       // If no valid saved state exists for any game mode, initialize the current mode
-      if ((!saved.divisionState || !saved.divisionState.levelProblems) &&
-        (!saved.additionState || !saved.additionState.levelProblems) &&
-        (!saved.multiplicationState || !saved.multiplicationState.levelProblems)) {
-        if (gameMode === 'division') {
-          initializeGame();
-        } else if (gameMode === 'addition') {
-          initializeAdditionGame();
-        } else if (gameMode === 'multiplication') {
-          initializeMultiplicationGame();
-        }
+      if (!saved.divisionState || !saved.divisionState.levelProblems) {
+        initializeGame();
+      }
+
+      if (!saved.additionState || !saved.additionState.levelProblems) {
+        initializeAdditionGame();
+      }
+
+      if (!saved.multiplicationState || !saved.multiplicationState.levelProblems) {
+        initializeMultiplicationGame();
       }
     } else {
       // Only initialize if we don't have saved state
-      if (gameMode === 'division') {
-        initializeGame();
-      } else if (gameMode === 'addition') {
-        initializeAdditionGame();
-      } else if (gameMode === 'multiplication') {
-        initializeMultiplicationGame();
-      }
+      initializeGame();
+      initializeAdditionGame();
+      initializeMultiplicationGame();
     }
   }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
+
+
 
   // Save current state when auto-save is triggered
   useEffect(() => {
@@ -192,7 +190,6 @@ function App() {
           levelProblems: multiplicationGameState.levelProblems,
         },
       };
-      console.log('Auto-saving progress:', currentProgress);
       saveProgress(currentProgress);
     };
 
@@ -205,37 +202,29 @@ function App() {
   // Handle auto-restore when tab becomes visible again
   useEffect(() => {
     const handleAutoRestore = () => {
-      console.log('Auto-restore triggered');
       const saved = loadProgress();
 
       if (saved) {
-        console.log('Restoring from saved state:', saved);
-
         // Restore the appropriate game mode state based on current mode
         if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) {
-          console.log('Auto-restoring division state');
           restoreGameState(
             saved.divisionState.currentLevel,
             saved.divisionState.currentProblemIndex,
             saved.divisionState.levelProblems
           );
         } else if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) {
-          console.log('Auto-restoring addition state');
           restoreAdditionGameState(
             saved.additionState.currentLevel,
             saved.additionState.currentProblemIndex,
             saved.additionState.levelProblems
           );
         } else if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) {
-          console.log('Auto-restoring multiplication state');
           restoreMultiplicationGameState(
             saved.multiplicationState.currentLevel,
             saved.multiplicationState.currentProblemIndex,
             saved.multiplicationState.levelProblems
           );
         }
-      } else {
-        console.log('No saved state found during auto-restore');
       }
     };
 
