@@ -230,9 +230,28 @@ export function useAdditionGameState() {
             );
 
             // Add the new answer
+            const updatedAnswers = [...filteredAnswers, answer];
+
+            // If problem was already submitted, re-validate all answers and check completion
+            if (prev.isSubmitted && prev.problem) {
+                const validatedAnswers = updatedAnswers.map(ans => {
+                    const isCorrect = validateAdditionAnswer(prev.problem!, ans);
+                    return { ...ans, isCorrect };
+                });
+
+                const complete = isAdditionProblemComplete(prev.problem, validatedAnswers);
+
+                return {
+                    ...prev,
+                    userAnswers: validatedAnswers,
+                    isComplete: complete,
+                };
+            }
+
+            // If not yet submitted, just update the answers
             return {
                 ...prev,
-                userAnswers: [...filteredAnswers, answer],
+                userAnswers: updatedAnswers,
             };
         });
     }, []);
@@ -245,6 +264,23 @@ export function useAdditionGameState() {
                     a.fieldType === fieldType)
             );
 
+            // If problem was already submitted, re-validate remaining answers and check completion
+            if (prev.isSubmitted && prev.problem) {
+                const validatedAnswers = filteredAnswers.map(ans => {
+                    const isCorrect = validateAdditionAnswer(prev.problem!, ans);
+                    return { ...ans, isCorrect };
+                });
+
+                const complete = isAdditionProblemComplete(prev.problem, validatedAnswers);
+
+                return {
+                    ...prev,
+                    userAnswers: validatedAnswers,
+                    isComplete: complete,
+                };
+            }
+
+            // If not yet submitted, just update the answers
             return {
                 ...prev,
                 userAnswers: filteredAnswers,

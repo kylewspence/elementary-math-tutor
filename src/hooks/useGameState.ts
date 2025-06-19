@@ -236,7 +236,17 @@ export function useGameState() {
             const validatedAnswer = { ...answer, isCorrect };
             const validatedAnswers = [...filteredAnswers, validatedAnswer];
 
-            // IMPORTANT: Don't set isSubmitted or isComplete here!
+            // If problem was already submitted, re-check completion
+            if (prev.isSubmitted && prev.problem) {
+                const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
+                return {
+                    ...prev,
+                    userAnswers: validatedAnswers,
+                    isComplete: complete,
+                };
+            }
+
+            // IMPORTANT: Don't set isSubmitted or isComplete here for unsubmitted problems!
             // These should only be set when the user explicitly clicks "Submit Answers"
             // which calls submitProblem(). Setting isSubmitted here causes premature
             // validation feedback and hides the submit button.
@@ -257,6 +267,16 @@ export function useGameState() {
                     a.fieldType === fieldType &&
                     a.fieldPosition === position)
             );
+
+            // If problem was already submitted, re-check completion
+            if (prev.isSubmitted && prev.problem) {
+                const complete = isProblemComplete(prev.problem as DivisionProblem, filteredAnswers);
+                return {
+                    ...prev,
+                    userAnswers: filteredAnswers,
+                    isComplete: complete,
+                };
+            }
 
             return {
                 ...prev,
