@@ -3,7 +3,11 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState, AdditionSt
 import { ADDITION_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
 import { generateAdditionProblem } from '../utils/additionGenerator';
 import { validateAdditionAnswer, isAdditionProblemComplete } from '../utils/additionValidator';
+import { fetchAdditionProblems } from '../utils/apiService';
 import { FEATURES } from '../utils/config';
+
+// Minimum number of problems needed per level before falling back to local generation
+const MIN_PROBLEMS_PER_LEVEL = 8;
 
 /**
  * Generates a problem specifically for the given level ID
@@ -49,32 +53,52 @@ export function useAdditionGameState() {
         setFetchError(null);
 
         try {
-            // Generate problems for this level
-            const problems: AdditionProblem[] = [];
-            for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
-                problems.push(generateLevelSpecificAdditionProblem(levelId));
+            let problems: AdditionProblem[] = [];
+
+            // Only fetch from API if feature is enabled
+            if (FEATURES.USE_API_PROBLEMS) {
+                // Fetch from API first
+                const apiProblems = await fetchAdditionProblems(levelId);
+                problems = [...apiProblems];
             }
 
-            // Shuffle the problems
-            const shuffledProblems = shuffleArray(problems);
+            // If we don't have enough from the API, supplement with local generation
+            const MIN_PROBLEMS_FROM_API = 8;
+            if (problems.length < MIN_PROBLEMS_FROM_API) {
+                const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                const localProblems = Array.from({ length: localProblemsNeeded },
+                    () => generateLevelSpecificAdditionProblem(levelId));
+
+                problems = [...problems, ...localProblems];
+            }
+
+            // Limit to 10 problems and shuffle
+            problems = problems.slice(0, PROBLEMS_PER_LEVEL);
+            problems = shuffleArray(problems);
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: shuffledProblems,
+                levelProblems: problems,
                 currentProblemIndex: 0,
-                problem: shuffledProblems.length > 0 ? shuffledProblems[0] : null,
+                problem: problems.length > 0 ? problems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
-        } catch {
-            setFetchError('Failed to generate problems. Please try again.');
+        } catch (error) {
+            console.error('Error loading addition problems:', error);
+            setFetchError('Failed to load problems. Please try again.');
 
-            // Generate a fallback problem
-            const fallbackProblem = generateLevelSpecificAdditionProblem(levelId);
+            // Fallback to locally generated problems
+            const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
+                () => generateLevelSpecificAdditionProblem(levelId));
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: [fallbackProblem],
+                levelProblems: fallbackProblems,
                 currentProblemIndex: 0,
-                problem: fallbackProblem,
+                problem: fallbackProblems.length > 0 ? fallbackProblems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
         } finally {
             setIsLoading(false);
@@ -121,6 +145,30 @@ export function useAdditionGameState() {
         // Load problems for the selected level
         loadProblemsForLevel(levelId);
     }, [loadProblemsForLevel]);
+
+    // Restore exact game state without regenerating problems
+    const restoreGameState = useCallback((levelId: number, problemIndex: number, problems: AdditionProblem[]) => {
+        // Check if the level exists
+        if (!ADDITION_LEVELS.some(l => l.id === levelId)) {
+            return;
+        }
+
+        // Ensure problemIndex is within bounds
+        const safeIndex = Math.max(0, Math.min(problemIndex, problems.length - 1));
+        const currentProblem = problems[safeIndex] || null;
+
+        // Restore exact state
+        setGameState(prev => ({
+            ...prev,
+            currentLevel: levelId,
+            currentProblemIndex: safeIndex,
+            levelProblems: problems,
+            problem: currentProblem,
+            userAnswers: [], // Always clear user answers when restoring
+            isSubmitted: false,
+            isComplete: false,
+        }));
+    }, []);
 
     // Generate a new problem
     const generateNewProblem = useCallback(() => {
@@ -266,7 +314,26 @@ export function useAdditionGameState() {
                 };
             }
 
-            // Otherwise, generate a new problem
+            // If we've finished the last problem, advance to the next level if available
+            const nextLevelId = prev.currentLevel + 1;
+            if (prev.availableLevels.includes(nextLevelId)) {
+                // Advance to next level and load its problems
+                // Note: This will trigger async problem loading, but we set level immediately
+                // The loadProblemsForLevel call will update problems when async operation completes
+                setTimeout(() => loadProblemsForLevel(nextLevelId), 0);
+
+                return {
+                    ...prev,
+                    currentLevel: nextLevelId,
+                    currentProblemIndex: 0,
+                    problem: null, // Will be set by loadProblemsForLevel
+                    userAnswers: [],
+                    isSubmitted: false,
+                    isComplete: false,
+                };
+            }
+
+            // If no next level available, generate a new problem for current level
             const newProblem = generateLevelSpecificAdditionProblem(prev.currentLevel);
             return {
                 ...prev,
@@ -276,9 +343,7 @@ export function useAdditionGameState() {
                 isComplete: false,
             };
         });
-    }, []);
-
-
+    }, [loadProblemsForLevel]);
 
     // Enable problem editing
     const enableEditing = useCallback(() => {
@@ -312,6 +377,7 @@ export function useAdditionGameState() {
         clearAnswer,
         nextProblem,
         jumpToLevel,
+        restoreGameState,
         initializeGame,
         updateProblem,
         enableEditing,

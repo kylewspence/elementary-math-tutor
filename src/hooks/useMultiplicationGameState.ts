@@ -64,20 +64,22 @@ export function useMultiplicationGameState() {
 
             // Only fetch from API if feature is enabled
             if (FEATURES.USE_API_PROBLEMS) {
-                // Pass the actual level ID to the API service for proper filtering
-                problems = await fetchMultiplicationProblems(levelId);
+                // Fetch from API first
+                const apiProblems = await fetchMultiplicationProblems(levelId);
+                problems = [...apiProblems];
             }
 
-            // If we didn't get enough problems from API, generate locally
-            if (problems.length < MIN_PROBLEMS_PER_LEVEL) {
-                // Generate enough additional problems
-                const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
-                for (let i = 0; i < neededProblems; i++) {
-                    problems.push(generateLevelSpecificMultiplicationProblem(levelId));
-                }
+            // If we don't have enough from the API, supplement with local generation
+            const MIN_PROBLEMS_FROM_API = 8;
+            if (problems.length < MIN_PROBLEMS_FROM_API) {
+                const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                const localProblems = Array.from({ length: localProblemsNeeded },
+                    () => generateLevelSpecificMultiplicationProblem(levelId));
+
+                problems = [...problems, ...localProblems];
             }
 
-            // Limit to maximum problems per level and shuffle
+            // Limit to 10 problems and shuffle
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
 
@@ -86,10 +88,12 @@ export function useMultiplicationGameState() {
                 levelProblems: problems,
                 currentProblemIndex: 0,
                 problem: problems.length > 0 ? problems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
-
-        } catch {
-            setFetchError('Failed to load multiplication problems. Please try again.');
+        } catch (error) {
+            console.error('Error loading multiplication problems:', error);
+            setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
             const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
@@ -100,6 +104,8 @@ export function useMultiplicationGameState() {
                 levelProblems: fallbackProblems,
                 currentProblemIndex: 0,
                 problem: fallbackProblems.length > 0 ? fallbackProblems[0] : null,
+                userAnswers: [],
+                isSubmitted: false,
             }));
         } finally {
             setIsLoading(false);
@@ -145,6 +151,30 @@ export function useMultiplicationGameState() {
         // Load problems for the selected level
         loadProblemsForLevel(levelId);
     }, [loadProblemsForLevel]);
+
+    // Restore exact game state without regenerating problems
+    const restoreGameState = useCallback((levelId: number, problemIndex: number, problems: MultiplicationProblem[]) => {
+        // Check if the level exists
+        if (!MULTIPLICATION_LEVELS.some(l => l.id === levelId)) {
+            return;
+        }
+
+        // Ensure problemIndex is within bounds
+        const safeIndex = Math.max(0, Math.min(problemIndex, problems.length - 1));
+        const currentProblem = problems[safeIndex] || null;
+
+        // Restore exact state
+        setGameState(prev => ({
+            ...prev,
+            currentLevel: levelId,
+            currentProblemIndex: safeIndex,
+            levelProblems: problems,
+            problem: currentProblem,
+            userAnswers: [], // Always clear user answers when restoring
+            isSubmitted: false,
+            isComplete: false,
+        }));
+    }, []);
 
     // Generate a new problem
     const generateNewProblem = useCallback(() => {
@@ -337,11 +367,9 @@ export function useMultiplicationGameState() {
     // Move to next problem
     const nextProblem = useCallback(() => {
         setGameState(prev => {
-            // Move to next problem index
-            const nextIndex = prev.currentProblemIndex + 1;
-
-            // If we have more problems available for this level, load the next one
-            if (nextIndex < prev.levelProblems.length) {
+            // If we have more problems in this level, move to the next one
+            if (prev.currentProblemIndex < prev.levelProblems.length - 1) {
+                const nextIndex = prev.currentProblemIndex + 1;
                 return {
                     ...prev,
                     currentProblemIndex: nextIndex,
@@ -352,7 +380,26 @@ export function useMultiplicationGameState() {
                 };
             }
 
-            // If we've completed all problems, generate a new one
+            // If we've finished the last problem, advance to the next level if available
+            const nextLevelId = prev.currentLevel + 1;
+            if (prev.availableLevels.includes(nextLevelId)) {
+                // Advance to next level and load its problems
+                // Note: This will trigger async problem loading, but we set level immediately
+                // The loadProblemsForLevel call will update problems when async operation completes
+                setTimeout(() => loadProblemsForLevel(nextLevelId), 0);
+
+                return {
+                    ...prev,
+                    currentLevel: nextLevelId,
+                    currentProblemIndex: 0,
+                    problem: null, // Will be set by loadProblemsForLevel
+                    userAnswers: [],
+                    isSubmitted: false,
+                    isComplete: false,
+                };
+            }
+
+            // If no next level available, generate a new problem for current level
             const newProblem = generateLevelSpecificMultiplicationProblem(prev.currentLevel);
             return {
                 ...prev,
@@ -362,9 +409,7 @@ export function useMultiplicationGameState() {
                 isComplete: false,
             };
         });
-    }, []);
-
-
+    }, [loadProblemsForLevel]);
 
     // Enable problem editing
     const enableEditing = useCallback(() => {
@@ -406,6 +451,7 @@ export function useMultiplicationGameState() {
         submitProblem,
         nextProblem,
         jumpToLevel,
+        restoreGameState,
         enableEditing,
         disableEditing,
     };

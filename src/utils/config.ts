@@ -19,13 +19,13 @@ export const API_CONFIG = {
 // Logging Configuration
 export const LOGGING_CONFIG = {
     // Disable console logs in production
-    ENABLE_DEBUG_LOGS: import.meta.env.DEV || import.meta.env.VITE_ENABLE_LOGS === 'true',
+    ENABLE_DEBUG_LOGS: false, // Disabled to clean up console
 };
 
 // Feature Flags
 export const FEATURES = {
     // Allow toggling features
-    USE_API_PROBLEMS: import.meta.env.VITE_USE_API_PROBLEMS !== 'false', // Default to true
+    USE_API_PROBLEMS: import.meta.env.VITE_USE_API_PROBLEMS !== 'false', // Re-enabled for debugging
     ALLOW_LEVEL_SKIPPING: true,
 };
 
@@ -33,16 +33,24 @@ export const FEATURES = {
  * Safe console logger that respects environment settings
  */
 export const logger = {
-    log: () => {
-        // Disabled - no logging
+    log: (...args: any[]) => {
+        if (LOGGING_CONFIG.ENABLE_DEBUG_LOGS) {
+            console.log('[DEBUG]', ...args);
+        }
     },
-    error: () => {
-        // Disabled - no logging
+    error: (...args: any[]) => {
+        if (LOGGING_CONFIG.ENABLE_DEBUG_LOGS) {
+            console.error('[ERROR]', ...args);
+        }
     },
-    warn: () => {
-        // Disabled - no logging
+    warn: (...args: any[]) => {
+        if (LOGGING_CONFIG.ENABLE_DEBUG_LOGS) {
+            console.warn('[WARN]', ...args);
+        }
     },
-    info: () => {
-        // Disabled - no logging
+    info: (...args: any[]) => {
+        if (LOGGING_CONFIG.ENABLE_DEBUG_LOGS) {
+            console.info('[INFO]', ...args);
+        }
     },
 }; 

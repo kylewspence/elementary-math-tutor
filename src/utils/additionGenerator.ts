@@ -64,7 +64,8 @@ export function generateAdditionProblem(level: AdditionLevel, specificAddend1?: 
         addend2,
         sum,
         steps,
-        isEditable: false
+        isEditable: false,
+        source: 'local',
     };
 }
 

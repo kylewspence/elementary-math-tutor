@@ -71,6 +71,7 @@ export function generateMultiplicationProblem(difficulty: MultiplicationDifficul
         partialProducts,
         difficulty,
         isEditable: false,
+        source: 'local',
     };
 }
 
@@ -100,5 +101,6 @@ export function createSpecificMultiplicationProblem(
         partialProducts,
         difficulty,
         isEditable: false,
+        source: 'local',
     };
 } 

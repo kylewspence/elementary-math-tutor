@@ -14,6 +14,7 @@ export interface AdditionProblem {
     addend2: number;
     sum: number;
     steps: AdditionStep[];
+    source?: 'api' | 'local'; // Track if problem came from API or local generation
     isEditable?: boolean;
 }
 
