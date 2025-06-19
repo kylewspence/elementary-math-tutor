@@ -56,9 +56,9 @@ export async function fetchMathProblems(): Promise<ApiResponse> {
 }
 
 /**
- * Converts an API question to a division problem format
+ * Converts raw API response to DivisionProblem format
  */
-export function convertToDivisionProblem(question: MathQuestion): DivisionProblem {
+function convertToDivisionProblem(question: MathQuestion): DivisionProblem {
     // For division, number_0 is the dividend and number_1 is the divisor
     const dividend = parseInt(question.number_0);
     const divisor = parseInt(question.number_1);
@@ -76,7 +76,7 @@ export function convertToDivisionProblem(question: MathQuestion): DivisionProble
         quotient,
         remainder,
         steps,
-        isEditable: false
+        source: 'api', // Mark as coming from API
     };
 }
 
@@ -112,7 +112,8 @@ export function convertToMultiplicationProblem(question: MultiplicationQuestion)
         product,
         partialProducts,
         isEditable: false,
-        difficulty: 'medium'
+        difficulty: 'medium',
+        source: 'api', // Mark as coming from API
     };
 
     // Calculate actual difficulty based on the problem

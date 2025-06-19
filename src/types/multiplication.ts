@@ -26,6 +26,7 @@ export interface MultiplicationProblem {
     partialProducts: PartialProduct[]; // For multi-digit multipliers
     isEditable?: boolean;    // Whether the problem can be edited by the user
     difficulty: MultiplicationDifficulty; // The difficulty level of the problem
+    source?: 'api' | 'local'; // Track if problem came from API or local generation
 }
 
 /**

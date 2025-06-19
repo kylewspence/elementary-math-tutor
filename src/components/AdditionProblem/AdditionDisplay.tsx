@@ -337,6 +337,16 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
     return (
         <div className="addition-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono pb-32">
+            {/* Problem source badge */}
+            <div className="mb-4 flex justify-center">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${problem.source === 'api'
+                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
+                    {problem.source === 'api' ? '🌐 Server Problem' : '💻 Local Problem'}
+                </span>
+            </div>
+
             {/* Problem header - clickable to edit */}
             <div className="text-center mb-4" ref={problemRef}>
                 <div className="text-xl text-gray-600 flex items-center justify-center gap-2">

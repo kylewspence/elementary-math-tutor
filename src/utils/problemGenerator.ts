@@ -55,6 +55,7 @@ export function generateProblem(level: GameLevel, specificDividend?: number, spe
         remainder,
         steps,
         isEditable: false,
+        source: 'local',
     };
 }
 

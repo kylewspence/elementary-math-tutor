@@ -21,6 +21,7 @@ export interface DivisionProblem {
     remainder: number;
     steps: DivisionStep[];
     isEditable?: boolean;
+    source?: 'api' | 'local'; // Track if problem came from API or local generation
 }
 
 export interface DivisionStep {
