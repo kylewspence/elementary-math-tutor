@@ -7,6 +7,24 @@ import { calculateAdditionSteps } from './additionGenerator';
 import { API_CONFIG } from './config';
 import { v4 as uuidv4 } from 'uuid';
 
+// API call tracking
+let apiCallCount = 0;
+
+/**
+ * Gets the current API call count (useful for debugging)
+ */
+export function getApiCallCount(): number {
+    return apiCallCount;
+}
+
+/**
+ * Resets the API call counter (useful for testing)
+ */
+export function resetApiCallCount(): void {
+    apiCallCount = 0;
+    console.log('🔄 API call counter reset to 0');
+}
+
 interface MathQuestion {
     question: string;
     number_0: string;
@@ -37,6 +55,11 @@ const API_ENDPOINT = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MATH_PROBLEMS
  * Fetches math problems from the server
  */
 export async function fetchMathProblems(): Promise<ApiResponse> {
+    // Increment and log API call count
+    apiCallCount++;
+    console.log(`🌐 API CALL #${apiCallCount} - Fetching math problems from server`);
+    console.trace('API call stack trace:'); // This will show us exactly what triggered the call
+
     // Check if API configuration is complete
     if (!API_CONFIG.BASE_URL || !API_CONFIG.DEVICE_ID) {
         console.error('API configuration incomplete:', {

@@ -147,7 +147,7 @@ function App() {
         );
       }
 
-      // If no valid saved state exists for any game mode, initialize the current mode
+      // Only initialize modes that don't have valid saved state
       if (!saved.divisionState || !saved.divisionState.levelProblems) {
         initializeGame();
       }
@@ -237,10 +237,16 @@ function App() {
     // Only run after we've loaded saved state
     if (!hasLoadedSavedState) return;
 
-    // Don't re-initialize if we just loaded saved state for this mode
+    // Don't re-initialize if we have saved state for this mode
     const saved = loadProgress();
-    if (saved && saved.gameMode === gameMode) return;
+    if (saved) {
+      // Check if the current mode has valid saved state
+      if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) return;
+      if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) return;
+      if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) return;
+    }
 
+    // Only initialize if we don't have saved state for this specific mode
     if (gameMode === 'division') {
       initializeGame();
     } else if (gameMode === 'addition') {
