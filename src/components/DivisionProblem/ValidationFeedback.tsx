@@ -18,8 +18,8 @@ const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
             {/* Main Message */}
             {message && (
                 <div className={`p-3 rounded-lg border ${isValid
-                        ? 'bg-green-50 border-green-200 text-green-800'
-                        : 'bg-red-50 border-red-200 text-red-800'
+                    ? 'bg-green-50 border-green-200 text-green-800'
+                    : 'bg-red-50 border-red-200 text-red-800'
                     }`}>
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -80,13 +80,6 @@ const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* Quick Reference */}
-            {!isValid && (
-                <div className="mt-3 text-xs text-gray-500">
-                    <p>💡 Remember: Use your numpad for fast input, Tab to move forward, Shift+Tab to go back</p>
                 </div>
             )}
         </div>
