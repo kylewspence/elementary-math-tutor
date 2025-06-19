@@ -3,7 +3,11 @@ import type { AdditionProblem, AdditionUserAnswer, AdditionGameState, AdditionSt
 import { ADDITION_LEVELS, PROBLEMS_PER_LEVEL } from '../utils/constants';
 import { generateAdditionProblem } from '../utils/additionGenerator';
 import { validateAdditionAnswer, isAdditionProblemComplete } from '../utils/additionValidator';
+import { fetchAdditionProblems } from '../utils/apiService';
 import { FEATURES } from '../utils/config';
+
+// Minimum number of problems needed per level before falling back to local generation
+const MIN_PROBLEMS_PER_LEVEL = 8;
 
 /**
  * Generates a problem specifically for the given level ID
@@ -49,13 +53,25 @@ export function useAdditionGameState() {
         setFetchError(null);
 
         try {
-            // Generate problems for this level
-            const problems: AdditionProblem[] = [];
-            for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
-                problems.push(generateLevelSpecificAdditionProblem(levelId));
+            let problems: AdditionProblem[] = [];
+
+            // Only fetch from API if feature is enabled
+            if (FEATURES.USE_API_PROBLEMS) {
+                // Pass the actual level ID to the API service for proper filtering
+                problems = await fetchAdditionProblems(levelId);
             }
 
-            // Shuffle the problems
+            // If we didn't get enough problems from API, generate locally
+            if (problems.length < MIN_PROBLEMS_PER_LEVEL) {
+                // Generate enough additional problems
+                const neededProblems = PROBLEMS_PER_LEVEL - problems.length;
+                for (let i = 0; i < neededProblems; i++) {
+                    problems.push(generateLevelSpecificAdditionProblem(levelId));
+                }
+            }
+
+            // Limit to maximum problems per level and shuffle
+            problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             const shuffledProblems = shuffleArray(problems);
 
             setGameState(prev => ({
@@ -64,17 +80,19 @@ export function useAdditionGameState() {
                 currentProblemIndex: 0,
                 problem: shuffledProblems.length > 0 ? shuffledProblems[0] : null,
             }));
-        } catch {
-            setFetchError('Failed to generate problems. Please try again.');
 
-            // Generate a fallback problem
-            const fallbackProblem = generateLevelSpecificAdditionProblem(levelId);
+        } catch {
+            setFetchError('Failed to load addition problems. Please try again.');
+
+            // Fallback to locally generated problems
+            const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
+                () => generateLevelSpecificAdditionProblem(levelId));
 
             setGameState(prev => ({
                 ...prev,
-                levelProblems: [fallbackProblem],
+                levelProblems: fallbackProblems,
                 currentProblemIndex: 0,
-                problem: fallbackProblem,
+                problem: fallbackProblems.length > 0 ? fallbackProblems[0] : null,
             }));
         } finally {
             setIsLoading(false);

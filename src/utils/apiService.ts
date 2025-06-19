@@ -1,6 +1,8 @@
 import type { DivisionProblem } from '../types/game';
 import type { MultiplicationProblem, MultiplicationQuestion } from '../types/multiplication';
+import type { AdditionProblem } from '../types/addition';
 import { calculateDivisionSteps } from './problemGenerator';
+import { calculateAdditionSteps } from './additionGenerator';
 
 import { API_CONFIG } from './config';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +17,9 @@ interface MathQuestion {
 interface ApiResponse {
     tag: string;
     public: {
+        addition_0: MathQuestion[];
+        addition_1: MathQuestion[];
+        addition_2: MathQuestion[];
         multiplication_0: MathQuestion[];
         multiplication_1: MathQuestion[];
         multiplication_2: MathQuestion[];
@@ -53,6 +58,29 @@ export async function fetchMathProblems(): Promise<ApiResponse> {
 
     const data = await response.json();
     return data;
+}
+
+/**
+ * Converts raw API response to AdditionProblem format
+ */
+function convertToAdditionProblem(question: MathQuestion): AdditionProblem {
+    // For addition, number_0 is the first addend and number_1 is the second addend
+    const addend1 = parseInt(question.number_0);
+    const addend2 = parseInt(question.number_1);
+
+    // Calculate the sum
+    const sum = addend1 + addend2;
+
+    // Calculate steps using imported function
+    const steps = calculateAdditionSteps(addend1, addend2);
+
+    return {
+        addend1,
+        addend2,
+        sum,
+        steps,
+        source: 'api', // Mark as coming from API
+    };
 }
 
 /**
@@ -121,6 +149,38 @@ export function convertToMultiplicationProblem(question: MultiplicationQuestion)
     multiplicationProblem.difficulty = difficultyScore <= 3 ? 'easy' : difficultyScore <= 7 ? 'medium' : 'hard';
 
     return multiplicationProblem;
+}
+
+/**
+ * Evaluates the difficulty of an addition problem
+ * @returns A difficulty score from 1-10
+ */
+function evaluateAdditionDifficulty(problem: AdditionProblem): number {
+    let difficulty = 1;
+
+    // Factor 1: Number of digits in addends
+    const addend1Digits = problem.addend1.toString().length;
+    const addend2Digits = problem.addend2.toString().length;
+    const maxDigits = Math.max(addend1Digits, addend2Digits);
+    difficulty += maxDigits - 1;
+
+    // Factor 2: Carrying complexity
+    let carriesCount = 0;
+    problem.steps.forEach(step => {
+        if (step.carry > 0) {
+            carriesCount++;
+        }
+    });
+    difficulty += carriesCount;
+
+    // Factor 3: Size of sum
+    const sumDigits = problem.sum.toString().length;
+    if (sumDigits > maxDigits) {
+        difficulty += 1; // Extra point for sum being longer than addends
+    }
+
+    // Cap the difficulty between 1 and 10
+    return Math.max(1, Math.min(10, difficulty));
 }
 
 /**
@@ -277,6 +337,38 @@ function meetsMultiplicationLevelRequirements(problem: MultiplicationProblem, le
 }
 
 /**
+ * Checks if an addition problem meets the requirements for a specific level
+ */
+function meetsAdditionLevelRequirements(problem: AdditionProblem, levelId: number): boolean {
+    const addend1Digits = problem.addend1.toString().length;
+    const addend2Digits = problem.addend2.toString().length;
+    const maxDigits = Math.max(addend1Digits, addend2Digits);
+
+    // Count carries needed
+    const carriesCount = problem.steps.filter(step => step.carry > 0).length;
+
+    // Level-specific requirements
+    switch (levelId) {
+        case 1:
+            // Level 1: 2-digit numbers, minimal carrying
+            return maxDigits === 2 && carriesCount <= 1;
+        case 2:
+            // Level 2: 2-3 digit numbers, some carrying
+            return maxDigits <= 3 && carriesCount <= 2;
+        case 3:
+            // Level 3: 3-digit numbers, moderate carrying
+            return maxDigits <= 3 && carriesCount <= 3;
+        case 4:
+        case 5:
+            // Level 4-5: 3-4 digit numbers, more carrying
+            return maxDigits <= 4 && carriesCount <= 4;
+        default:
+            // Higher levels: any complexity
+            return true;
+    }
+}
+
+/**
  * Filters problems to ensure they match the expected difficulty level and removes duplicates
  */
 function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): DivisionProblem[] {
@@ -365,6 +457,50 @@ function filterMultiplicationProblemsForLevel(problems: MultiplicationProblem[],
 }
 
 /**
+ * Filters addition problems to ensure they match the expected difficulty level and removes duplicates
+ */
+function filterAdditionProblemsForLevel(problems: AdditionProblem[], levelId: number): AdditionProblem[] {
+    // Create a map to track unique problems
+    const uniqueProblems = new Map<string, AdditionProblem>();
+
+    // More flexible difficulty ranges
+    let minDifficulty = 1;
+    let maxDifficulty = 10; // Allow all difficulties initially
+
+    // Adjust ranges based on level but be more inclusive
+    if (levelId === 1) {
+        minDifficulty = 1;
+        maxDifficulty = 4;
+    } else if (levelId === 2) {
+        minDifficulty = 2;
+        maxDifficulty = 6;
+    } else if (levelId === 3) {
+        minDifficulty = 3;
+        maxDifficulty = 7;
+    } else if (levelId >= 4) {
+        minDifficulty = 3;
+        maxDifficulty = 10;
+    }
+
+    // Filter problems
+    for (const problem of problems) {
+        const difficulty = evaluateAdditionDifficulty(problem);
+        const key = `add_${problem.addend1}_${problem.addend2}`;
+
+        // Check each filter condition separately
+        if (difficulty >= minDifficulty &&
+            difficulty <= maxDifficulty &&
+            !uniqueProblems.has(key) &&
+            meetsAdditionLevelRequirements(problem, levelId)) {
+            uniqueProblems.set(key, problem);
+        }
+    }
+
+    // Return unique problems that meet criteria
+    return Array.from(uniqueProblems.values());
+}
+
+/**
  * Fetches division problems of a specific level
  * @param level 0=easy, 1=medium, 2=hard
  */
@@ -414,6 +550,35 @@ export async function fetchMultiplicationProblems(level: number = 0): Promise<Mu
 
         // Filter problems by difficulty level and remove duplicates
         const filteredProblems = filterMultiplicationProblemsForLevel(allMultiplicationProblems, level);
+
+        return filteredProblems;
+    } catch {
+        // Return empty array on error
+        return [];
+    }
+}
+
+/**
+ * Fetches addition problems of a specific level
+ * @param level 0=easy, 1=medium, 2=hard
+ */
+export async function fetchAdditionProblems(level: number = 0): Promise<AdditionProblem[]> {
+    try {
+        const response = await fetchMathProblems();
+
+        // Get all addition problems from all levels - we'll filter by difficulty later
+        const allAdditionProblems: AdditionProblem[] = [];
+
+        // Get problems from all addition levels in the API response
+        for (let i = 0; i <= 2; i++) {
+            const key = `addition_${i}`;
+            const additionQuestions = response.public[key] || [];
+            const problems = additionQuestions.map(convertToAdditionProblem);
+            allAdditionProblems.push(...problems);
+        }
+
+        // Filter problems by difficulty level and remove duplicates
+        const filteredProblems = filterAdditionProblemsForLevel(allAdditionProblems, level);
 
         return filteredProblems;
     } catch {
