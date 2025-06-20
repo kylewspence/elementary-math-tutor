@@ -81,7 +81,12 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     // Auto-focus the active input
     useEffect(() => {
         if (activeInputRef.current) {
-            activeInputRef.current.focus();
+            // Add a small delay for mobile browsers to ensure DOM is ready
+            setTimeout(() => {
+                if (activeInputRef.current) {
+                    activeInputRef.current.focus();
+                }
+            }, 10);
         }
     }, [currentFocus]);
 
