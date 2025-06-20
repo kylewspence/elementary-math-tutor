@@ -1,31 +1,11 @@
 # Task ID: 10
-# Title: Enhance useMathGameState Hook
+# Title: Implement Subtraction API Endpoints
 # Status: pending
 # Dependencies: 8
 # Priority: medium
-# Description: Ensure useMathGameState handles all operation types consistently.
+# Description: Add subtraction endpoints to the API service, following the established pattern for addition.
 # Details:
-Review and enhance useMathGameState to ensure it supports all operations uniformly. Add any necessary configurations for future operations like Subtraction.
+Update apiService.ts to include subtraction endpoints. Implement fallback to local generation following the addition pattern.
 
 # Test Strategy:
-Verify state management consistency across all operations.
-
-# Subtasks:
-## 1. Review Current Logic [pending]
-### Dependencies: None
-### Description: Analyze the existing codebase to understand the current logic implementation.
-### Details:
-Examine the current state management logic and document how it interacts with existing operations. Identify any potential areas for improvement or refactoring to align with architectural goals.
-
-## 2. Add Support for New Operations [pending]
-### Dependencies: 10.1
-### Description: Implement new operations in the codebase while ensuring compatibility with existing logic.
-### Details:
-Based on the review, integrate new operations into the state management system. Ensure these operations are consistent with the architectural blueprint and do not disrupt existing functionality.
-
-## 3. Test State Consistency [pending]
-### Dependencies: 10.1, 10.2
-### Description: Conduct tests to verify the consistency of state management across all operations.
-### Details:
-Develop and execute test cases that cover both existing and new operations. Ensure that state transitions are handled correctly and that the system maintains consistency as per the complexity analysis.
-
+Test API calls to ensure subtraction endpoints function correctly and fallback logic works as expected.

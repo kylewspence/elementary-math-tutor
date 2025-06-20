@@ -1,0 +1,31 @@
+# Task ID: 25
+# Title: Conduct Final Review and Approval
+# Status: pending
+# Dependencies: 24
+# Priority: high
+# Description: Perform a final review of the subtraction feature implementation and seek approval for release, ensuring it matches the addition feature exactly.
+# Details:
+Conduct a comprehensive review of the subtraction feature, ensuring all success criteria are met and it mirrors the addition feature in functionality and design. Seek approval from stakeholders for release.
+
+# Test Strategy:
+Gather stakeholder feedback and ensure all success metrics are achieved before release. Verify that subtraction matches addition exactly in terms of UI and functionality, and ensure no changes have been made to division, addition, or multiplication.
+
+# Subtasks:
+## 1. Add Regression Testing Protocol [pending]
+### Dependencies: 25.1
+### Description: Create comprehensive regression testing to ensure existing operations continue working after shared component refactoring
+### Details:
+This must include testing Division, Addition, and Multiplication operations after Task 1 (shared component refactoring) is complete to ensure no regressions were introduced. Test all shared behaviors: submit button, keyboard navigation, mobile controls, session persistence, and auto-generation.
+
+## 2. Create Mobile-First Testing Protocol [pending]
+### Dependencies: None
+### Description: Establish testing procedures specifically for mobile functionality to prevent mobile regression issues
+### Details:
+Based on memory of mobile sticky submit button issues that were previously resolved, create specific mobile testing steps: test sticky controls positioning, test pagehide/visibilitychange persistence events, test mobile keyboard navigation, test orientation changes, test app switching behavior. Must verify all four operations work identically on mobile.
+
+## 3. Verify Subtraction Matches Addition [pending]
+### Dependencies: None
+### Description: Ensure the subtraction feature is an exact copy of the addition feature in terms of UI and functionality.
+### Details:
+Review the subtraction implementation to confirm it uses the same patterns as addition. Check for identical mobile sticky controls, submit button logic, wrong answer handling, and UI components. Ensure App.tsx and Header.tsx patterns are copied exactly.
+

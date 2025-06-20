@@ -1,0 +1,200 @@
+Math Tutor Subtraction Feature - Product Requirements Document v2.0
+Architecture-First Implementation
+
+EXECUTIVE SUMMARY
+Add a subtraction operation to the Math Tutor application that strictly follows established shared architecture patterns. This implementation prioritizes consistency with existing operations (Division, Addition, Multiplication) over unique features, ensuring seamless integration and preventing architectural drift.
+
+CORE PRINCIPLE: Build subtraction to be indistinguishable from other operations in all shared behaviors, then selectively add operation-specific features only where truly necessary.
+
+CURRENT STATE ANALYSIS
+
+Established Shared Architecture (MUST FOLLOW):
+- Shared Components: SubmitControls, Input, problem header patterns
+- Shared Hooks: useSessionPersistence, validation patterns, keyboard navigation structure  
+- Integration Patterns: App.tsx automatic generation effects, focus management, mode switching
+- UX Patterns: Mobile sticky controls, loading states, edit-click behavior
+
+Critical Success Factors:
+1. Visual Consistency: Subtraction must look identical to other operations for all shared elements
+2. Behavioral Consistency: All interactions must work identically (keyboard nav, submit, validation)
+3. Architectural Consistency: Must use same hooks, components, and integration patterns
+4. Mobile Consistency: Must work with existing mobile persistence and sticky controls
+
+GOALS
+
+Primary Goals (In Priority Order):
+1. Architecture Compliance: Subtraction follows ALL established patterns without deviation
+2. Seamless Integration: Users cannot tell subtraction was added later - feels native
+3. Zero Regression: Existing operations continue working unchanged
+4. Simple Borrowing: Implement borrowing in the simplest way that maintains consistency
+
+Success Criteria:
+- Visual Parity: Subtraction looks identical to addition/multiplication for shared elements
+- Behavioral Parity: All shared interactions work identically across operations
+- Integration Parity: Mode switching, problem generation, persistence work identically
+- Code Quality: Subtraction implementation is indistinguishable from other operations in structure
+
+TECHNICAL REQUIREMENTS
+
+MANDATORY Reference Implementation Patterns:
+
+Component Structure (MUST MATCH):
+- Follow AdditionDisplay.tsx structure exactly
+- Same imports and interface patterns
+- Same useEffect patterns for focus and editing  
+- Same helper function patterns and naming
+- Same render structure (header, main content, shared controls)
+- Same loading/error/empty states
+
+Hook Structure (MUST MATCH):
+- Follow useAdditionGameState.ts pattern exactly
+- Same state interface structure
+- Same initialization pattern
+- Same problem generation flow
+- Same API integration approach
+- Same validation and completion logic
+
+Integration Structure (MUST MATCH):
+- Follow App.tsx addition patterns exactly
+- Same automatic generation useEffect
+- Same automatic focus useEffect
+- Same handler patterns and naming
+- Same inclusion in initialization effects
+- Same auto-save integration
+
+IMPLEMENTATION STRATEGY
+
+Phase 0: Architecture Audit & Shared Component Extraction
+CRITICAL: Before any subtraction work, ensure shared architecture is solid
+
+Tasks:
+- Audit current shared components and verify SubmitControls exists and is used by all operations
+- Identify any duplicated submit logic that should be shared
+- Document exact patterns that subtraction must follow
+- Extract any remaining duplicated logic between operations
+- Ensure all operations use identical patterns for shared behaviors
+- Create reference documentation for new operation implementation
+
+Phase 1: Foundation (Consistency-First)
+GOAL: Create subtraction that is visually and behaviorally identical to addition
+
+Tasks:
+- Create src/types/subtraction.ts mirroring addition types exactly
+- Create src/utils/subtractionGenerator.ts following addition pattern
+- Create src/utils/subtractionValidator.ts following addition pattern
+- VALIDATION GATE: Verify types follow same patterns as addition
+- Create src/hooks/useSubtractionGameState.ts by copying useAdditionGameState
+- Replace addition-specific logic with subtraction equivalents while maintaining identical interface
+- VALIDATION GATE: Verify hook structure is indistinguishable from addition
+- Create src/hooks/useSubtractionKeyboardNav.ts by copying useAdditionKeyboardNav
+- Replace addition-specific field logic with subtraction equivalents
+- Maintain identical navigation behavior and key handling
+- VALIDATION GATE: Verify keyboard behavior is identical to addition
+
+Phase 2: Display Component (Visual Consistency)
+GOAL: Create subtraction display that looks identical to addition for all shared elements
+
+Tasks:
+- Create src/components/SubtractionProblem/SubtractionDisplay.tsx by copying AdditionDisplay
+- Replace addition-specific layout with simple subtraction layout (minuend - subtrahend = difference)
+- MUST USE: Shared SubmitControls component - no custom submit logic
+- MUST MATCH: Same header pattern, loading states, error states  
+- VALIDATION GATE: Visually indistinguishable from addition except for operation-specific math layout
+- Implement simple subtraction layout: minuend, minus sign, subtrahend, line, difference inputs
+- Use same grid constants and sizing as addition
+- NO borrowing visualization initially - keep it simple
+- VALIDATION GATE: Layout is clean and matches addition complexity level
+
+Phase 3: App Integration (Integration Parity)
+GOAL: Subtraction integrates identically to other operations
+
+Tasks:
+- Add subtraction to GameMode type
+- Add subtraction game state and handlers following addition pattern exactly
+- CRITICAL: Copy automatic generation useEffect for subtraction
+- CRITICAL: Copy automatic focus useEffect for subtraction
+- CRITICAL: Add subtraction to initialization useEffect
+- VALIDATION GATE: Mode switching works seamlessly between all 4 operations
+- Add subtraction tab to Header component
+- Match styling and behavior of other operation tabs
+- VALIDATION GATE: Header looks and works identically
+- Add subtractionState to GameProgress interface
+- Include subtraction in auto-save logic
+- VALIDATION GATE: Persistence works identically to other operations
+
+Phase 4: API Integration (Following Established Pattern)
+Tasks:
+- Add subtraction endpoints to apiService.ts following addition pattern
+- Implement fallback to local generation following addition pattern
+- VALIDATION GATE: API integration is indistinguishable from other operations
+
+Phase 5: Testing & Validation (Zero Regression)
+CRITICAL: Comprehensive testing to ensure no architectural drift
+
+Tasks:
+- Visual Test: Verify subtraction looks identical to other operations for shared elements
+- Behavioral Test: Verify all shared interactions work identically across all operations
+- Integration Test: Verify mode switching, problem generation, persistence work identically
+- Mobile Test: Verify mobile controls and persistence work identically
+- Regression Test: Verify Division still works perfectly
+- Regression Test: Verify Addition still works perfectly
+- Regression Test: Verify Multiplication still works perfectly
+- Regression Test: Verify all shared components work across all operations
+- Regression Test: Verify session persistence works for all operations
+
+Phase 6: Enhancement (FUTURE - After MVP Proven)
+Only after Phase 5 is completely successful and stable
+
+Tasks:
+- Research if borrowing visualization adds significant educational value
+- If implementing borrowing, ensure it doesn't break shared architecture patterns
+- Consider if similar enhancements should be added to addition carry logic
+- VALIDATION GATE: Enhanced features don't break consistency
+
+CONSTRAINTS
+
+MANDATORY: Shared Component Usage
+- MUST USE: SubmitControls from /Shared - no custom submit logic
+- MUST USE: Input component with same variant logic as other operations
+- MUST FOLLOW: Same problem header pattern (clickable edit)
+- MUST FOLLOW: Same loading/error state patterns
+- NO CUSTOM: Submit buttons, validation feedback, or UI elements not present in other operations
+
+MANDATORY: Integration Pattern Compliance
+- MUST HAVE: Automatic problem generation useEffect (copy from addition)
+- MUST HAVE: Automatic focus setting useEffect (copy from addition)
+- MUST HAVE: Inclusion in mode initialization useEffect
+- MUST HAVE: Same handler patterns and naming as other operations
+
+MANDATORY: Behavioral Consistency
+- Keyboard navigation must work identically to other operations
+- Submit flow must work identically to other operations
+- Validation and error handling must work identically
+- Mobile controls must work identically
+- Problem editing must work identically
+
+FORBIDDEN: Architectural Deviations
+- NO CUSTOM: UI elements not present in other operations (arrows, explanatory text, etc.)
+- NO CUSTOM: Submit button logic or positioning
+- NO CUSTOM: Validation feedback patterns
+- NO CUSTOM: Loading or error state handling
+- NO DEVIATION: From established keyboard navigation patterns
+
+SUCCESS METRICS
+
+Architecture Compliance:
+- Subtraction implementation is indistinguishable from other operations in structure
+- No unique patterns or components introduced
+- All shared behaviors work identically
+
+User Experience Consistency:
+- Users cannot tell subtraction was added later
+- All interactions work identically across operations
+- Mobile experience is seamless
+
+Code Quality:
+- Same patterns, naming, and structure as existing operations
+- No duplication of shared logic
+- Easy to maintain and extend
+
+This PRD ensures that subtraction will be implemented with surgical precision, following established patterns exactly and preventing the architectural drift that can occur when new features are developed in isolation. 

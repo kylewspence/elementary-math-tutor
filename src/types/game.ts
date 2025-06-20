@@ -2,6 +2,9 @@
 import type { MultiplicationProblem } from './multiplication';
 import type { AdditionProblem } from './addition';
 
+// Centralized game mode type
+export type GameMode = 'division' | 'addition' | 'multiplication' | 'subtraction';
+
 export interface GameLevel {
     id: number;
     name: string;
