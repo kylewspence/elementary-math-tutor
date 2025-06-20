@@ -3,6 +3,7 @@
 import type { GameLevel } from '../types/game';
 import type { AdditionLevel } from '../types/addition';
 import type { MultiplicationLevel } from '../types/multiplication';
+import type { SubtractionLevel } from '../types/subtraction';
 
 
 export const DIVISION_CONSTANTS = {
@@ -400,6 +401,90 @@ export const ADDITION_LEVELS: AdditionLevel[] = [
         maxDigits: 5,
         maxValue: 99999,
         carryRequired: true,
+    },
+];
+
+// Subtraction levels
+export const SUBTRACTION_LEVELS: SubtractionLevel[] = [
+    {
+        id: 1,
+        name: 'Level 1',
+        description: 'Single digit subtraction, no borrowing',
+        maxDigits: 1,
+        maxValue: 9,
+        borrowRequired: false,
+    },
+    {
+        id: 2,
+        name: 'Level 2',
+        description: 'Single digit subtraction with borrowing',
+        maxDigits: 1,
+        maxValue: 9,
+        borrowRequired: true,
+    },
+    {
+        id: 3,
+        name: 'Level 3',
+        description: 'Two-digit subtraction, no borrowing',
+        maxDigits: 2,
+        maxValue: 99,
+        borrowRequired: false,
+    },
+    {
+        id: 4,
+        name: 'Level 4',
+        description: 'Two-digit subtraction with borrowing',
+        maxDigits: 2,
+        maxValue: 99,
+        borrowRequired: true,
+    },
+    {
+        id: 5,
+        name: 'Level 5',
+        description: 'Three-digit subtraction, no borrowing',
+        maxDigits: 3,
+        maxValue: 999,
+        borrowRequired: false,
+    },
+    {
+        id: 6,
+        name: 'Level 6',
+        description: 'Three-digit subtraction with borrowing',
+        maxDigits: 3,
+        maxValue: 999,
+        borrowRequired: true,
+    },
+    {
+        id: 7,
+        name: 'Level 7',
+        description: 'Four-digit subtraction, no borrowing',
+        maxDigits: 4,
+        maxValue: 9999,
+        borrowRequired: false,
+    },
+    {
+        id: 8,
+        name: 'Level 8',
+        description: 'Four-digit subtraction with borrowing',
+        maxDigits: 4,
+        maxValue: 9999,
+        borrowRequired: true,
+    },
+    {
+        id: 9,
+        name: 'Level 9',
+        description: 'Five-digit subtraction, no borrowing',
+        maxDigits: 5,
+        maxValue: 99999,
+        borrowRequired: false,
+    },
+    {
+        id: 10,
+        name: 'Level 10',
+        description: 'Five-digit subtraction with borrowing',
+        maxDigits: 5,
+        maxValue: 99999,
+        borrowRequired: true,
     },
 ];
 

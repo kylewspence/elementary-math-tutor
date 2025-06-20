@@ -1,0 +1,11 @@
+# Task ID: 17
+# Title: Conduct Regression Testing for Multiplication
+# Status: pending
+# Dependencies: 16
+# Priority: medium
+# Description: Ensure that the multiplication operation continues to work perfectly after subtraction integration.
+# Details:
+Perform regression tests on the multiplication operation to ensure no functionality is broken.
+
+# Test Strategy:
+Use regression testing tools to validate multiplication functionality.

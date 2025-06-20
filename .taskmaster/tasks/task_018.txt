@@ -1,0 +1,11 @@
+# Task ID: 18
+# Title: Conduct Regression Testing for Shared Components
+# Status: pending
+# Dependencies: 17
+# Priority: medium
+# Description: Ensure all shared components work across all operations after subtraction integration.
+# Details:
+Perform regression tests on shared components to ensure they function correctly across all operations.
+
+# Test Strategy:
+Use regression testing tools to validate shared component functionality.

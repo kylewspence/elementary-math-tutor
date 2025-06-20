@@ -1,31 +1,49 @@
 # Task ID: 9
-# Title: Enhance useMathKeyboardNav Hook
+# Title: Add Subtraction Tab to Header
 # Status: pending
 # Dependencies: 8
 # Priority: medium
-# Description: Add operation-specific configuration options to the useMathKeyboardNav hook.
+# Description: Include a subtraction tab in the header component, matching the style and behavior of existing operation tabs. Centralize the GameMode type to ensure consistency across the application.
 # Details:
-Modify useMathKeyboardNav to accept operation-specific configurations while maintaining shared navigation logic. Ensure it supports all current operations.
+Modify the Header component to include a subtraction tab. Ensure the styling and behavior are consistent with other operation tabs by copying the existing tab button structure exactly. Extract the GameMode type to a centralized location to eliminate duplication and add 'subtraction' to the type.
 
 # Test Strategy:
-Test keyboard navigation across all operations to ensure consistent behavior.
+Verify that the subtraction tab appears and functions identically to other operation tabs, particularly the addition tab. Ensure that the GameMode type is correctly imported and used in both App.tsx and Header.tsx, and that 'subtraction' is included in the type.
 
 # Subtasks:
-## 1. Add Configuration Options [pending]
+## 1. Extract GameMode type to src/types/game.ts [pending]
 ### Dependencies: None
-### Description: Introduce new configuration options to the existing system to support enhanced functionality.
+### Description: Create a new file src/types/game.ts and move the GameMode type definition there.
 ### Details:
-Review the current configuration setup and identify areas where new options can be integrated. Ensure that these options are backward compatible and do not disrupt existing configurations. Update the configuration documentation to reflect these changes.
 
-## 2. Update Navigation Logic [pending]
-### Dependencies: 9.1
-### Description: Revise the navigation logic to incorporate new configuration options and improve user flow.
-### Details:
-Analyze the current navigation logic and determine how it can be adjusted to accommodate the new configuration options. Ensure that the navigation remains intuitive and efficient. Test the updated navigation logic to confirm that it integrates seamlessly with existing components.
 
-## 3. Test Across Operations [pending]
-### Dependencies: 9.1, 9.2
-### Description: Conduct thorough testing across all operations to ensure that new configurations and navigation logic work as intended.
+## 2. Update App.tsx to import GameMode [pending]
+### Dependencies: None
+### Description: Modify App.tsx to import the GameMode type from src/types/game.ts.
 ### Details:
-Develop a comprehensive testing plan that covers all aspects of the updated system. This should include unit tests, integration tests, and user acceptance tests. Document any issues found and work with the development team to resolve them before final deployment.
+
+
+## 3. Update Header.tsx to import GameMode [pending]
+### Dependencies: None
+### Description: Modify Header.tsx to import the GameMode type from src/types/game.ts.
+### Details:
+
+
+## 4. Add 'subtraction' to GameMode type [pending]
+### Dependencies: None
+### Description: Update the GameMode type in src/types/game.ts to include 'subtraction'.
+### Details:
+
+
+## 5. Add subtraction tab button to Header component [pending]
+### Dependencies: None
+### Description: Implement a subtraction tab button in the Header component following the pattern of existing operation tabs. Ensure it is identical to the addition tab in terms of className, onClick pattern, styling, and mobile controls.
+### Details:
+
+
+## 6. Verify imports and type references [pending]
+### Dependencies: None
+### Description: Ensure all imports and type references for GameMode are correct and that 'subtraction' is properly included.
+### Details:
+
 

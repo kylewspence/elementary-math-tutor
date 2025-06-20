@@ -1,31 +1,11 @@
 # Task ID: 4
-# Title: Refactor DivisionDisplay to Use Shared Components
+# Title: Implement Subtraction Validator
 # Status: pending
-# Dependencies: 2, 3
+# Dependencies: 3
 # Priority: medium
-# Description: Refactor DivisionDisplay to utilize shared subcomponents for input and feedback.
+# Description: Create a validator for subtraction problems that follows the addition validation pattern.
 # Details:
-Modify DivisionDisplay to use the shared ProblemInput and ValidationFeedback components. Ensure the layout and functionality remain unchanged.
+Develop src/utils/subtractionValidator.ts by copying the addition validator. Modify the logic to validate subtraction problems while keeping the same interface and function patterns.
 
 # Test Strategy:
-Verify that the Division operation functions correctly with the refactored components.
-
-# Subtasks:
-## 1. Update Imports [pending]
-### Dependencies: None
-### Description: Refactor the codebase to update import statements according to the new module paths defined in the architectural blueprint.
-### Details:
-Review the architectural blueprint to identify new module paths. Update all import statements in the codebase to reflect these changes, ensuring that all modules are correctly imported from their new locations.
-
-## 2. Integrate Shared Components [pending]
-### Dependencies: 4.1
-### Description: Integrate shared components into the existing codebase as per the architectural blueprint.
-### Details:
-Identify shared components that need to be integrated from the architectural blueprint. Refactor the code to replace existing implementations with these shared components, ensuring compatibility and maintaining existing functionality.
-
-## 3. Verify Functionality [pending]
-### Dependencies: 4.1, 4.2
-### Description: Conduct thorough testing to verify that all functionalities work as expected after refactoring.
-### Details:
-Perform unit and integration tests on the refactored codebase to ensure that all functionalities are intact and working as expected. Document any issues found and address them accordingly.
-
+Test the validator with various subtraction problems to ensure it correctly validates inputs.

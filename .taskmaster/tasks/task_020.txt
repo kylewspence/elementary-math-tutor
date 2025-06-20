@@ -1,0 +1,11 @@
+# Task ID: 20
+# Title: Research Borrowing Visualization
+# Status: pending
+# Dependencies: 19
+# Priority: low
+# Description: Investigate the potential educational value of adding borrowing visualization to subtraction.
+# Details:
+Research educational benefits and implementation strategies for borrowing visualization in subtraction.
+
+# Test Strategy:
+Conduct user studies or educational research to assess the value of borrowing visualization.

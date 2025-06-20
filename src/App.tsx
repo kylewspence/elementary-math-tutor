@@ -5,18 +5,21 @@ import LevelSelectorDrawer from './components/LevelSelector/LevelSelectorDrawer'
 import DivisionDisplay from './components/DivisionProblem/DivisionDisplay';
 import AdditionDisplay from './components/AdditionProblem/AdditionDisplay';
 import MultiplicationDisplay from './components/MultiplicationProblem/MultiplicationDisplay';
+import SubtractionDisplay from './components/SubtractionProblem/SubtractionDisplay';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useAdditionGameState } from './hooks/useAdditionGameState';
 import { useAdditionKeyboardNav } from './hooks/useAdditionKeyboardNav';
 import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
 import { useMultiplicationKeyboardNav } from './hooks/useMultiplicationKeyboardNav';
+import { useSubtractionGameState } from './hooks/useSubtractionGameState';
+import { useSubtractionKeyboardNav } from './hooks/useSubtractionKeyboardNav';
 import type { UserAnswer, DivisionProblem } from './types/game';
 import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
 import type { MultiplicationProblem } from './types/multiplication';
+import type { SubtractionUserAnswer, SubtractionProblem } from './types/subtraction';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
-
-type GameMode = 'division' | 'addition' | 'multiplication';
+import type { GameMode } from './types/game';
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('division');
@@ -82,6 +85,25 @@ function App() {
     loadProblemsForLevel: loadMultiplicationProblemsForLevel,
   } = useMultiplicationGameState();
 
+  // Subtraction game state
+  const {
+    gameState: subtractionGameState,
+    generateNewProblem: generateNewSubtractionProblem,
+    submitAnswer: submitSubtractionAnswer,
+    submitProblem: submitSubtractionProblem,
+    clearAnswer: clearSubtractionAnswer,
+    nextProblem: nextSubtractionProblem,
+    jumpToLevel: jumpToSubtractionLevel,
+    restoreGameState: restoreSubtractionGameState,
+    initializeGame: initializeSubtractionGame,
+    updateProblem: updateSubtractionProblem,
+    enableEditing: enableSubtractionEditing,
+    disableEditing: disableSubtractionEditing,
+    isLoading: isSubtractionLoading,
+    fetchError: subtractionFetchError,
+    loadProblemsForLevel: loadSubtractionProblemsForLevel,
+  } = useSubtractionGameState();
+
   // Keyboard navigation hooks
   const {
     currentFocus,
@@ -109,6 +131,13 @@ function App() {
     moveToNextField: moveToNextMultiplicationField,
     areAllFieldsFilled: areAllMultiplicationFieldsFilled,
   } = useMultiplicationKeyboardNav(multiplicationGameState.problem, multiplicationGameState.userAnswers, multiplicationGameState.isSubmitted);
+
+  const {
+    currentFocus: subtractionCurrentFocus,
+    handleKeyDown: handleSubtractionKeyDown,
+    jumpToField: jumpToSubtractionField,
+    areAllFieldsFilled: areAllSubtractionFieldsFilled,
+  } = useSubtractionKeyboardNav(subtractionGameState.problem, subtractionGameState.userAnswers, subtractionGameState.isSubmitted);
 
   // Load saved state on startup (only once)
   useEffect(() => {
@@ -147,6 +176,15 @@ function App() {
         );
       }
 
+      // Restore subtraction state if it exists using exact state restoration
+      if (saved.subtractionState && saved.subtractionState.currentLevel > 0 && saved.subtractionState.levelProblems) {
+        restoreSubtractionGameState(
+          saved.subtractionState.currentLevel,
+          saved.subtractionState.currentProblemIndex,
+          saved.subtractionState.levelProblems
+        );
+      }
+
       // Only initialize modes that don't have valid saved state
       if (!saved.divisionState || !saved.divisionState.levelProblems) {
         initializeGame();
@@ -159,13 +197,18 @@ function App() {
       if (!saved.multiplicationState || !saved.multiplicationState.levelProblems) {
         initializeMultiplicationGame();
       }
+
+      if (!saved.subtractionState || !saved.subtractionState.levelProblems) {
+        initializeSubtractionGame();
+      }
     } else {
       // Only initialize if we don't have saved state
       initializeGame();
       initializeAdditionGame();
       initializeMultiplicationGame();
+      initializeSubtractionGame();
     }
-  }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
+  }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
 
 
@@ -189,12 +232,18 @@ function App() {
           currentProblemIndex: multiplicationGameState.currentProblemIndex,
           levelProblems: multiplicationGameState.levelProblems,
         },
+        subtractionState: {
+          currentLevel: subtractionGameState.currentLevel,
+          currentProblemIndex: subtractionGameState.currentProblemIndex,
+          levelProblems: subtractionGameState.levelProblems,
+        },
       };
       console.log('💾 Auto-save triggered - saving progress:', {
         gameMode,
         divisionLevel: gameState.currentLevel,
         additionLevel: additionGameState.currentLevel,
-        multiplicationLevel: multiplicationGameState.currentLevel
+        multiplicationLevel: multiplicationGameState.currentLevel,
+        subtractionLevel: subtractionGameState.currentLevel
       });
       saveProgress(currentProgress);
     };
@@ -283,6 +332,13 @@ function App() {
     }
   }, [gameMode, multiplicationGameState.problem, generateNewMultiplicationProblem]);
 
+  // Generate new problem when needed for subtraction
+  useEffect(() => {
+    if (gameMode === 'subtraction' && !subtractionGameState.problem) {
+      generateNewSubtractionProblem();
+    }
+  }, [gameMode, subtractionGameState.problem, generateNewSubtractionProblem]);
+
   // Always set initial focus to the first input field when a new division problem is generated
   useEffect(() => {
     if (gameMode === 'division' && gameState.problem && gameState.userAnswers.length === 0) {
@@ -306,6 +362,14 @@ function App() {
       jumpToMultiplicationField('product', 0, undefined);
     }
   }, [gameMode, multiplicationGameState.problem, multiplicationGameState.userAnswers.length, jumpToMultiplicationField]);
+
+  // Always set initial focus to the first input field when a new subtraction problem is generated
+  useEffect(() => {
+    if (gameMode === 'subtraction' && subtractionGameState.problem && subtractionGameState.userAnswers.length === 0) {
+      // Reset focus to the rightmost difference input (ones place) - column 0 is the rightmost
+      jumpToSubtractionField(0, 'difference');
+    }
+  }, [gameMode, subtractionGameState.problem, subtractionGameState.userAnswers.length, jumpToSubtractionField]);
 
   // Division handlers
   const handleAnswerSubmit = (answer: UserAnswer) => {
@@ -427,6 +491,42 @@ function App() {
     jumpToMultiplicationLevel(levelId);
   };
 
+  // Subtraction handlers
+  const handleSubtractionAnswerSubmit = (answer: SubtractionUserAnswer) => {
+    submitSubtractionAnswer(answer);
+  };
+
+  const handleSubtractionAnswerClear = (columnPosition: number, fieldType: 'difference' | 'borrow') => {
+    clearSubtractionAnswer(columnPosition, fieldType);
+  };
+
+  const handleSubtractionProblemSubmit = () => {
+    submitSubtractionProblem();
+
+    // Clear focus by jumping to invalid position after submission
+    jumpToSubtractionField(-1, 'difference');
+  };
+
+  const handleSubtractionKeyboardNav = (e: React.KeyboardEvent) => {
+    handleSubtractionKeyDown(e, handleSubtractionProblemSubmit);
+  };
+
+  const handleSubtractionFieldClick = (columnPosition: number, fieldType: 'difference' | 'borrow') => {
+    jumpToSubtractionField(columnPosition, fieldType);
+  };
+
+  const handleNextSubtractionProblem = () => {
+    nextSubtractionProblem();
+  };
+
+  const handleRetrySubtractionFetch = () => {
+    loadSubtractionProblemsForLevel(subtractionGameState.currentLevel);
+  };
+
+  const handleSubtractionLevelSelect = (levelId: number) => {
+    jumpToSubtractionLevel(levelId);
+  };
+
   const toggleGameMode = (mode: GameMode) => {
     setGameMode(mode);
   };
@@ -449,6 +549,12 @@ function App() {
         currentLevel: multiplicationGameState.currentLevel,
         availableLevels: multiplicationGameState.availableLevels,
         completedLevels: multiplicationGameState.completedLevels,
+      };
+    } else if (gameMode === 'subtraction') {
+      return {
+        currentLevel: subtractionGameState.currentLevel,
+        availableLevels: subtractionGameState.availableLevels,
+        completedLevels: subtractionGameState.completedLevels,
       };
     }
     // Default values if no game mode is active
@@ -474,6 +580,11 @@ function App() {
       return {
         currentProblem: multiplicationGameState.currentProblemIndex + 1,
         totalProblems: multiplicationGameState.levelProblems.length,
+      };
+    } else if (gameMode === 'subtraction') {
+      return {
+        currentProblem: subtractionGameState.currentProblemIndex + 1,
+        totalProblems: subtractionGameState.levelProblems.length,
       };
     }
     // Default values if no game mode is active
@@ -570,6 +681,31 @@ function App() {
             areAllFieldsFilled={areAllMultiplicationFieldsFilled}
           />
         )}
+
+        {gameMode === 'subtraction' && (
+          <SubtractionDisplay
+            problem={subtractionGameState.problem as SubtractionProblem}
+            userAnswers={subtractionGameState.userAnswers}
+            currentFocus={subtractionCurrentFocus}
+            isSubmitted={subtractionGameState.isSubmitted}
+            isComplete={subtractionGameState.isComplete}
+            isLoading={isSubtractionLoading}
+            fetchError={subtractionFetchError}
+            onAnswerSubmit={handleSubtractionAnswerSubmit}
+            onAnswerClear={handleSubtractionAnswerClear}
+            onProblemSubmit={handleSubtractionProblemSubmit}
+            onNextProblem={handleNextSubtractionProblem}
+            onFieldClick={handleSubtractionFieldClick}
+            onKeyDown={handleSubtractionKeyboardNav}
+            onRetryFetch={handleRetrySubtractionFetch}
+
+            onEnableEditing={enableSubtractionEditing}
+            onDisableEditing={disableSubtractionEditing}
+            onUpdateProblem={updateSubtractionProblem}
+            onNewProblem={generateNewSubtractionProblem}
+            areAllFieldsFilled={areAllSubtractionFieldsFilled}
+          />
+        )}
       </main>
 
       <LevelSelectorDrawer
@@ -580,7 +716,8 @@ function App() {
         onLevelSelect={
           gameMode === 'addition' ? handleAdditionLevelSelect :
             gameMode === 'multiplication' ? handleMultiplicationLevelSelect :
-              handleLevelSelect
+              gameMode === 'subtraction' ? handleSubtractionLevelSelect :
+                handleLevelSelect
         }
       />
     </div>

@@ -1,31 +1,11 @@
 # Task ID: 6
-# Title: Refactor MultiplicationDisplay to Use Shared Components
+# Title: Develop Subtraction Keyboard Navigation Hook
 # Status: pending
-# Dependencies: 2, 3
+# Dependencies: 5
 # Priority: medium
-# Description: Refactor MultiplicationDisplay to utilize shared subcomponents for input and feedback.
+# Description: Implement the keyboard navigation hook for subtraction, ensuring it matches the addition navigation behavior.
 # Details:
-Modify MultiplicationDisplay to use the shared ProblemInput and ValidationFeedback components. Ensure the layout and functionality remain unchanged.
+Create src/hooks/useSubtractionKeyboardNav.ts by copying useAdditionKeyboardNav. Replace addition-specific field logic with subtraction equivalents, ensuring identical navigation behavior and key handling.
 
 # Test Strategy:
-Verify that the Multiplication operation functions correctly with the refactored components.
-
-# Subtasks:
-## 1. Update Imports [pending]
-### Dependencies: None
-### Description: Refactor the codebase to update and organize import statements according to the new architectural blueprint.
-### Details:
-Review all import statements in the codebase to ensure they align with the new module structure. Remove any unused imports and ensure that all necessary modules are imported correctly. Reference the architectural blueprint for the correct module paths.
-
-## 2. Integrate Shared Components [pending]
-### Dependencies: 6.1
-### Description: Integrate shared components into the existing codebase while preserving current functionality.
-### Details:
-Identify all instances where shared components can be utilized. Replace existing code with shared components where applicable, ensuring that the functionality remains unchanged. Test each integration point to verify that the shared components work as expected.
-
-## 3. Ensure Layout Consistency [pending]
-### Dependencies: 6.1, 6.2
-### Description: Ensure that the layout across the application is consistent with the design specifications.
-### Details:
-Review the application's layout and compare it with the design specifications. Make necessary adjustments to ensure consistency in spacing, alignment, and component usage. Verify that all pages adhere to the design guidelines and that the user experience is seamless.
-
+Test keyboard navigation to ensure it functions identically to the addition operation.
