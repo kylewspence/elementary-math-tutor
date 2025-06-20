@@ -331,7 +331,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
     const BORROW_HEIGHT = BOX_TOTAL_WIDTH * 0.6; // Smaller height for borrow boxes
 
     return (
-        <div className="subtraction-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono pb-32">
+        <div className="subtraction-display bg-white p-8 rounded-xl border-2 border-gray-200 font-mono">
             {/* Problem source badge */}
             <div className="mb-4 flex justify-center">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${problem.source === 'api'
@@ -472,8 +472,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
 
             </div>
 
-            {/* Button layout - Mobile sticky at bottom */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+            {/* Button layout - Always visible sticky controls */}
+            <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 mt-8">
                 <div className="flex flex-col items-center">
                     {/* Submit/Next Problem button */}
                     {!isSubmitted ? (
