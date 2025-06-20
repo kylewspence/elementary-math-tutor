@@ -20,13 +20,12 @@ interface MultiplicationDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
-    onKeyDown: (e: React.KeyboardEvent) => void;
+    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
     onFieldClick: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
     onNextProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
-    setCurrentFocus?: (focus: MultiplicationCurrentFocus) => void;
     moveToNextField?: (fieldType?: 'product' | 'partial' | 'carry', position?: number, partialIndex?: number) => void;
     areAllFieldsFilled?: () => boolean;
 }
@@ -50,33 +49,13 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     onRetryFetch,
     onUpdateProblem,
     isComplete = false,
-    setCurrentFocus,
     moveToNextField,
     areAllFieldsFilled
 }) => {
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
-    const firstRenderRef = useRef(true);
 
-    // Set initial focus on first render
-    useEffect(() => {
-        if (firstRenderRef.current && problem && setCurrentFocus) {
-            // Set focus to the rightmost product digit (position 0)
-            setCurrentFocus({
-                fieldType: 'product',
-                fieldPosition: 0,
-                partialIndex: undefined
-            });
-            firstRenderRef.current = false;
 
-            // Ensure focus is set after a short delay to allow the input to render
-            setTimeout(() => {
-                if (activeInputRef.current) {
-                    activeInputRef.current.focus();
-                }
-            }, 100);
-        }
-    }, [problem, setCurrentFocus]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -181,7 +160,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 // Auto-advance to next field after successful input
                 if (moveToNextField) {
                     setTimeout(() => {
-                        moveToNextField();
+                        moveToNextField(fieldType, position, partialIndex);
                     }, 0);
                 }
             }
@@ -193,7 +172,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 value={userAnswer?.value?.toString() || ''}
                 variant={getInputVariant(fieldType, position, partialIndex)}
                 onClick={() => onFieldClick(fieldType, position, partialIndex)}
-                onKeyDown={onKeyDown}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit)}
                 onChange={handleChange}
                 // Remove onAutoAdvance to prevent unwanted navigation
                 onEnter={isSubmitted && isComplete ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}

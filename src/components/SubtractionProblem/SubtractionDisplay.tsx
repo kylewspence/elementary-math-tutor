@@ -17,7 +17,7 @@ interface SubtractionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: string | null;
-    onKeyDown: (e: React.KeyboardEvent) => void;
+    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
     onFieldClick: (columnPosition: number, fieldType: 'difference' | 'borrow') => void;
     gameState?: SubtractionGameState;
     onNextProblem?: () => void;
@@ -222,7 +222,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                 value={getUserAnswer(columnPosition, fieldType)?.value?.toString() || ''}
                 variant={getInputVariant(columnPosition, fieldType)}
                 onChange={(value) => handleInputChange(columnPosition, fieldType, value)}
-                onKeyDown={(e) => onKeyDown(e)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit)}
                 onClick={() => onFieldClick(columnPosition, fieldType)}
                 onAutoAdvance={handleAutoAdvance}
                 onBackspace={() => {
