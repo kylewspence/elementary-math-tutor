@@ -112,7 +112,7 @@ export function useSubtractionKeyboardNav(problem: SubtractionProblem | null, us
         } else if (e.key === KEYBOARD_KEYS.ENTER) {
             if (isSubmitted) {
                 // If problem is already submitted, don't prevent default
-                // Let the Input component's onEnter handle it
+                // Let the Input component's onEnter handle "Next Problem"
                 return;
             } else {
                 e.preventDefault();

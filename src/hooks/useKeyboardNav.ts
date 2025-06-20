@@ -161,7 +161,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
             case KEYBOARD_KEYS.ENTER:
                 if (isSubmitted) {
                     // If problem is already submitted, don't prevent default
-                    // Let the Input component's onEnter handle it
+                    // Let the Input component's onEnter handle "Next Problem"
                     return;
                 } else {
                     e.preventDefault();

@@ -14,10 +14,10 @@ import { useMultiplicationGameState } from './hooks/useMultiplicationGameState';
 import { useMultiplicationKeyboardNav } from './hooks/useMultiplicationKeyboardNav';
 import { useSubtractionGameState } from './hooks/useSubtractionGameState';
 import { useSubtractionKeyboardNav } from './hooks/useSubtractionKeyboardNav';
-import type { UserAnswer, DivisionProblem } from './types/game';
-import type { AdditionUserAnswer, AdditionProblem } from './types/addition';
+import type { DivisionProblem } from './types/game';
+import type { AdditionProblem } from './types/addition';
 import type { MultiplicationProblem } from './types/multiplication';
-import type { SubtractionUserAnswer, SubtractionProblem } from './types/subtraction';
+import type { SubtractionProblem } from './types/subtraction';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import type { GameMode } from './types/game';
 
@@ -371,161 +371,77 @@ function App() {
     }
   }, [gameMode, subtractionGameState.problem, subtractionGameState.userAnswers.length, jumpToSubtractionField]);
 
-  // Division handlers
-  const handleAnswerSubmit = (answer: UserAnswer) => {
-    submitAnswer(answer);
-  };
-
-  const handleAnswerClear = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number) => {
-    clearAnswer(stepNumber, fieldType, position);
-  };
-
-  const handleProblemSubmit = () => {
-    submitProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (gameState.problem) {
-      // Use a step number that's guaranteed not to exist
-      jumpToField(-1, 'quotient', 0);
-    }
-  };
-
-  const handleKeyboardNav = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, handleProblemSubmit);
-  };
-
-  const handleFieldClick = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0) => {
-    jumpToField(stepNumber, fieldType, position);
-  };
-
-  const handleNextProblem = () => {
+  // Division handlers - reordered to fix dependencies
+  const handleDivisionNext = useCallback(() => {
     nextProblem();
-  };
+    // Immediately set focus to first field to keep keyboard open
+    setTimeout(() => {
+      jumpToField(0, 'quotient', 0);
+    }, 50);
+  }, [nextProblem, jumpToField]);
 
-  const handleLevelSelect = (levelId: number) => {
-    jumpToLevel(levelId);
-  };
-
-  const handleRetryFetch = () => {
-    loadProblemsForLevel(gameState.currentLevel);
-  };
-
-  // Addition handlers
-  const handleAdditionAnswerSubmit = (answer: AdditionUserAnswer) => {
-    submitAdditionAnswer(answer);
-  };
-
-  const handleAdditionAnswerClear = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-    clearAdditionAnswer(columnPosition, fieldType);
-  };
-
-  const handleAdditionProblemSubmit = () => {
-    submitAdditionProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (additionGameState.problem) {
-      // Use a field position that's guaranteed not to exist
-      jumpToAdditionField(-1, 'sum');
+  const handleDivisionSubmit = useCallback(() => {
+    if (gameState.isComplete) {
+      handleDivisionNext();
+    } else {
+      submitProblem();
+      // Remove focus clearing - keep keyboard open
     }
-  };
+  }, [gameState.isComplete, submitProblem, handleDivisionNext]);
 
-  const handleAdditionKeyboardNav = (e: React.KeyboardEvent) => {
-    handleAdditionKeyDown(e, handleAdditionProblemSubmit);
-  };
-
-  const handleAdditionFieldClick = (columnPosition: number, fieldType: 'sum' | 'carry') => {
-    jumpToAdditionField(columnPosition, fieldType);
-  };
-
-  const handleNextAdditionProblem = () => {
+  // Addition handlers - reordered to fix dependencies
+  const handleAdditionNext = useCallback(() => {
     nextAdditionProblem();
-  };
+    // Immediately set focus to first field to keep keyboard open
+    setTimeout(() => {
+      jumpToAdditionField(0, 'sum');
+    }, 50);
+  }, [nextAdditionProblem, jumpToAdditionField]);
 
-  const handleAdditionLevelSelect = (levelId: number) => {
-    jumpToAdditionLevel(levelId);
-  };
-
-  const handleRetryAdditionFetch = () => {
-    loadAdditionProblemsForLevel(additionGameState.currentLevel);
-  };
-
-  // Multiplication handlers
-  const handleMultiplicationAnswerSubmit = (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-    submitMultiplicationAnswer(value, fieldType, position, partialIndex);
-  };
-
-  const handleMultiplicationAnswerClear = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-    clearMultiplicationAnswer(fieldType, position, partialIndex);
-  };
-
-  const handleMultiplicationProblemSubmit = () => {
-    submitMultiplicationProblem();
-
-    // Clear focus by setting it to a non-existent field after submission
-    if (multiplicationGameState.problem) {
-      jumpToMultiplicationField('product', -1, undefined);
+  const handleAdditionSubmit = useCallback(() => {
+    if (additionGameState.isComplete) {
+      handleAdditionNext();
+    } else {
+      submitAdditionProblem();
+      // Remove focus clearing - keep keyboard open
     }
-  };
+  }, [additionGameState.isComplete, submitAdditionProblem, handleAdditionNext]);
 
-  const handleMultiplicationKeyboardNav = (e: React.KeyboardEvent) => {
-    handleMultiplicationKeyDown(e, handleMultiplicationProblemSubmit);
-  };
-
-  const handleMultiplicationFieldClick = (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => {
-    jumpToMultiplicationField(fieldType, position, partialIndex);
-  };
-
-  const handleNextMultiplicationProblem = () => {
+  // Multiplication handlers - reordered to fix dependencies
+  const handleMultiplicationNext = useCallback(() => {
     nextMultiplicationProblem();
-  };
+    // Immediately set focus to first field to keep keyboard open
+    setTimeout(() => {
+      jumpToMultiplicationField('product', 0);
+    }, 50);
+  }, [nextMultiplicationProblem, jumpToMultiplicationField]);
 
-  const handleMultiplicationUpdateProblem = (multiplicand: number, multiplier: number) => {
-    updateMultiplicationProblem(multiplicand, multiplier);
-  };
+  const handleMultiplicationSubmit = useCallback(() => {
+    if (multiplicationGameState.isComplete) {
+      handleMultiplicationNext();
+    } else {
+      submitMultiplicationProblem();
+      // Remove focus clearing - keep keyboard open
+    }
+  }, [multiplicationGameState.isComplete, submitMultiplicationProblem, handleMultiplicationNext]);
 
-  const handleRetryMultiplicationFetch = () => {
-    loadMultiplicationProblemsForLevel(multiplicationGameState.currentLevel);
-  };
-
-  const handleMultiplicationLevelSelect = (levelId: number) => {
-    jumpToMultiplicationLevel(levelId);
-  };
-
-  // Subtraction handlers
-  const handleSubtractionAnswerSubmit = (answer: SubtractionUserAnswer) => {
-    submitSubtractionAnswer(answer);
-  };
-
-  const handleSubtractionAnswerClear = (columnPosition: number, fieldType: 'difference' | 'borrow') => {
-    clearSubtractionAnswer(columnPosition, fieldType);
-  };
-
-  const handleSubtractionProblemSubmit = () => {
-    submitSubtractionProblem();
-
-    // Clear focus by jumping to invalid position after submission
-    jumpToSubtractionField(-1, 'difference');
-  };
-
-  const handleSubtractionKeyboardNav = (e: React.KeyboardEvent) => {
-    handleSubtractionKeyDown(e, handleSubtractionProblemSubmit);
-  };
-
-  const handleSubtractionFieldClick = (columnPosition: number, fieldType: 'difference' | 'borrow') => {
-    jumpToSubtractionField(columnPosition, fieldType);
-  };
-
-  const handleNextSubtractionProblem = () => {
+  // Subtraction handlers - reordered to fix dependencies
+  const handleSubtractionNext = useCallback(() => {
     nextSubtractionProblem();
-  };
+    // Immediately set focus to first field to keep keyboard open
+    setTimeout(() => {
+      jumpToSubtractionField(0, 'difference');
+    }, 50);
+  }, [nextSubtractionProblem, jumpToSubtractionField]);
 
-  const handleRetrySubtractionFetch = () => {
-    loadSubtractionProblemsForLevel(subtractionGameState.currentLevel);
-  };
-
-  const handleSubtractionLevelSelect = (levelId: number) => {
-    jumpToSubtractionLevel(levelId);
-  };
+  const handleSubtractionSubmit = useCallback(() => {
+    if (subtractionGameState.isComplete) {
+      handleSubtractionNext();
+    } else {
+      submitSubtractionProblem();
+      // Remove focus clearing - keep keyboard open
+    }
+  }, [subtractionGameState.isComplete, submitSubtractionProblem, handleSubtractionNext]);
 
   const toggleGameMode = (mode: GameMode) => {
     setGameMode(mode);
@@ -614,13 +530,13 @@ function App() {
             isComplete={gameState.isComplete}
             isLoading={isLoading}
             fetchError={typeof fetchError === 'string' ? new Error(fetchError) : fetchError}
-            onAnswerSubmit={handleAnswerSubmit}
-            onAnswerClear={handleAnswerClear}
-            onProblemSubmit={handleProblemSubmit}
-            onNextProblem={handleNextProblem}
-            onFieldClick={handleFieldClick}
-            onKeyDown={handleKeyboardNav}
-            onRetryFetch={handleRetryFetch}
+            onAnswerSubmit={submitAnswer}
+            onAnswerClear={clearAnswer}
+            onProblemSubmit={handleDivisionSubmit}
+            onNextProblem={handleDivisionNext}
+            onFieldClick={jumpToField}
+            onKeyDown={handleKeyDown}
+            onRetryFetch={() => loadProblemsForLevel(gameState.currentLevel)}
 
             onEnableEditing={enableEditing}
             onDisableEditing={disableEditing}
@@ -640,13 +556,13 @@ function App() {
             isComplete={additionGameState.isComplete}
             isLoading={isAdditionLoading}
             fetchError={additionFetchError}
-            onAnswerSubmit={handleAdditionAnswerSubmit}
-            onAnswerClear={handleAdditionAnswerClear}
-            onProblemSubmit={handleAdditionProblemSubmit}
-            onNextProblem={handleNextAdditionProblem}
-            onFieldClick={handleAdditionFieldClick}
-            onKeyDown={handleAdditionKeyboardNav}
-            onRetryFetch={handleRetryAdditionFetch}
+            onAnswerSubmit={submitAdditionAnswer}
+            onAnswerClear={clearAdditionAnswer}
+            onProblemSubmit={handleAdditionSubmit}
+            onNextProblem={handleAdditionNext}
+            onFieldClick={jumpToAdditionField}
+            onKeyDown={handleAdditionKeyDown}
+            onRetryFetch={() => loadAdditionProblemsForLevel(additionGameState.currentLevel)}
 
             onEnableEditing={enableAdditionEditing}
             onDisableEditing={disableAdditionEditing}
@@ -665,17 +581,17 @@ function App() {
             isComplete={multiplicationGameState.isComplete}
             isLoading={isMultiplicationLoading}
             fetchError={typeof multiplicationFetchError === 'string' ? new Error(multiplicationFetchError) : multiplicationFetchError}
-            onAnswerSubmit={handleMultiplicationAnswerSubmit}
-            onAnswerClear={handleMultiplicationAnswerClear}
-            onProblemSubmit={handleMultiplicationProblemSubmit}
-            onNextProblem={handleNextMultiplicationProblem}
-            onFieldClick={handleMultiplicationFieldClick}
-            onKeyDown={handleMultiplicationKeyboardNav}
-            onRetryFetch={handleRetryMultiplicationFetch}
+            onAnswerSubmit={submitMultiplicationAnswer}
+            onAnswerClear={clearMultiplicationAnswer}
+            onProblemSubmit={handleMultiplicationSubmit}
+            onNextProblem={handleMultiplicationNext}
+            onFieldClick={jumpToMultiplicationField}
+            onKeyDown={handleMultiplicationKeyDown}
+            onRetryFetch={() => loadMultiplicationProblemsForLevel(multiplicationGameState.currentLevel)}
 
             onEnableEditing={enableMultiplicationEditing}
             onDisableEditing={disableMultiplicationEditing}
-            onUpdateProblem={handleMultiplicationUpdateProblem}
+            onUpdateProblem={updateMultiplicationProblem}
             onNewProblem={generateNewMultiplicationProblem}
             moveToNextField={moveToNextMultiplicationField}
             areAllFieldsFilled={areAllMultiplicationFieldsFilled}
@@ -691,13 +607,13 @@ function App() {
             isComplete={subtractionGameState.isComplete}
             isLoading={isSubtractionLoading}
             fetchError={subtractionFetchError}
-            onAnswerSubmit={handleSubtractionAnswerSubmit}
-            onAnswerClear={handleSubtractionAnswerClear}
-            onProblemSubmit={handleSubtractionProblemSubmit}
-            onNextProblem={handleNextSubtractionProblem}
-            onFieldClick={handleSubtractionFieldClick}
-            onKeyDown={handleSubtractionKeyboardNav}
-            onRetryFetch={handleRetrySubtractionFetch}
+            onAnswerSubmit={submitSubtractionAnswer}
+            onAnswerClear={clearSubtractionAnswer}
+            onProblemSubmit={handleSubtractionSubmit}
+            onNextProblem={handleSubtractionNext}
+            onFieldClick={jumpToSubtractionField}
+            onKeyDown={handleSubtractionKeyDown}
+            onRetryFetch={() => loadSubtractionProblemsForLevel(subtractionGameState.currentLevel)}
 
             onEnableEditing={enableSubtractionEditing}
             onDisableEditing={disableSubtractionEditing}
@@ -714,10 +630,10 @@ function App() {
         availableLevels={getCurrentLevelInfo().availableLevels}
         completedLevels={getCurrentLevelInfo().completedLevels}
         onLevelSelect={
-          gameMode === 'addition' ? handleAdditionLevelSelect :
-            gameMode === 'multiplication' ? handleMultiplicationLevelSelect :
-              gameMode === 'subtraction' ? handleSubtractionLevelSelect :
-                handleLevelSelect
+          gameMode === 'addition' ? jumpToAdditionLevel :
+            gameMode === 'multiplication' ? jumpToMultiplicationLevel :
+              gameMode === 'subtraction' ? jumpToSubtractionLevel :
+                jumpToLevel
         }
       />
     </div>

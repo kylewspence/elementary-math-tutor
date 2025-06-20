@@ -19,7 +19,7 @@ interface DivisionDisplayProps {
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
-    onKeyDown: (e: React.KeyboardEvent) => void;
+    onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
     onFieldClick: (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position?: number) => void;
     gameState?: GameState;
     onNextProblem?: () => void;
@@ -276,7 +276,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         handleInputChange(stepNumber, fieldType, position, value);
                     }
                 }}
-                onKeyDown={(e) => onKeyDown(e)}
+                onKeyDown={(e) => onKeyDown(e, onProblemSubmit)}
                 onClick={() => onFieldClick(stepNumber, fieldType, position)}
                 onAutoAdvance={handleAutoAdvance}
                 onBackspace={() => {
