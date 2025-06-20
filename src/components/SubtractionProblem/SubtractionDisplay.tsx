@@ -96,8 +96,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
     // Helper function to check if a column receives a borrow - matches keyboard nav logic exactly
     const receivesBorrow = useCallback((columnPosition: number) => {
         if (!problem) return false;
-        const nextStep = problem.steps.find(s => s.columnPosition === columnPosition + 1);
-        return nextStep !== undefined && nextStep.borrow > 0;
+        const step = problem.steps.find(s => s.columnPosition === columnPosition);
+        return step !== undefined && step.borrowReceived > 0;
     }, [problem]);
 
     // Get all required fields - matches keyboard navigation logic exactly
@@ -427,7 +427,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : step.digit1}
+                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : (step.digit1 ?? '')}
                                     </div>
                                 ))}
                             </div>
@@ -445,7 +445,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : step.digit2}
+                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : (step.digit2 ?? '')}
                                     </div>
                                 ))}
                             </div>

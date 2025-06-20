@@ -10,14 +10,7 @@ export function validateSubtractionAnswer(problem: SubtractionProblem, answer: S
     const step = problem.steps.find(s => s.columnPosition === columnPosition);
 
     if (!step) {
-        // If this is a borrow field for a column that exists
-        if (fieldType === 'borrow') {
-            // Find the next step (the one that would receive this borrow)
-            const nextStep = problem.steps.find(s => s.columnPosition === columnPosition + 1);
-            if (nextStep) {
-                return value === nextStep.borrow;
-            }
-        }
+        // If no step found for this column, it's invalid
         return false;
     }
 
@@ -25,8 +18,8 @@ export function validateSubtractionAnswer(problem: SubtractionProblem, answer: S
     if (fieldType === 'difference') {
         return value === step.difference;
     } else if (fieldType === 'borrow') {
-        // For borrow, we check the borrow value for this step
-        return value === step.borrow;
+        // For borrow, we check the borrowReceived value for this step
+        return value === step.borrowReceived;
     }
 
     return false;
@@ -70,8 +63,8 @@ export function getRequiredSubtractionFields(problem: SubtractionProblem): { col
             fieldType: 'difference'
         });
 
-        // Add borrow field for this column if borrowing is needed
-        if (step.borrow > 0) {
+        // Add borrow field for this column if it receives a borrow
+        if (step.borrowReceived > 0) {
             fields.push({
                 columnPosition: step.columnPosition,
                 fieldType: 'borrow'

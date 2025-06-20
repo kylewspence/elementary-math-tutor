@@ -17,8 +17,8 @@ export function useSubtractionKeyboardNav(problem: SubtractionProblem | null, us
     // Helper function to check if a column receives a borrow - matches UI logic exactly
     const receivesBorrow = useCallback((columnPosition: number) => {
         if (!problem) return false;
-        const nextStep = problem.steps.find(s => s.columnPosition === columnPosition + 1);
-        return nextStep !== undefined && nextStep.borrow > 0;
+        const step = problem.steps.find(s => s.columnPosition === columnPosition);
+        return step !== undefined && step.borrowReceived > 0;
     }, [problem]);
 
     // Get all fields that the UI actually renders - matches SubtractionDisplay exactly
