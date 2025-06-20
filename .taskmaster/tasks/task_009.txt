@@ -1,31 +1,25 @@
 # Task ID: 9
-# Title: Enhance useMathKeyboardNav Hook
+# Title: Develop Subtraction Keyboard Navigation
 # Status: pending
 # Dependencies: 8
 # Priority: medium
-# Description: Add operation-specific configuration options to the useMathKeyboardNav hook.
+# Description: Implement keyboard navigation for subtraction.
 # Details:
-Modify useMathKeyboardNav to accept operation-specific configurations while maintaining shared navigation logic. Ensure it supports all current operations.
+Create src/hooks/useSubtractionKeyboardNav.ts following addition patterns. Handle right-to-left navigation, field jumping, submit on Enter, and backspace navigation.
 
 # Test Strategy:
-Test keyboard navigation across all operations to ensure consistent behavior.
+Test keyboard navigation to ensure it matches behavior of other operations.
 
 # Subtasks:
-## 1. Add Configuration Options [pending]
+## 1. Implement Navigation Logic [pending]
 ### Dependencies: None
-### Description: Introduce new configuration options to the existing system to support enhanced functionality.
+### Description: Develop the keyboard navigation logic to ensure user-friendly interaction.
 ### Details:
-Review the current configuration setup and identify areas where new options can be integrated. Ensure that these options are backward compatible and do not disrupt existing configurations. Update the configuration documentation to reflect these changes.
+Focus on creating a seamless navigation experience using keyboard inputs. Ensure that the navigation logic is intuitive and aligns with standard user expectations.
 
-## 2. Update Navigation Logic [pending]
+## 2. Test Navigation for Consistency with Other Operations [pending]
 ### Dependencies: 9.1
-### Description: Revise the navigation logic to incorporate new configuration options and improve user flow.
+### Description: Conduct tests to ensure the implemented navigation logic is consistent with other operations.
 ### Details:
-Analyze the current navigation logic and determine how it can be adjusted to accommodate the new configuration options. Ensure that the navigation remains intuitive and efficient. Test the updated navigation logic to confirm that it integrates seamlessly with existing components.
-
-## 3. Test Across Operations [pending]
-### Dependencies: 9.1, 9.2
-### Description: Conduct thorough testing across all operations to ensure that new configurations and navigation logic work as intended.
-### Details:
-Develop a comprehensive testing plan that covers all aspects of the updated system. This should include unit tests, integration tests, and user acceptance tests. Document any issues found and work with the development team to resolve them before final deployment.
+Perform thorough testing to verify that the navigation logic does not conflict with existing operations and maintains consistency across the application.
 

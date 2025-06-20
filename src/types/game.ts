@@ -1,6 +1,7 @@
 // Core game types for the Math Tutor app
 import type { MultiplicationProblem } from './multiplication';
 import type { AdditionProblem } from './addition';
+import type { SubtractionProblem, SubtractionGameState } from './subtraction';
 
 export interface GameLevel {
     id: number;
@@ -76,7 +77,7 @@ export interface MultiplicationGameState {
 }
 
 // Union type for all game states
-export type GameState = DivisionGameState | AdditionGameState | MultiplicationGameState;
+export type GameState = DivisionGameState | AdditionGameState | MultiplicationGameState | SubtractionGameState;
 
 export interface UserAnswer {
     stepNumber: number;

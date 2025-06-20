@@ -1,31 +1,31 @@
 # Task ID: 2
-# Title: Extract Shared Subcomponents
+# Title: Extend Session Persistence for Subtraction
 # Status: pending
 # Dependencies: 1
 # Priority: high
-# Description: Extract ProblemInput and ValidationFeedback components to a shared directory.
+# Description: Update session persistence to include subtraction state.
 # Details:
-Move ProblemInput and ValidationFeedback from the Division components to a new shared directory. Ensure these components are properly typed with TypeScript and can be reused across different operations.
+Update src/hooks/useSessionPersistence.ts to include subtractionState in GameProgress interface. Ensure state is saved and restored correctly for subtraction.
 
 # Test Strategy:
-Ensure that the extracted components work correctly in the Division operation without any errors.
+Test state saving and restoration for subtraction across tab switches and page refreshes.
 
 # Subtasks:
-## 1. Extract and Modularize Components [pending]
+## 1. Update the Interface [pending]
 ### Dependencies: None
-### Description: Identify and extract components from the existing codebase to improve modularity and reusability.
+### Description: Modify the user interface to accommodate new session persistence features.
 ### Details:
-Review the existing codebase to identify components that can be modularized. Extract these components into separate modules, ensuring that dependencies are properly managed and that the components are reusable across different parts of the application.
+Ensure the interface changes are intuitive and clearly indicate the state-saving functionality to the user.
 
-## 2. Implement TypeScript Typing [pending]
+## 2. Implement State Saving [pending]
 ### Dependencies: 2.1
-### Description: Add TypeScript typing to the extracted components to ensure type safety and improve code quality.
+### Description: Develop the logic to save the current state of the application.
 ### Details:
-Once components are extracted, implement TypeScript typing for each component. Ensure that all interfaces and types are defined according to the architectural blueprint and that the code compiles without errors.
+Create a mechanism to store the application state in a persistent storage solution, ensuring data integrity and security.
 
-## 3. Test Integration of Components [pending]
-### Dependencies: 2.1, 2.2
-### Description: Conduct integration testing to ensure that the newly modularized and typed components work together seamlessly.
+## 3. Test State Restoration [pending]
+### Dependencies: 2.2
+### Description: Conduct thorough testing to ensure the application can reliably restore the saved state.
 ### Details:
-Develop and execute integration tests to verify that the components interact correctly within the application. Focus on edge cases and ensure that the integration aligns with the shared architecture goals.
+Perform various test scenarios to validate that the state restoration works as expected under different conditions.
 

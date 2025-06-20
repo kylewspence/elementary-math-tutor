@@ -1,8 +1,10 @@
 import type { DivisionProblem } from '../types/game';
 import type { MultiplicationProblem, MultiplicationQuestion } from '../types/multiplication';
 import type { AdditionProblem } from '../types/addition';
+import type { SubtractionProblem } from '../types/subtraction';
 import { calculateDivisionSteps } from './problemGenerator';
 import { calculateAdditionSteps } from './additionGenerator';
+import { generateSubtractionProblem } from './subtractionGenerator';
 
 import { API_CONFIG } from './config';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,6 +40,9 @@ interface ApiResponse {
         addition_0: MathQuestion[];
         addition_1: MathQuestion[];
         addition_2: MathQuestion[];
+        subtraction_0: MathQuestion[];
+        subtraction_1: MathQuestion[];
+        subtraction_2: MathQuestion[];
         multiplication_0: MathQuestion[];
         multiplication_1: MathQuestion[];
         multiplication_2: MathQuestion[];
@@ -108,7 +113,7 @@ export async function fetchMathProblems(): Promise<ApiResponse> {
     }
 
     // Validate that the public object has the expected math problem arrays
-    const expectedKeys = ['division_0', 'division_1', 'division_2', 'multiplication_0', 'multiplication_1', 'multiplication_2', 'addition_0', 'addition_1', 'addition_2'];
+    const expectedKeys = ['division_0', 'division_1', 'division_2', 'multiplication_0', 'multiplication_1', 'multiplication_2', 'addition_0', 'addition_1', 'addition_2', 'subtraction_0', 'subtraction_1', 'subtraction_2'];
     const actualKeys = Object.keys(data.public);
     const missingKeys = expectedKeys.filter(key => !actualKeys.includes(key));
 
@@ -140,6 +145,62 @@ function convertToAdditionProblem(question: MathQuestion): AdditionProblem {
         addend2,
         sum,
         steps,
+        source: 'api', // Mark as coming from API
+    };
+}
+
+/**
+ * Validates if a subtraction problem is suitable for practice
+ */
+function isValidSubtractionProblem(minuend: number, subtrahend: number): boolean {
+    // Reject problems with negative numbers
+    if (minuend < 0 || subtrahend < 0) {
+        return false;
+    }
+
+    // Reject problems where subtrahend is larger than minuend (would result in negative answer)
+    if (subtrahend > minuend) {
+        return false;
+    }
+
+    // Reject problems where minuend equals subtrahend (always results in 0)
+    // These are too trivial for practice
+    if (minuend === subtrahend) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Converts raw API response to SubtractionProblem format
+ */
+function convertToSubtractionProblem(question: MathQuestion): SubtractionProblem | null {
+    // For subtraction, number_0 is the minuend and number_1 is the subtrahend
+    const minuend = parseInt(question.number_0);
+    const subtrahend = parseInt(question.number_1);
+
+    // Validate the problem
+    if (!isValidSubtractionProblem(minuend, subtrahend)) {
+        return null;
+    }
+
+    // Use the generator to create the complete problem with steps
+    const problem = generateSubtractionProblem(
+        {
+            id: 1,
+            name: 'API Problem',
+            description: 'From API',
+            maxDigits: Math.max(minuend.toString().length, subtrahend.toString().length),
+            maxValue: Math.max(minuend, subtrahend),
+            borrowRequired: false // Will be determined by the generator
+        },
+        minuend,
+        subtrahend
+    );
+
+    return {
+        ...problem,
         source: 'api', // Mark as coming from API
     };
 }
@@ -272,6 +333,44 @@ function evaluateAdditionDifficulty(problem: AdditionProblem): number {
     const sumDigits = problem.sum.toString().length;
     if (sumDigits > maxDigits) {
         difficulty += 1; // Extra point for sum being longer than addends
+    }
+
+    // Cap the difficulty between 1 and 10
+    return Math.max(1, Math.min(10, difficulty));
+}
+
+/**
+ * Evaluates the difficulty of a subtraction problem
+ * @returns A difficulty score from 1-10
+ */
+function evaluateSubtractionDifficulty(problem: SubtractionProblem): number {
+    let difficulty = 1;
+
+    // Factor 1: Number of digits in minuend and subtrahend
+    const minuendDigits = problem.minuend.toString().length;
+    const subtrahendDigits = problem.subtrahend.toString().length;
+    const maxDigits = Math.max(minuendDigits, subtrahendDigits);
+    difficulty += maxDigits - 1;
+
+    // Factor 2: Borrowing complexity
+    let borrowCount = 0;
+    problem.steps.forEach(step => {
+        if (step.borrowed > 0) {
+            borrowCount++;
+        }
+    });
+    difficulty += borrowCount * 2; // Borrowing is more complex than carrying
+
+    // Factor 3: Multiple borrowing across columns
+    if (borrowCount > 1) {
+        difficulty += 1;
+    }
+
+    // Factor 4: Zeros in minuend (make borrowing more complex)
+    const minuendStr = problem.minuend.toString();
+    const zeroCount = (minuendStr.match(/0/g) || []).length;
+    if (zeroCount > 0 && borrowCount > 0) {
+        difficulty += zeroCount;
     }
 
     // Cap the difficulty between 1 and 10
@@ -464,6 +563,38 @@ function meetsAdditionLevelRequirements(problem: AdditionProblem, levelId: numbe
 }
 
 /**
+ * Checks if a subtraction problem meets the requirements for a specific level
+ */
+function meetsSubtractionLevelRequirements(problem: SubtractionProblem, levelId: number): boolean {
+    const minuendDigits = problem.minuend.toString().length;
+    const subtrahendDigits = problem.subtrahend.toString().length;
+    const maxDigits = Math.max(minuendDigits, subtrahendDigits);
+
+    // Count borrows needed
+    const borrowCount = problem.steps.filter(step => step.borrowed > 0).length;
+
+    // Level-specific requirements
+    switch (levelId) {
+        case 1:
+            // Level 1: 2-digit numbers, no borrowing
+            return maxDigits === 2 && borrowCount === 0;
+        case 2:
+            // Level 2: 2-3 digit numbers, minimal borrowing
+            return maxDigits <= 3 && borrowCount <= 1;
+        case 3:
+            // Level 3: 3-digit numbers, some borrowing
+            return maxDigits <= 3 && borrowCount <= 2;
+        case 4:
+        case 5:
+            // Level 4-5: 3-4 digit numbers, more borrowing
+            return maxDigits <= 4 && borrowCount <= 3;
+        default:
+            // Higher levels: any complexity
+            return true;
+    }
+}
+
+/**
  * Filters division problems to ensure they match the expected difficulty level and removes duplicates
  */
 function filterProblemsForLevel(problems: DivisionProblem[], levelId: number): DivisionProblem[] {
@@ -606,6 +737,50 @@ function filterAdditionProblemsForLevel(problems: AdditionProblem[], levelId: nu
 }
 
 /**
+ * Filters subtraction problems to ensure they match the expected difficulty level and removes duplicates
+ */
+function filterSubtractionProblemsForLevel(problems: SubtractionProblem[], levelId: number): SubtractionProblem[] {
+    // Create a map to track unique problems
+    const uniqueProblems = new Map<string, SubtractionProblem>();
+
+    // More flexible difficulty ranges
+    let minDifficulty = 1;
+    let maxDifficulty = 10; // Allow all difficulties initially
+
+    // Adjust ranges based on level but be more inclusive
+    if (levelId === 1) {
+        minDifficulty = 1;
+        maxDifficulty = 4;
+    } else if (levelId === 2) {
+        minDifficulty = 2;
+        maxDifficulty = 6;
+    } else if (levelId === 3) {
+        minDifficulty = 3;
+        maxDifficulty = 7;
+    } else if (levelId >= 4) {
+        minDifficulty = 3;
+        maxDifficulty = 10;
+    }
+
+    // Filter problems
+    for (const problem of problems) {
+        const difficulty = evaluateSubtractionDifficulty(problem);
+        const key = `sub_${problem.minuend}_${problem.subtrahend}`;
+
+        // Check each filter condition separately
+        if (difficulty >= minDifficulty &&
+            difficulty <= maxDifficulty &&
+            !uniqueProblems.has(key) &&
+            meetsSubtractionLevelRequirements(problem, levelId)) {
+            uniqueProblems.set(key, problem);
+        }
+    }
+
+    // Return unique problems that meet criteria
+    return Array.from(uniqueProblems.values());
+}
+
+/**
  * Fetches division problems of a specific level
  * @param level 0=easy, 1=medium, 2=hard
  */
@@ -688,6 +863,39 @@ export async function fetchAdditionProblems(level: number = 0): Promise<Addition
 
         // Filter problems by difficulty level and remove duplicates
         const filteredProblems = filterAdditionProblemsForLevel(allAdditionProblems, level);
+
+        return filteredProblems;
+    } catch {
+        // Return empty array on error
+        return [];
+    }
+}
+
+/**
+ * Fetches subtraction problems of a specific level
+ * @param level 0=easy, 1=medium, 2=hard
+ */
+export async function fetchSubtractionProblems(level: number = 0): Promise<SubtractionProblem[]> {
+    try {
+        const response = await fetchMathProblems();
+
+        // Get all subtraction problems from all levels - we'll filter by difficulty later
+        const allSubtractionProblems: SubtractionProblem[] = [];
+
+        // Get problems from all subtraction levels in the API response
+        for (let i = 0; i <= 2; i++) {
+            const key = `subtraction_${i}`;
+            const subtractionQuestions = response.public[key] || [];
+
+            // Convert each question to a SubtractionProblem, filtering out invalid ones
+            const convertedProblems = subtractionQuestions
+                .map(convertToSubtractionProblem)
+                .filter((problem): problem is SubtractionProblem => problem !== null);
+            allSubtractionProblems.push(...convertedProblems);
+        }
+
+        // Filter problems by difficulty level and remove duplicates
+        const filteredProblems = filterSubtractionProblemsForLevel(allSubtractionProblems, level);
 
         return filteredProblems;
     } catch {

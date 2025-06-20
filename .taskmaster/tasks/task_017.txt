@@ -1,0 +1,25 @@
+# Task ID: 17
+# Title: Validate Mobile Responsiveness
+# Status: pending
+# Dependencies: 11, 13
+# Priority: medium
+# Description: Test mobile responsiveness of subtraction feature.
+# Details:
+Ensure subtraction feature is mobile-responsive, with sticky submit controls and proper layout adjustments.
+
+# Test Strategy:
+Test on various mobile devices to ensure responsive design and functionality.
+
+# Subtasks:
+## 1. Test Layout Adjustments on Various Devices [pending]
+### Dependencies: None
+### Description: Ensure that the layout adjusts correctly across different screen sizes and orientations.
+### Details:
+Conduct tests on various devices including smartphones, tablets, and desktops to verify that the layout is responsive and elements are displayed correctly.
+
+## 2. Test Sticky Controls on Various Devices [pending]
+### Dependencies: 17.1
+### Description: Verify that sticky controls function correctly across different devices.
+### Details:
+Check that sticky controls remain fixed in position as intended during scrolling on different devices and screen sizes.
+

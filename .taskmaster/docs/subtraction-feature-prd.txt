@@ -1,0 +1,322 @@
+# Subtraction Feature Implementation - Product Requirements Document
+
+## Executive Summary
+
+Add a comprehensive subtraction tab to the Math Tutor application that seamlessly integrates with the existing shared architecture. The subtraction feature will follow the same patterns established for Division, Addition, and Multiplication operations, ensuring consistency in user experience, state management, keyboard navigation, and progress persistence.
+
+## Current State Analysis
+
+### Existing Architecture (To Leverage)
+- **Shared State Management**: `useSessionPersistence` for progress saving between tabs and page refreshes with pagehide/visibilitychange events for mobile
+- **Shared Hooks**: `useSharedValidation` for field validation across operations
+- **Shared Components**: Base `Input` component with consistent keyboard handling
+
+### CRITICAL MISSING ELEMENTS IDENTIFIED
+- **Missing Shared Components**: The `src/components/Shared/index.ts` references components that don't exist:
+  - `ProblemInput.tsx` (referenced but missing)
+  - `ValidationFeedback.tsx` (referenced but missing)  
+  - `SubmitControls.tsx` (referenced but missing)
+- **Code Duplication**: Each operation duplicates submit button logic instead of using shared components
+- **Incomplete Type System**: Current `GameMode` type missing 'subtraction'
+- **Header Component**: Missing subtraction tab button
+
+### Recent Critical Fixes (Must Preserve)
+- **Mobile Progress Persistence**: Fixed with pagehide event for mobile browsers
+- **Wrong Answer Handling**: Users cannot advance until all wrong answers are corrected
+- **Auto-restore Events**: Re-enabled for proper tab switching and refresh persistence
+- **Multiplication State Reset**: Fixed auto-initialization conflict
+
+### Established Patterns (Must Follow)
+- **Submit Button Logic**: Disabled until all fields filled, shows "Submit Answers" → "Next Problem"
+- **Wrong Answer Feedback**: Red validation, blocking advancement, requiring corrections
+- **Keyboard Navigation**: Arrow keys, Tab, Enter, Backspace with auto-advance
+- **Field Validation**: Real-time validation with visual feedback after submission
+- **Session Persistence**: Auto-save on visibility change, pagehide, beforeunload
+
+## Goals
+
+### Primary Goals
+1. **Seamless Integration**: Subtraction tab works identically to existing operations for shared behaviors
+2. **Borrowing Logic**: Implement proper subtraction with borrowing (regrouping) visualization
+3. **Consistent UX**: All user interactions (keyboard nav, submit, validation) work the same as other operations
+4. **State Persistence**: Progress saves between tab switches, page refreshes, and mobile app switching
+5. **API Integration**: Subtraction problems fetched from server with local fallback
+6. **Wrong Answer Handling**: Cannot advance until all wrong answers are corrected
+
+### Success Criteria
+- Subtraction tab appears in header alongside Division, Addition, Multiplication
+- Borrowing is visually clear and follows standard math notation
+- Keyboard navigation works identically to other operations
+- Submit button behavior and validation feedback are consistent
+- Progress saves and restores correctly between sessions and on mobile
+- Level progression follows the same pattern as other operations
+- Wrong answers require correction before advancement
+
+## Technical Architecture
+
+### Subtraction Types and Interfaces
+```typescript
+// src/types/subtraction.ts
+export interface SubtractionLevel {
+    id: number;
+    name: string;
+    description: string;
+    maxDigits: number;
+    maxValue: number;
+    borrowingRequired: boolean;
+}
+
+export interface SubtractionProblem {
+    minuend: number;      // Top number (being subtracted from)
+    subtrahend: number;   // Bottom number (being subtracted)
+    difference: number;   // Result
+    steps: SubtractionStep[];
+    source?: 'api' | 'local';
+    isEditable?: boolean;
+}
+
+export interface SubtractionStep {
+    stepNumber: number;
+    columnPosition: number;  // Position from right (ones, tens, hundreds, etc.)
+    digit1: number;          // Digit from minuend (potentially adjusted for borrowing)
+    digit2: number;          // Digit from subtrahend
+    difference: number;      // Result of subtraction
+    borrow: number;          // Borrow from next column (0 or 1)
+    borrowGiven: number;     // Borrow given to previous column (0 or 1)
+}
+
+export interface SubtractionUserAnswer {
+    columnPosition: number;
+    fieldType: 'difference' | 'borrow';
+    value: number;
+    isCorrect: boolean;
+    timestamp: Date;
+}
+
+export interface SubtractionCurrentFocus {
+    columnPosition: number;
+    fieldType: 'difference' | 'borrow';
+}
+
+export interface SubtractionGameState {
+    currentLevel: number;
+    completedLevels: number[];
+    availableLevels: number[];
+    currentProblemIndex: number;
+    levelProblems: SubtractionProblem[];
+    problem: SubtractionProblem | null;
+    userAnswers: SubtractionUserAnswer[];
+    isSubmitted: boolean;
+    isComplete: boolean;
+    score: number;
+    gameMode: 'division' | 'addition' | 'multiplication' | 'subtraction';
+}
+```
+
+### Component Architecture
+- **SubtractionDisplay**: Main component following AdditionDisplay pattern
+- **SubtractionGameState Hook**: Following useAdditionGameState pattern
+- **SubtractionKeyboardNav Hook**: Following useAdditionKeyboardNav pattern
+- **API Integration**: Extend apiService.ts with subtraction support
+- **Session Persistence**: Extend GameProgress interface
+
+## Implementation Requirements
+
+### Phase 0: Foundation (CRITICAL - Must Be Done First)
+- **Extract Shared Components**: Create actual ProblemInput, ValidationFeedback, SubmitControls components from existing displays
+- **Eliminate Code Duplication**: Refactor existing operations to use shared components
+- **Update Type System**: Add 'subtraction' to GameMode union type
+- **Update Header Component**: Add subtraction tab with consistent styling
+
+### Phase 1: Core Types and Interfaces
+- Create `src/types/subtraction.ts` with all subtraction-specific types
+- Update `src/hooks/useSessionPersistence.ts` to include subtractionState in GameProgress interface
+- Update `src/utils/apiService.ts` to include subtraction problem fetching and conversion
+
+### Phase 2: Subtraction Logic and Validation
+- Create `src/utils/subtractionGenerator.ts` for local problem generation
+- Create `src/utils/subtractionValidator.ts` for answer validation
+- Create `src/utils/subtractionCalculator.ts` for step calculation (borrowing logic)
+- Update `src/hooks/useSharedValidation.ts` to handle subtraction field types
+
+### Phase 3: Subtraction Game State Management
+- Create `src/hooks/useSubtractionGameState.ts` following addition/multiplication patterns
+- Include: problem generation, answer submission, validation, level progression
+- Integrate with session persistence for state saving/restoration
+- Include API integration with local fallback
+- Implement wrong answer handling (cannot advance until corrected)
+
+### Phase 4: Subtraction Keyboard Navigation
+- Create `src/hooks/useSubtractionKeyboardNav.ts` following addition patterns
+- Handle: right-to-left navigation, field jumping, submit on Enter, backspace navigation
+- Integrate with shared validation for field completion checking
+- Support all keyboard shortcuts (Tab, Arrow keys, Enter, Backspace)
+
+### Phase 5: Subtraction Display Component
+- Create `src/components/SubtractionProblem/SubtractionDisplay.tsx`
+- Implement borrowing visualization with proper math notation
+- Include: minuend/subtrahend display, borrowing indicators, difference input fields
+- Support problem editing (minuend/subtrahend modification)
+- Include loading states, error handling, completion feedback, and wrong answer styling
+
+### Phase 6: App Integration
+- Update `src/App.tsx` to include subtraction game state and handlers
+- Add subtraction tab to `src/components/Header/Header.tsx`
+- Include subtraction in auto-save/restore logic with mobile support
+- Add subtraction-specific event handlers and state management
+- Ensure subtraction works with existing session persistence
+
+### Phase 7: API Integration
+- Update `src/utils/apiService.ts` to fetch subtraction problems
+- Add subtraction problem conversion from API format
+- Include subtraction in level requirement checking
+- Add subtraction to API call tracking and error handling
+- Support subtraction_0, subtraction_1, subtraction_2 API endpoints
+
+### Phase 8: Testing and Validation
+- Test all shared behaviors work identically (keyboard nav, submit, validation)
+- Verify borrowing logic works correctly for various problem types
+- Test state persistence between tab switches, page refreshes, and mobile app switching
+- Validate API integration and local fallback functionality
+- Test mobile responsiveness and sticky submit controls
+- Verify wrong answer handling prevents advancement
+
+## Technical Constraints
+
+### Preserve Existing Functionality
+- All existing operations (Division, Addition, Multiplication) must continue working unchanged
+- Shared logic modifications must not break other operations
+- Session persistence must work for all operations including subtraction
+- API integration must continue working for existing operations
+- Mobile progress saving must work for subtraction
+
+### Follow Established Patterns
+- Use same TypeScript patterns and naming conventions as Addition/Multiplication
+- Follow existing component structure and prop interfaces
+- Use same validation and error handling approaches
+- Maintain consistent keyboard navigation behavior
+- Use same level progression and problem advancement logic
+- Implement same wrong answer handling as other operations
+
+### Code Quality Requirements
+- No console logging (per user preference)
+- Proper TypeScript typing throughout
+- Follow existing CSS class naming and Tailwind usage
+- Maintain accessibility patterns and ARIA labels
+- Include proper error boundaries and loading states
+
+## User Experience Requirements
+
+### Consistent Behavior
+- Tab switching preserves current problem state for all operations
+- Submit button behavior identical across all operations
+- Keyboard navigation (Tab, Arrow keys, Enter, Backspace) works the same way
+- Validation feedback appears consistently
+- Level progression animations and feedback are uniform
+- Mobile sticky submit controls work for subtraction
+- Wrong answers prevent advancement until corrected
+
+### Subtraction-Specific Features
+- **Borrowing Visualization**: Clear indication when borrowing occurs with small numbers above digits
+- **Right-to-Left Input**: Follows standard math notation (ones, tens, hundreds)
+- **Field Validation**: Real-time validation of difference and borrow fields
+- **Problem Editing**: Ability to modify minuend and subtrahend
+- **Step-by-Step Feedback**: Visual feedback for each column calculation
+- **Borrowing Lines**: Visual indicators showing borrowing flow between columns
+
+### Performance Requirements
+- No degradation in current performance
+- Tab switching should be instantaneous
+- Input responsiveness must remain excellent
+- Problem generation should not be slower
+- API calls should be efficient and cached appropriately
+
+## Success Metrics
+
+### Functional Metrics
+- Subtraction tab works without breaking existing operations
+- Keyboard navigation works identically across all tabs
+- Submit and level progression logic is uniform
+- Zero regression in existing functionality
+- Borrowing logic works correctly for all problem types
+- Mobile progress saving works reliably
+
+### Code Quality Metrics
+- Subtraction follows same patterns as existing operations
+- Clear separation between shared logic and subtraction-specific UI
+- Easy maintenance and future enhancements
+- Proper error handling and edge case coverage
+
+### Developer Experience
+- Adding subtraction requires minimal changes to existing code
+- Subtraction implementation follows documented patterns
+- Component boundaries are clear and logical
+- Testing shared logic is straightforward
+
+## Technical Implementation Notes
+
+### Borrowing Logic Implementation
+```typescript
+// Example borrowing calculation
+function calculateSubtractionSteps(minuend: number, subtrahend: number): SubtractionStep[] {
+    const minuendStr = minuend.toString();
+    const subtrahendStr = subtrahend.toString();
+    const maxLength = Math.max(minuendStr.length, subtrahendStr.length);
+    
+    let borrowValue = 0;
+    const steps: SubtractionStep[] = [];
+    
+    for (let i = 0; i < maxLength; i++) {
+        const digit1 = parseInt(minuendStr[minuendStr.length - 1 - i] || '0');
+        const digit2 = parseInt(subtrahendStr[subtrahendStr.length - 1 - i] || '0');
+        
+        // Apply borrow from previous column
+        const adjustedDigit1 = digit1 - borrowValue;
+        
+        // Determine if we need to borrow
+        const needsBorrow = adjustedDigit1 < digit2;
+        const nextBorrow = needsBorrow ? 1 : 0;
+        
+        // Calculate difference
+        const difference = needsBorrow ? (adjustedDigit1 + 10) - digit2 : adjustedDigit1 - digit2;
+        
+        steps.push({
+            stepNumber: i,
+            columnPosition: i,
+            digit1: adjustedDigit1,
+            digit2,
+            difference,
+            borrow: nextBorrow,
+            borrowGiven: borrowValue
+        });
+        
+        borrowValue = nextBorrow;
+    }
+    
+    return steps;
+}
+```
+
+### Visual Borrowing Indicators
+- Use small "1" indicators above columns where borrowing occurs
+- Show borrowing lines or arrows connecting affected columns
+- Use color coding to highlight borrowed digits
+- Provide clear visual feedback for borrowing process
+- Follow standard math textbook notation
+
+### Integration Points
+- **Session Persistence**: Add subtractionState to GameProgress interface
+- **API Service**: Add subtraction problem fetching and conversion
+- **Shared Validation**: Extend to handle subtraction field types
+- **Header Component**: Add subtraction tab button
+- **App Component**: Add subtraction game state and handlers
+- **Mobile Support**: Ensure pagehide event works for subtraction
+
+### API Integration Details
+- Support subtraction_0, subtraction_1, subtraction_2 endpoints
+- Convert API response to SubtractionProblem format
+- Implement difficulty evaluation for subtraction problems
+- Add subtraction to level requirement checking
+- Include proper error handling and fallback to local generation
+
+This PRD ensures that the subtraction feature will be implemented with surgical precision, leveraging all the shared architecture we've built while maintaining the high quality and consistency of the existing operations, including all the recent fixes for mobile persistence and wrong answer handling. 

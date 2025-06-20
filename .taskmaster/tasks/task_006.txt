@@ -1,31 +1,31 @@
 # Task ID: 6
-# Title: Refactor MultiplicationDisplay to Use Shared Components
+# Title: Create Subtraction Calculation Logic
 # Status: pending
-# Dependencies: 2, 3
+# Dependencies: 1
 # Priority: medium
-# Description: Refactor MultiplicationDisplay to utilize shared subcomponents for input and feedback.
+# Description: Implement borrowing logic for subtraction calculations.
 # Details:
-Modify MultiplicationDisplay to use the shared ProblemInput and ValidationFeedback components. Ensure the layout and functionality remain unchanged.
+Create src/utils/subtractionCalculator.ts to handle borrowing logic in subtraction. Implement calculateSubtractionSteps function to process borrowing and calculate differences.
 
 # Test Strategy:
-Verify that the Multiplication operation functions correctly with the refactored components.
+Test borrowing logic with edge cases to ensure correct calculation of differences and borrowing steps.
 
 # Subtasks:
-## 1. Update Imports [pending]
+## 1. Implement Borrowing Logic [pending]
 ### Dependencies: None
-### Description: Refactor the codebase to update and organize import statements according to the new architectural blueprint.
+### Description: Develop the logic required to handle borrowing in the system.
 ### Details:
-Review all import statements in the codebase to ensure they align with the new module structure. Remove any unused imports and ensure that all necessary modules are imported correctly. Reference the architectural blueprint for the correct module paths.
+This involves creating functions or methods that accurately manage borrowing operations, ensuring that all rules and conditions are met.
 
-## 2. Integrate Shared Components [pending]
+## 2. Calculate Differences [pending]
 ### Dependencies: 6.1
-### Description: Integrate shared components into the existing codebase while preserving current functionality.
+### Description: Create functionality to calculate differences after borrowing operations.
 ### Details:
-Identify all instances where shared components can be utilized. Replace existing code with shared components where applicable, ensuring that the functionality remains unchanged. Test each integration point to verify that the shared components work as expected.
+This task requires implementing calculations that determine the differences in values or states after borrowing logic is applied.
 
-## 3. Ensure Layout Consistency [pending]
+## 3. Test Edge Cases [pending]
 ### Dependencies: 6.1, 6.2
-### Description: Ensure that the layout across the application is consistent with the design specifications.
+### Description: Design and execute tests to cover edge cases for borrowing logic.
 ### Details:
-Review the application's layout and compare it with the design specifications. Make necessary adjustments to ensure consistency in spacing, alignment, and component usage. Verify that all pages adhere to the design guidelines and that the user experience is seamless.
+Develop a comprehensive suite of tests that ensure the borrowing logic handles all potential edge cases and scenarios.
 

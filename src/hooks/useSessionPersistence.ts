@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import type { DivisionProblem } from '../types/game';
 import type { AdditionProblem } from '../types/addition';
 import type { MultiplicationProblem } from '../types/multiplication';
+import type { SubtractionProblem } from '../types/subtraction';
 
 // State we want to persist for each game mode - now with specific types
 interface SavedDivisionState {
@@ -22,12 +23,19 @@ interface SavedMultiplicationState {
     levelProblems: MultiplicationProblem[];
 }
 
+interface SavedSubtractionState {
+    currentLevel: number;
+    currentProblemIndex: number;
+    levelProblems: SubtractionProblem[];
+}
+
 // Progress interface for all game modes
 interface GameProgress {
-    gameMode: 'division' | 'addition' | 'multiplication';
+    gameMode: 'division' | 'addition' | 'multiplication' | 'subtraction';
     divisionState?: SavedDivisionState;
     additionState?: SavedAdditionState;
     multiplicationState?: SavedMultiplicationState;
+    subtractionState?: SavedSubtractionState;
 }
 
 const STORAGE_KEY = 'mathTutorProgress';

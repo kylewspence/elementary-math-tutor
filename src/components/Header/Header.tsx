@@ -1,6 +1,6 @@
 import React from 'react';
 
-type GameMode = 'division' | 'addition' | 'multiplication';
+type GameMode = 'division' | 'addition' | 'multiplication' | 'subtraction';
 
 interface HeaderProps {
     gameMode: GameMode;
@@ -57,6 +57,15 @@ const Header: React.FC<HeaderProps> = ({
                                     }`}
                             >
                                 Multiplication
+                            </button>
+                            <button
+                                onClick={() => onToggleGameMode('subtraction')}
+                                className={`px-4 py-2 rounded-lg transition-colors ${gameMode === 'subtraction'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Subtraction
                             </button>
                         </div>
                     </div>

@@ -1,37 +1,37 @@
 # Task ID: 8
-# Title: Simplify App.tsx for Tab Management
+# Title: Implement Subtraction Game State Management
 # Status: pending
-# Dependencies: 7
+# Dependencies: 1, 2, 3, 4, 5, 6
 # Priority: high
-# Description: Refactor App.tsx to focus on tab management and shared hook orchestration.
+# Description: Create game state management for subtraction.
 # Details:
-Move operation-specific logic out of App.tsx and into their respective components. Ensure App.tsx handles tab switching and shared hook orchestration efficiently.
+Create src/hooks/useSubtractionGameState.ts following patterns from addition and multiplication. Include problem generation, answer submission, validation, level progression, and session persistence.
 
 # Test Strategy:
-Test tab switching and shared hook functionality to ensure no regressions.
+Test game state management for correct problem generation, state saving, and level progression.
 
 # Subtasks:
-## 1. Extract Logic from App.tsx [pending]
+## 1. Implement State Management [pending]
 ### Dependencies: None
-### Description: Identify and extract business logic from App.tsx into separate modules to improve maintainability.
+### Description: Develop a system to manage the game state, ensuring all components can access and update the state as needed.
 ### Details:
-Review the App.tsx file to identify sections of code that handle business logic. Create new modules or services to encapsulate this logic, ensuring that the extracted code is well-documented and tested.
+Design a centralized state management solution using a suitable library or framework. Ensure it supports reactive updates and can handle complex state transitions.
 
-## 2. Refactor for Tab Management [pending]
+## 2. Develop Problem Generation Module [pending]
 ### Dependencies: 8.1
-### Description: Refactor the application to implement a more efficient tab management system.
+### Description: Create a module to generate problems for the game, ensuring variety and appropriate difficulty levels.
 ### Details:
-Utilize the extracted logic to refactor the tab management system. Ensure that the new system aligns with the architectural blueprint and supports dynamic tab creation and destruction.
+Implement algorithms to generate problems dynamically. Ensure the problems are diverse and can be adjusted for different difficulty levels.
 
-## 3. Test Tab Functionality [pending]
+## 3. Implement Answer Validation System [pending]
 ### Dependencies: 8.2
-### Description: Develop and execute a comprehensive test suite to verify the functionality of the new tab management system.
+### Description: Develop a system to validate answers provided by users, ensuring accuracy and reliability.
 ### Details:
-Create unit and integration tests to cover all aspects of tab functionality, including edge cases. Ensure that the tests are automated and can be run as part of the CI/CD pipeline.
+Create a validation mechanism that checks user answers against correct solutions. Ensure it handles edge cases and provides feedback.
 
-## 4. Optimize Performance [pending]
-### Dependencies: 8.3
-### Description: Analyze and optimize the performance of the refactored application, focusing on the tab management system.
+## 4. Implement Session Persistence [pending]
+### Dependencies: 8.1, 8.2, 8.3
+### Description: Develop a system to persist user sessions, allowing users to resume their progress.
 ### Details:
-Use profiling tools to identify performance bottlenecks in the tab management system. Implement optimizations to reduce load times and improve responsiveness, ensuring that changes do not introduce new bugs.
+Design a solution to save and restore user sessions, ensuring data integrity and security. Consider using local storage or a database.
 

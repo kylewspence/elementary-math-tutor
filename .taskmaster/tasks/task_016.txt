@@ -1,0 +1,25 @@
+# Task ID: 16
+# Title: Test API and Local Fallback
+# Status: pending
+# Dependencies: 12, 13
+# Priority: medium
+# Description: Ensure API integration and local fallback work seamlessly.
+# Details:
+Test API integration for subtraction and verify local fallback functionality when API is unavailable.
+
+# Test Strategy:
+Simulate API failures and ensure local problem generation works as expected.
+
+# Subtasks:
+## 1. Test API Integration [pending]
+### Dependencies: None
+### Description: Conduct tests to ensure the API integrates correctly with the system.
+### Details:
+This involves verifying that the API endpoints are accessible, data is correctly transmitted and received, and the integration meets the specified requirements.
+
+## 2. Simulate API Failures for Fallback Testing [pending]
+### Dependencies: 16.1
+### Description: Simulate API failures to test the system's fallback mechanisms.
+### Details:
+This involves intentionally causing API failures to ensure that the system can handle them gracefully and continue to operate without interruption.
+

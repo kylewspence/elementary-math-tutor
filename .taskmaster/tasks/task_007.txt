@@ -1,37 +1,25 @@
 # Task ID: 7
-# Title: Remove MathDisplay Component
+# Title: Update Shared Validation for Subtraction
 # Status: pending
-# Dependencies: 4, 5, 6
+# Dependencies: 5
 # Priority: medium
-# Description: Remove the monolithic MathDisplay component and replace it with operation-specific displays.
+# Description: Extend shared validation to handle subtraction fields.
 # Details:
-Eliminate the MathDisplay component and ensure each operation uses its specific display component. Update any references to MathDisplay in the codebase.
+Update src/hooks/useSharedValidation.ts to include validation for subtraction-specific fields such as difference and borrow.
 
 # Test Strategy:
-Ensure all operations display correctly without the MathDisplay component.
+Verify shared validation correctly handles subtraction fields and integrates with existing validation logic.
 
 # Subtasks:
-## 1. Identify Dependencies of the Component [pending]
+## 1. Update Validation Logic [pending]
 ### Dependencies: None
-### Description: Analyze the existing codebase to identify all dependencies related to the component that needs to be removed.
+### Description: Modify the existing validation logic to incorporate new requirements.
 ### Details:
-Review the architectural blueprint and existing code to list all modules, functions, and data structures that interact with the component.
+Review the current validation logic and update it to meet the new specifications. Ensure that the changes are documented and align with the overall system architecture.
 
-## 2. Remove the Component [pending]
+## 2. Test Integration with Existing Logic [pending]
 ### Dependencies: 7.1
-### Description: Safely remove the component from the codebase while ensuring no immediate breakage occurs.
+### Description: Conduct integration testing to ensure the updated validation logic works seamlessly with the existing system.
 ### Details:
-Based on the identified dependencies, carefully delete the component's code and any related files, ensuring that the removal aligns with the architectural goals.
-
-## 3. Update References in the Codebase [pending]
-### Dependencies: 7.2
-### Description: Update all references in the codebase that previously pointed to the removed component.
-### Details:
-Search for and modify any code that referenced the removed component, ensuring that alternative solutions or stubs are in place where necessary.
-
-## 4. Test the Codebase for Functionality [pending]
-### Dependencies: 7.3
-### Description: Conduct thorough testing to ensure that the removal of the component has not affected the overall functionality of the system.
-### Details:
-Run existing test suites and perform additional manual testing to verify that all features work as expected without the removed component.
+Perform comprehensive integration tests to verify that the updated validation logic does not disrupt existing functionalities. Document any issues and ensure they are resolved before final deployment.
 

@@ -1,31 +1,31 @@
 # Task ID: 12
-# Title: Implement Multiplication Tab Keyboard Navigation
+# Title: Extend API Integration for Subtraction
 # Status: pending
-# Dependencies: 9
+# Dependencies: 3, 8
 # Priority: medium
-# Description: Ensure keyboard navigation works identically in the multiplication tab.
+# Description: Enhance API integration to include subtraction-specific logic.
 # Details:
-Implement tab/shift+tab and arrow key navigation in the multiplication tab, ensuring it matches the behavior of other tabs.
+Update src/utils/apiService.ts to include subtraction in level requirement checking and API call tracking. Implement error handling and fallback to local generation.
 
 # Test Strategy:
-Test keyboard navigation in the multiplication tab to ensure it is consistent with other tabs.
+Test API integration to ensure subtraction problems are fetched and handled correctly, with proper error handling.
 
 # Subtasks:
-## 1. Implement Navigation Logic [pending]
+## 1. Update API Logic [pending]
 ### Dependencies: None
-### Description: Develop the navigation logic to ensure consistent behavior across different tabs.
+### Description: Modify the existing API logic to enhance integration capabilities.
 ### Details:
-Use the architectural blueprint to guide the implementation. Reference existing navigation code to maintain consistency and functionality. Ensure that the navigation logic is modular and can be easily integrated with other components.
+Review the current API implementation and identify areas for improvement. Implement changes to optimize data flow and ensure compatibility with new requirements.
 
-## 2. Test Keyboard Interactions [pending]
+## 2. Implement Error Handling [pending]
 ### Dependencies: 12.1
-### Description: Create and execute tests for keyboard interactions to ensure they work as expected.
+### Description: Add comprehensive error handling to the API logic to manage potential failures.
 ### Details:
-Develop test cases based on the architectural blueprint to verify that keyboard interactions are functioning correctly. Ensure tests cover all possible user interactions and edge cases. Reference existing test frameworks and methodologies.
+Design and implement error handling mechanisms to capture and respond to various error scenarios. Ensure that the system can gracefully handle unexpected inputs and failures.
 
-## 3. Ensure Consistency Across Components [pending]
+## 3. Test Fallback Mechanisms [pending]
 ### Dependencies: 12.1, 12.2
-### Description: Review and adjust components to ensure consistency in behavior and appearance.
+### Description: Develop and execute tests for fallback mechanisms to ensure system resilience.
 ### Details:
-Conduct a thorough review of all components to ensure they align with the architectural blueprint. Make necessary adjustments to maintain a consistent user experience across the application. Reference existing style guides and component libraries.
+Create test cases to simulate failure scenarios and verify that fallback mechanisms operate correctly. Adjust the logic as necessary to ensure robust performance under adverse conditions.
 

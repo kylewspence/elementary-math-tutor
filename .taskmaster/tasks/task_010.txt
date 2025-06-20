@@ -1,31 +1,31 @@
 # Task ID: 10
-# Title: Enhance useMathGameState Hook
+# Title: Create Subtraction Display Component
 # Status: pending
 # Dependencies: 8
-# Priority: medium
-# Description: Ensure useMathGameState handles all operation types consistently.
+# Priority: high
+# Description: Develop UI component for displaying subtraction problems.
 # Details:
-Review and enhance useMathGameState to ensure it supports all operations uniformly. Add any necessary configurations for future operations like Subtraction.
+Create src/components/SubtractionProblem/SubtractionDisplay.tsx. Implement borrowing visualization, minuend/subtrahend display, borrowing indicators, and difference input fields.
 
 # Test Strategy:
-Verify state management consistency across all operations.
+Verify UI component displays problems correctly with borrowing visualization and handles user input accurately.
 
 # Subtasks:
-## 1. Review Current Logic [pending]
+## 1. Implement UI Component [pending]
 ### Dependencies: None
-### Description: Analyze the existing codebase to understand the current logic implementation.
+### Description: Develop the user interface component for the application.
 ### Details:
-Examine the current state management logic and document how it interacts with existing operations. Identify any potential areas for improvement or refactoring to align with architectural goals.
+Create the layout and design for the UI component, ensuring it is responsive and user-friendly.
 
-## 2. Add Support for New Operations [pending]
+## 2. Add Borrowing Visualization [pending]
 ### Dependencies: 10.1
-### Description: Implement new operations in the codebase while ensuring compatibility with existing logic.
+### Description: Integrate visualization features to represent borrowing activities.
 ### Details:
-Based on the review, integrate new operations into the state management system. Ensure these operations are consistent with the architectural blueprint and do not disrupt existing functionality.
+Design and implement visual elements that clearly depict borrowing actions within the UI component.
 
-## 3. Test State Consistency [pending]
+## 3. Test User Input Handling [pending]
 ### Dependencies: 10.1, 10.2
-### Description: Conduct tests to verify the consistency of state management across all operations.
+### Description: Conduct tests to ensure user inputs are handled correctly.
 ### Details:
-Develop and execute test cases that cover both existing and new operations. Ensure that state transitions are handled correctly and that the system maintains consistency as per the complexity analysis.
+Perform thorough testing of the UI component to verify that all user inputs are processed accurately and efficiently.
 

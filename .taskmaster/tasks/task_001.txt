@@ -1,31 +1,31 @@
 # Task ID: 1
-# Title: Setup Project Repository
+# Title: Setup Subtraction Types and Interfaces
 # Status: pending
 # Dependencies: None
-# Priority: medium
-# Description: Initialize the project repository and ensure all dependencies are up-to-date.
+# Priority: high
+# Description: Create TypeScript interfaces for subtraction feature after establishing shared components.
 # Details:
-Create a new branch for the UI refactor. Ensure all dependencies such as React, TypeScript, and Tailwind CSS are up-to-date. Set up ESLint and Prettier for code quality and formatting.
+Before creating subtraction types, extract and create shared components ProblemInput, ValidationFeedback, and SubmitControls from existing operation displays. Then, create src/types/subtraction.ts with interfaces SubtractionLevel, SubtractionProblem, SubtractionStep, SubtractionUserAnswer, SubtractionCurrentFocus, and SubtractionGameState. Update src/types/game.ts to include 'subtraction' in GameMode union type.
 
 # Test Strategy:
-Verify that the project builds successfully and all existing tests pass.
+Verify shared components are correctly extracted and integrated. Ensure TypeScript interfaces compile without errors and are correctly imported in relevant modules.
 
 # Subtasks:
-## 1. Initialize the Repository [pending]
+## 1. Create Individual Interfaces [pending]
 ### Dependencies: None
-### Description: Set up the initial repository structure according to the architectural blueprint.
+### Description: Design and implement each required interface separately for the project.
 ### Details:
-Create a new repository using the specified version control system. Ensure the directory structure aligns with the architectural blueprint. Include a README file with basic project information.
+Identify all the interfaces needed for the project and create them with the necessary properties and methods.
 
-## 2. Update Dependencies [pending]
+## 2. Update Game Mode Union Type [pending]
 ### Dependencies: 1.1
-### Description: Update and install necessary dependencies as per the project's requirements.
+### Description: Modify the existing game mode union type to include new interfaces.
 ### Details:
-Review the existing code to identify required dependencies. Update the package manager configuration file (e.g., package.json, requirements.txt) to include these dependencies. Run the package manager to install the dependencies and verify their installation.
+Ensure that the game mode union type is updated to reflect the newly created interfaces, maintaining compatibility with existing code.
 
-## 3. Set Up Code Quality Tools [pending]
-### Dependencies: 1.1, 1.2
-### Description: Integrate code quality tools to ensure code standards are maintained.
+## 3. Extract Shared Components [pending]
+### Dependencies: None
+### Description: Extract ProblemInput, ValidationFeedback, and SubmitControls components from existing operation displays.
 ### Details:
-Select appropriate code quality tools (e.g., linters, formatters) based on the project's technology stack. Configure these tools in the repository, ensuring they align with the architectural goals. Test the tools to confirm they are functioning correctly.
+Locate the existing operation displays and extract the ProblemInput, ValidationFeedback, and SubmitControls components. Ensure these components are reusable and integrated into the shared components index.ts file.
 

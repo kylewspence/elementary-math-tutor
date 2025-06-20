@@ -1,0 +1,31 @@
+# Task ID: 18
+# Title: Test Wrong Answer Handling
+# Status: pending
+# Dependencies: 13
+# Priority: high
+# Description: Ensure wrong answers are handled correctly in subtraction.
+# Details:
+Test wrong answer handling to ensure users cannot advance until all wrong answers are corrected. Implement the same wrong answer handling pattern used in other operations.
+
+# Test Strategy:
+Submit incorrect answers and verify that advancement is blocked until corrections are made. Ensure the system provides red validation feedback and requires corrections before the 'Next Problem' button appears.
+
+# Subtasks:
+## 1. Test Wrong Answer Submission [pending]
+### Dependencies: None
+### Description: Ensure that the system correctly handles the submission of wrong answers by providing appropriate feedback to the user.
+### Details:
+Create test cases that simulate the submission of incorrect answers and verify that the system provides clear and informative feedback to the user, indicating what was incorrect and how to proceed.
+
+## 2. Ensure Advancement Blocking on Wrong Answer [pending]
+### Dependencies: 18.1
+### Description: Verify that the system blocks user advancement when a wrong answer is submitted.
+### Details:
+Develop test scenarios where users attempt to advance after submitting a wrong answer and confirm that the system prevents progression until the correct answer is provided. Ensure red validation feedback is shown and the 'Next Problem' button does not appear until corrections are made.
+
+## 3. Implement Consistent Wrong Answer Handling Pattern [pending]
+### Dependencies: 18.1, 18.2
+### Description: Ensure subtraction uses the same wrong answer handling pattern as other operations.
+### Details:
+Review the wrong answer handling implementation in other operations and ensure subtraction follows the same pattern. Verify that red validation feedback is provided and corrections are required before the 'Next Problem' button appears.
+

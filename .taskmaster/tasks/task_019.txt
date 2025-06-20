@@ -1,0 +1,25 @@
+# Task ID: 19
+# Title: Conduct Performance Testing
+# Status: pending
+# Dependencies: 13
+# Priority: medium
+# Description: Ensure subtraction feature meets performance requirements.
+# Details:
+Conduct performance testing to ensure no degradation in current performance and that subtraction feature is efficient.
+
+# Test Strategy:
+Measure performance metrics such as response time and input responsiveness to ensure they meet requirements.
+
+# Subtasks:
+## 1. Measure Response Time Under Load [pending]
+### Dependencies: None
+### Description: Evaluate the system's response time when subjected to high load conditions.
+### Details:
+Set up a testing environment that simulates high user load and measure the time taken for the system to respond to requests. Use tools like JMeter or LoadRunner to generate load and capture response times.
+
+## 2. Assess Input Responsiveness Under Load [pending]
+### Dependencies: 19.1
+### Description: Determine how input responsiveness is affected when the system is under load.
+### Details:
+Conduct tests to evaluate how quickly the system processes user inputs during peak load times. This involves measuring the delay between input actions and system responses. Use automated scripts to simulate user interactions.
+

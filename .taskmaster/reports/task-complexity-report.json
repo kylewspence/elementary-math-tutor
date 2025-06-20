@@ -1,141 +1,173 @@
 {
 	"meta": {
-		"generatedAt": "2025-06-18T17:41:24.399Z",
-		"tasksAnalyzed": 15,
-		"totalTasks": 15,
-		"analysisCount": 16,
+		"generatedAt": "2025-06-20T00:34:50.427Z",
+		"tasksAnalyzed": 20,
+		"totalTasks": 20,
+		"analysisCount": 20,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
 		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 16,
-			"taskTitle": "Fix TypeScript Errors in Project",
-			"complexityScore": 7,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Break down the task into the following subtasks: 1. Review the TypeScript error log to identify specific files and lines where errors occur. 2. Address type mismatches between different problem types such as DivisionProblem, AdditionProblem, and MultiplicationProblem by ensuring consistent interfaces and type definitions. 3. Remove unused variables and imports to clean up the code. 4. Add missing required properties in returned objects to ensure all required properties are included. 5. Investigate and resolve issues with state management in the useGameState hook to ensure it correctly manages and updates state as expected.",
-			"reasoning": "The task involves resolving 26 TypeScript errors, including type mismatches, unused variables and imports, missing properties, and state management issues. Each of these error categories requires a distinct approach and careful attention to detail. Breaking down the task into specific subtasks allows for a more organized and efficient resolution process, ensuring that all issues are addressed systematically."
-		},
-		{
 			"taskId": 1,
-			"taskTitle": "Setup Project Repository",
+			"taskTitle": "Setup Subtraction Types and Interfaces",
 			"complexityScore": 4,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down the task into initializing the repository, updating dependencies, and setting up code quality tools.",
-			"reasoning": "The task involves multiple setup steps that are straightforward but require attention to detail."
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Consider breaking down the task into creating each interface separately and updating the game mode union type.",
+			"reasoning": "The task involves creating multiple interfaces and updating an existing type, which is straightforward but requires attention to detail."
 		},
 		{
 			"taskId": 2,
-			"taskTitle": "Extract Shared Subcomponents",
+			"taskTitle": "Extend Session Persistence for Subtraction",
 			"complexityScore": 5,
 			"recommendedSubtasks": 3,
-			"expansionPrompt": "Divide the task into moving components, typing with TypeScript, and testing integration.",
-			"reasoning": "Extracting components requires careful handling of dependencies and ensuring reusability."
+			"expansionPrompt": "Divide the task into updating the interface, implementing state saving, and testing state restoration.",
+			"reasoning": "The task involves modifying session persistence logic, which requires careful testing to ensure reliability."
 		},
 		{
 			"taskId": 3,
-			"taskTitle": "Create SubmitControls Component",
+			"taskTitle": "API Service Extension for Subtraction",
 			"complexityScore": 6,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Separate the task into designing the component, implementing logic, styling, and integration testing.",
-			"reasoning": "Creating a new component involves design, logic implementation, and ensuring it fits into the existing system."
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the task into updating the API service, implementing response conversion, and testing each endpoint.",
+			"reasoning": "Extending an API service involves multiple steps, including handling different endpoints and ensuring data consistency."
 		},
 		{
 			"taskId": 4,
-			"taskTitle": "Refactor DivisionDisplay to Use Shared Components",
+			"taskTitle": "Implement Local Subtraction Problem Generator",
 			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into updating imports, integrating shared components, and verifying functionality.",
-			"reasoning": "Refactoring requires careful integration to maintain existing functionality."
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Separate the task into implementing the generator and testing problem structure alignment with the API.",
+			"reasoning": "Creating a problem generator is moderately complex, requiring alignment with existing structures."
 		},
 		{
 			"taskId": 5,
-			"taskTitle": "Refactor AdditionDisplay to Use Shared Components",
+			"taskTitle": "Develop Subtraction Validation Logic",
 			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Divide into updating imports, integrating shared components, and testing for regressions.",
-			"reasoning": "Similar to other refactoring tasks, it involves integration and testing."
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Divide the task into implementing validation logic and testing with various scenarios.",
+			"reasoning": "Validation logic requires careful implementation to handle different cases accurately."
 		},
 		{
 			"taskId": 6,
-			"taskTitle": "Refactor MultiplicationDisplay to Use Shared Components",
-			"complexityScore": 5,
+			"taskTitle": "Create Subtraction Calculation Logic",
+			"complexityScore": 6,
 			"recommendedSubtasks": 3,
-			"expansionPrompt": "Separate into updating imports, integrating shared components, and ensuring layout consistency.",
-			"reasoning": "Refactoring requires maintaining existing functionality while integrating new components."
+			"expansionPrompt": "Consider breaking down the task into implementing borrowing logic, calculating differences, and testing edge cases.",
+			"reasoning": "The task involves complex logic for borrowing, which needs thorough testing."
 		},
 		{
 			"taskId": 7,
-			"taskTitle": "Remove MathDisplay Component",
-			"complexityScore": 6,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down into identifying dependencies, removing the component, updating references, and testing.",
-			"reasoning": "Removing a component requires careful handling of dependencies and ensuring no functionality is lost."
+			"taskTitle": "Update Shared Validation for Subtraction",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Separate the task into updating validation logic and testing integration with existing logic.",
+			"reasoning": "Updating shared validation is straightforward but requires integration testing."
 		},
 		{
 			"taskId": 8,
-			"taskTitle": "Simplify App.tsx for Tab Management",
+			"taskTitle": "Implement Subtraction Game State Management",
 			"complexityScore": 7,
 			"recommendedSubtasks": 4,
-			"expansionPrompt": "Divide into extracting logic, refactoring for tab management, testing tab functionality, and optimizing performance.",
-			"reasoning": "Refactoring a central file like App.tsx involves significant changes and testing to ensure stability."
+			"expansionPrompt": "Break down the task into implementing state management, problem generation, answer validation, and session persistence.",
+			"reasoning": "Game state management is complex, involving multiple aspects that need to work together seamlessly."
 		},
 		{
 			"taskId": 9,
-			"taskTitle": "Enhance useMathKeyboardNav Hook",
-			"complexityScore": 6,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Separate into adding configuration options, updating navigation logic, and testing across operations.",
-			"reasoning": "Enhancing a hook requires careful updates to maintain existing functionality while adding new features."
+			"taskTitle": "Develop Subtraction Keyboard Navigation",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Divide the task into implementing navigation logic and testing for consistency with other operations.",
+			"reasoning": "Keyboard navigation requires careful implementation to ensure user-friendly interaction."
 		},
 		{
 			"taskId": 10,
-			"taskTitle": "Enhance useMathGameState Hook",
+			"taskTitle": "Create Subtraction Display Component",
 			"complexityScore": 6,
 			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into reviewing current logic, adding support for new operations, and testing state consistency.",
-			"reasoning": "Enhancing state management involves ensuring consistency across different operations."
+			"expansionPrompt": "Consider breaking down the task into implementing the UI component, adding borrowing visualization, and testing user input handling.",
+			"reasoning": "Developing a UI component with visualization requires attention to detail and user interaction testing."
 		},
 		{
 			"taskId": 11,
-			"taskTitle": "Implement Multiplication Tab Visual Consistency",
-			"complexityScore": 4,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Divide into applying styles and verifying visual consistency.",
-			"reasoning": "The task is primarily about styling, which is straightforward but requires attention to detail."
+			"taskTitle": "Integrate Subtraction into App",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Separate the task into updating the main application, adding UI elements, integrating session persistence, and testing mobile support.",
+			"reasoning": "Integration into the main application is complex, involving multiple components and ensuring seamless operation."
 		},
 		{
 			"taskId": 12,
-			"taskTitle": "Implement Multiplication Tab Keyboard Navigation",
-			"complexityScore": 5,
+			"taskTitle": "Extend API Integration for Subtraction",
+			"complexityScore": 6,
 			"recommendedSubtasks": 3,
-			"expansionPrompt": "Separate into implementing navigation logic, testing keyboard interactions, and ensuring consistency.",
-			"reasoning": "Implementing navigation requires ensuring consistent behavior across different tabs."
+			"expansionPrompt": "Break down the task into updating API logic, implementing error handling, and testing fallback mechanisms.",
+			"reasoning": "Enhancing API integration involves multiple steps, including error handling and fallback logic."
 		},
 		{
 			"taskId": 13,
-			"taskTitle": "Implement Multiplication Tab Carry Number Functionality",
+			"taskTitle": "Test Subtraction Feature for Shared Behaviors",
 			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down into adding input fields, styling, and testing functionality.",
-			"reasoning": "Adding new functionality involves design, implementation, and testing to ensure it works as expected."
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Divide the task into testing keyboard navigation and validation feedback for consistency.",
+			"reasoning": "Testing shared behaviors requires ensuring consistency across different features."
 		},
 		{
 			"taskId": 14,
-			"taskTitle": "Standardize Multiplication Tab Buttons",
-			"complexityScore": 4,
+			"taskTitle": "Validate Borrowing Logic",
+			"complexityScore": 5,
 			"recommendedSubtasks": 2,
-			"expansionPrompt": "Divide into updating button styles and verifying consistency with other tabs.",
-			"reasoning": "Standardizing buttons is primarily a styling task, which is straightforward but requires consistency checks."
+			"expansionPrompt": "Separate the task into testing borrowing logic with standard cases and edge cases.",
+			"reasoning": "Validating borrowing logic requires thorough testing to ensure accuracy."
 		},
 		{
 			"taskId": 15,
-			"taskTitle": "Testing and Validation",
-			"complexityScore": 8,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Separate into creating test cases, executing tests, documenting results, and addressing any issues found.",
-			"reasoning": "Comprehensive testing involves multiple steps and is critical to ensure the stability of the entire system."
+			"taskTitle": "Verify State Persistence",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Consider breaking down the task into testing state persistence across different scenarios and devices.",
+			"reasoning": "State persistence testing involves ensuring reliability across various conditions."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Test API and Local Fallback",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Divide the task into testing API integration and simulating API failures for fallback testing.",
+			"reasoning": "Testing fallback mechanisms requires simulating failures and ensuring seamless operation."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Validate Mobile Responsiveness",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Separate the task into testing layout adjustments and sticky controls on various devices.",
+			"reasoning": "Mobile responsiveness testing involves ensuring proper layout and functionality on different devices."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Test Wrong Answer Handling",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Consider breaking down the task into testing wrong answer submission and ensuring advancement blocking.",
+			"reasoning": "Testing wrong answer handling requires ensuring correct user feedback and progression logic."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Conduct Performance Testing",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Divide the task into measuring response time and input responsiveness under load.",
+			"reasoning": "Performance testing involves ensuring the feature meets efficiency requirements without degradation."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Finalize Documentation and Code Review",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the task into completing documentation, conducting code review, and addressing identified issues.",
+			"reasoning": "Finalizing documentation and conducting a code review are crucial for ensuring quality and maintainability."
 		}
 	]
 }
