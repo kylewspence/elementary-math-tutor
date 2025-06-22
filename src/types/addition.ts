@@ -32,7 +32,7 @@ export interface AdditionUserAnswer {
     columnPosition: number;
     fieldType: 'sum' | 'carry';
     value: number;
-    isCorrect: boolean;
+    isCorrect: boolean | null; // null = pending, true = correct, false = incorrect
     timestamp: Date;
 }
 

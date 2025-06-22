@@ -1,9 +1,9 @@
 {
 	"meta": {
-		"generatedAt": "2025-06-18T17:41:24.399Z",
+		"generatedAt": "2025-06-21T20:24:11.187Z",
 		"tasksAnalyzed": 15,
 		"totalTasks": 15,
-		"analysisCount": 16,
+		"analysisCount": 31,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
 		"usedResearch": true
@@ -136,6 +136,126 @@
 			"recommendedSubtasks": 5,
 			"expansionPrompt": "Separate into creating test cases, executing tests, documenting results, and addressing any issues found.",
 			"reasoning": "Comprehensive testing involves multiple steps and is critical to ensure the stability of the entire system."
+		},
+		{
+			"taskId": 27,
+			"taskTitle": "Update Mobile Error Messaging",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Identify all instances of 'press enter' in the codebase, replace with mobile-friendly instructions, and ensure consistency across operations.",
+			"reasoning": "The task involves straightforward text replacement and consistency checks across a limited scope of operations."
+		},
+		{
+			"taskId": 28,
+			"taskTitle": "Maintain Submit Button Visibility",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Modify CSS and JavaScript to maintain button visibility, test across error states, and ensure consistency across operations.",
+			"reasoning": "Requires CSS and JavaScript changes with testing across multiple error states, slightly increasing complexity."
+		},
+		{
+			"taskId": 29,
+			"taskTitle": "Implement Touch-Friendly Error Correction",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Design touch-based error correction interface, implement touch events, and ensure compatibility with keyboard navigation.",
+			"reasoning": "Involves designing and implementing a new interface with touch event handling, increasing complexity."
+		},
+		{
+			"taskId": 30,
+			"taskTitle": "Prevent Auto-Acceptance of Correct Answers",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Update validation logic to require explicit submit action and ensure consistency across operations.",
+			"reasoning": "Requires changes to validation logic and ensuring consistent application across operations."
+		},
+		{
+			"taskId": 31,
+			"taskTitle": "Implement Visual Feedback for Answer States",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Introduce visual indicators for answer states and implement CSS transitions for smooth changes.",
+			"reasoning": "Involves adding visual feedback and transitions, which is moderately complex."
+		},
+		{
+			"taskId": 32,
+			"taskTitle": "Support Multiple Division Carry Methods",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Research division carry methods, update validation logic, and ensure correct user feedback.",
+			"reasoning": "Requires research and significant changes to validation logic to support multiple methods."
+		},
+		{
+			"taskId": 33,
+			"taskTitle": "Enhance User Feedback for Division Carry",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Design feedback mechanisms for division carry operations and implement tooltips or inline hints.",
+			"reasoning": "Focuses on designing and implementing user feedback mechanisms, which is moderately complex."
+		},
+		{
+			"taskId": 34,
+			"taskTitle": "Fix Number Rendering with Trailing Zeros",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Debug number rendering pipeline and ensure correct display of numbers with trailing zeros.",
+			"reasoning": "Involves debugging and updating rendering logic, which is moderately complex."
+		},
+		{
+			"taskId": 35,
+			"taskTitle": "Validate Display Consistency Across Operations",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Review number display logic and ensure consistent formatting across operations.",
+			"reasoning": "Primarily involves reviewing and ensuring consistency, which is less complex."
+		},
+		{
+			"taskId": 36,
+			"taskTitle": "Redesign Submit Button State Management",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Update state management logic for submit button and test behavior across states.",
+			"reasoning": "Involves refactoring state management logic, which requires careful testing and validation."
+		},
+		{
+			"taskId": 37,
+			"taskTitle": "Implement Mobile-Specific Interaction Patterns",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Design and implement mobile-specific interaction patterns and conduct usability testing.",
+			"reasoning": "Requires designing and implementing new interaction patterns, increasing complexity."
+		},
+		{
+			"taskId": 38,
+			"taskTitle": "Test Mobile Compatibility for Error Recovery",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Conduct comprehensive testing of error recovery workflows on mobile devices.",
+			"reasoning": "Involves extensive testing to ensure compatibility, which is moderately complex."
+		},
+		{
+			"taskId": 39,
+			"taskTitle": "Refactor State Management Hooks",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Refactor state management hooks to support new validation logic and ensure efficiency.",
+			"reasoning": "Requires refactoring and ensuring efficiency, which is complex due to potential impacts on data flow."
+		},
+		{
+			"taskId": 40,
+			"taskTitle": "Conduct Regression Testing for Existing Features",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Develop a comprehensive regression test suite and automate testing processes.",
+			"reasoning": "Involves developing a comprehensive test suite and automation, which is complex and time-consuming."
+		},
+		{
+			"taskId": 41,
+			"taskTitle": "Performance Testing with Complex Number Formats",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Conduct performance testing with complex number formats and optimize code as needed.",
+			"reasoning": "Focuses on performance testing and optimization, which is moderately complex."
 		}
 	]
 }

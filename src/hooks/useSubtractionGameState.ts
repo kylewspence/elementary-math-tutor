@@ -229,22 +229,21 @@ export function useSubtractionGameState() {
                     a.fieldType === answer.fieldType)
             );
 
+            // If problem was already submitted, mark new answers as pending (not validated)
+            const newAnswer = prev.isSubmitted
+                ? { ...answer, isCorrect: null as boolean | null } // Mark as pending
+                : { ...answer, isCorrect: false as boolean | null }; // Default to false for initial submission
+
             // Add the new answer
-            const updatedAnswers = [...filteredAnswers, answer];
+            const updatedAnswers = [...filteredAnswers, newAnswer];
 
-            // If problem was already submitted, re-validate all answers and check completion
-            if (prev.isSubmitted && prev.problem) {
-                const validatedAnswers = updatedAnswers.map(ans => {
-                    const isCorrect = validateSubtractionAnswer(prev.problem!, ans);
-                    return { ...ans, isCorrect };
-                });
-
-                const complete = isSubtractionProblemComplete(prev.problem, validatedAnswers);
-
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
-                    userAnswers: validatedAnswers,
-                    isComplete: complete,
+                    userAnswers: updatedAnswers,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 
@@ -264,19 +263,13 @@ export function useSubtractionGameState() {
                     a.fieldType === fieldType)
             );
 
-            // If problem was already submitted, re-validate remaining answers and check completion
-            if (prev.isSubmitted && prev.problem) {
-                const validatedAnswers = filteredAnswers.map(ans => {
-                    const isCorrect = validateSubtractionAnswer(prev.problem!, ans);
-                    return { ...ans, isCorrect };
-                });
-
-                const complete = isSubtractionProblemComplete(prev.problem, validatedAnswers);
-
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
-                    userAnswers: validatedAnswers,
-                    isComplete: complete,
+                    userAnswers: filteredAnswers,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 

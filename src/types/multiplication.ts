@@ -47,7 +47,7 @@ export interface MultiplicationUserAnswer {
     fieldPosition: number;             // Position within the field (0 = ones, 1 = tens, etc.)
     partialIndex?: number;             // Index of the partial product (if applicable)
     value: number;                     // The user's answer
-    isCorrect: boolean;                // Whether the answer is correct
+    isCorrect: boolean | null;         // null = pending, true = correct, false = incorrect
     timestamp: Date;                   // When the answer was submitted
 }
 

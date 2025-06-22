@@ -18,8 +18,23 @@ export function validateSubtractionAnswer(problem: SubtractionProblem, answer: S
     if (fieldType === 'difference') {
         return value === step.difference;
     } else if (fieldType === 'borrow') {
-        // For borrow, we check the borrowReceived value for this step
-        return value === step.borrowReceived;
+        // For borrow, accept multiple valid approaches:
+        // 1. Traditional: exact borrowReceived amount (usually 1)
+        // 2. Alternative: the reduced digit value (original digit minus borrow amount)
+        // 3. Zero if no borrowing needed
+
+        if (step.borrowReceived === 0) {
+            // No borrowing needed, only accept 0 or empty
+            return value === 0;
+        } else {
+            // Borrowing needed - accept either:
+            // - The exact borrow amount (traditional method)
+            // - The reduced original digit value (alternative method)
+            const exactBorrowAmount = step.borrowReceived;
+            const reducedDigitValue = step.digit1 - step.borrowReceived;
+
+            return value === exactBorrowAmount || value === reducedDigitValue;
+        }
     }
 
     return false;

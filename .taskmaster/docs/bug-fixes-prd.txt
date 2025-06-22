@@ -1,0 +1,111 @@
+# Math Tutor Bug Fixes - Product Requirements Document
+
+## Project Overview
+Address critical user experience and functionality bugs in the Math Tutor application affecting mobile users, validation logic, educational accuracy, and display consistency across all four math operations (Division, Addition, Multiplication, Subtraction).
+
+## Problem Statement
+The Math Tutor currently has several user-facing bugs that impact the learning experience:
+
+1. **Mobile UX Breakdown**: Error messages reference "press enter" which mobile users cannot do, and submit buttons disappear after wrong answers
+2. **Premature Auto-Acceptance**: Correct answers are automatically accepted without user confirmation, bypassing the submit workflow
+3. **Educational Inconsistency**: Division carry boxes only accept one specific answer when multiple valid approaches exist
+4. **Display Corruption**: Numbers with trailing zeros (1000, 2000) display incorrectly as "1---0" instead of proper digit representation
+
+## Target Users
+- Elementary and middle school students using mobile devices (60% of users)
+- Students learning multiple approaches to division algorithms
+- Teachers requiring consistent validation across all problem types
+- Users working with larger numbers containing zeros
+
+## Success Metrics
+- 100% mobile compatibility for error recovery workflows
+- Consistent submit-before-advance behavior across all operations
+- Support for multiple valid carry strategies in division
+- Accurate display of all number formats including trailing zeros
+
+## Technical Requirements
+
+### 1. Mobile-First Error Recovery System
+**Priority: Critical**
+- Replace "press enter" messaging with mobile-appropriate instructions
+- Maintain submit button visibility during error states
+- Implement touch-friendly error correction workflow
+- Ensure consistent behavior across all four math operations
+
+### 2. Unified Submit Validation Logic
+**Priority: High**
+- Prevent automatic acceptance of correct answers
+- Require explicit submit action for all answer confirmations
+- Update visual feedback: red → gray (pending) → green (confirmed)
+- Maintain consistent state management across operations
+
+### 3. Flexible Division Carry Logic
+**Priority: High**
+- Support both traditional (1) and alternative (original-1) carry methods
+- Implement intelligent validation that accepts multiple correct approaches
+- Default to more intuitive carry method when ambiguous
+- Maintain educational accuracy while improving user experience
+
+### 4. Robust Number Display System
+**Priority: Medium**
+- Fix rendering of numbers with internal/trailing zeros
+- Ensure proper digit-by-digit display for all number formats
+- Prevent character substitution (dashes for zeros)
+- Validate display consistency across all problem generators
+
+## Implementation Scope
+
+### Phase 1: Mobile UX Fixes
+- Update error messaging components
+- Redesign submit button state management
+- Implement mobile-specific interaction patterns
+- Test across iOS Safari, Android Chrome, mobile browsers
+
+### Phase 2: Validation Logic Overhaul
+- Refactor auto-acceptance prevention
+- Implement pending state visual indicators
+- Update state management hooks
+- Ensure cross-operation consistency
+
+### Phase 3: Division Carry Enhancement
+- Research and implement multiple carry strategies
+- Update validation logic for flexible acceptance
+- Enhance user feedback for carry operations
+- Maintain backward compatibility
+
+### Phase 4: Display System Hardening
+- Debug number rendering pipeline
+- Fix zero-handling in digit display
+- Implement comprehensive number format testing
+- Validate across all difficulty levels
+
+## Technical Constraints
+- Must maintain existing keyboard navigation
+- Preserve accessibility features
+- Ensure TypeScript type safety
+- Maintain performance across all devices
+- No breaking changes to existing correct functionality
+
+## Success Criteria
+- [ ] Mobile users can recover from errors without keyboard
+- [ ] All correct answers require explicit submission
+- [ ] Division accepts multiple valid carry approaches
+- [ ] All numbers display correctly regardless of zero placement
+- [ ] Zero regression in existing functionality
+- [ ] Consistent behavior across all four math operations
+
+## Risk Mitigation
+- Comprehensive testing on mobile devices
+- Validation logic testing with edge cases
+- Educational accuracy review for carry methods
+- Performance testing with complex number formats
+- Regression testing for existing features
+
+## Timeline
+- Phase 1: 2-3 development sessions
+- Phase 2: 2-3 development sessions  
+- Phase 3: 1-2 development sessions
+- Phase 4: 1-2 development sessions
+- Testing & Polish: 1 development session
+
+Total estimated effort: 7-11 development sessions 

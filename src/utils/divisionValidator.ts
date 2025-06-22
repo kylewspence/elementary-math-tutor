@@ -37,7 +37,7 @@ export function validateAnswer(
 
     switch (fieldType) {
         case 'quotient':
-            return value === step.quotientDigit;
+            return value === getDigitAtPosition(problem.quotient, fieldPosition);
         case 'multiply':
             return value === getDigitAtPosition(step.multiply, fieldPosition);
         case 'subtract':
@@ -63,7 +63,7 @@ export function getCorrectAnswer(
 
     switch (fieldType) {
         case 'quotient':
-            return step.quotientDigit;
+            return getDigitAtPosition(problem.quotient, fieldPosition);
         case 'multiply':
             return getDigitAtPosition(step.multiply, fieldPosition);
         case 'subtract':
@@ -83,9 +83,14 @@ export function isProblemComplete(
     for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
         const step = problem.steps[stepIndex];
 
-        // Check quotient
-        const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', 0);
-        if (!quotientAnswer) return false;
+        // Check quotient digits (only for the first step since quotient spans all steps)
+        if (stepIndex === 0) {
+            const quotientDigits = problem.quotient.toString().length;
+            for (let pos = 0; pos < quotientDigits; pos++) {
+                const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', pos);
+                if (!quotientAnswer) return false;
+            }
+        }
 
         // Check multiply digits
         const multiplyDigits = step.multiply.toString().length;
@@ -119,10 +124,15 @@ export function getNextRequiredField(
     for (let stepIndex = 0; stepIndex < problem.steps.length; stepIndex++) {
         const step = problem.steps[stepIndex];
 
-        // Check quotient
-        const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', 0);
-        if (!quotientAnswer) {
-            return { stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: 0 };
+        // Check quotient digits (only for the first step since quotient spans all steps)
+        if (stepIndex === 0) {
+            const quotientDigits = problem.quotient.toString().length;
+            for (let pos = 0; pos < quotientDigits; pos++) {
+                const quotientAnswer = findMatchingAnswer(userAnswers, stepIndex, 'quotient', pos);
+                if (!quotientAnswer) {
+                    return { stepNumber: stepIndex, fieldType: 'quotient', fieldPosition: pos };
+                }
+            }
         }
 
         // Check multiply digits
