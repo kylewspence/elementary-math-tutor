@@ -573,6 +573,8 @@ export const MULTIPLICATION_LEVELS: MultiplicationLevel[] = [
 ];
 
 // Configuration for different difficulty levels
+// TEMPORARY: All multiplication difficulties limited to single-digit multipliers
+// until multi-digit multiplication implementation is complete
 export const DIFFICULTY_CONFIG = {
     multiplication: {
         easy: {
@@ -580,16 +582,16 @@ export const DIFFICULTY_CONFIG = {
             multiplierDigits: 1,
         },
         medium: {
-            multiplicandDigits: 2,
-            multiplierDigits: 2,
+            multiplicandDigits: 3,
+            multiplierDigits: 1, // TEMPORARY: Changed from 2 to 1 to avoid multi-digit multipliers
         },
         hard: {
-            multiplicandDigits: 3,
-            multiplierDigits: 2,
+            multiplicandDigits: 4,
+            multiplierDigits: 1, // TEMPORARY: Changed from 2 to 1 to avoid multi-digit multipliers
         },
         expert: {
-            multiplicandDigits: 3,
-            multiplierDigits: 3,
+            multiplicandDigits: 5,
+            multiplierDigits: 1, // TEMPORARY: Changed from 3 to 1 to avoid multi-digit multipliers
         },
     },
 } as const; 

@@ -1,6 +1,12 @@
 import type { MultiplicationProblem, MultiplicationUserAnswer } from '../types/multiplication';
 
 /**
+ * NOTE: Current implementation is optimized for single-digit multipliers.
+ * Multi-digit multiplier validation is incomplete and will be implemented in a future update.
+ * DIFFICULTY_CONFIG is temporarily set to only generate single-digit multipliers.
+ */
+
+/**
  * Validates a user's answer for a specific field in a multiplication problem
  * @param problem The multiplication problem
  * @param answer The user's answer to validate

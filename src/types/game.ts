@@ -86,7 +86,7 @@ export interface UserAnswer {
     fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown';
     fieldPosition: number;
     value: number;
-    isCorrect: boolean;
+    isCorrect: boolean | null; // null = pending, true = correct, false = incorrect
     timestamp: Date;
 }
 

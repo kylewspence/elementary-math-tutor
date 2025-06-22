@@ -11,6 +11,7 @@ const MIN_PROBLEMS_PER_LEVEL = 8;
 
 /**
  * Maps game level ID to multiplication difficulty
+ * Note: DIFFICULTY_CONFIG is temporarily modified to only generate single-digit multipliers
  */
 function mapLevelToDifficulty(levelId: number): MultiplicationDifficulty {
     // Map level IDs to difficulty
@@ -244,40 +245,10 @@ export function useMultiplicationGameState() {
                 a.partialIndex === partialIndex
         );
 
-        // Calculate the correct answer based on field type
-        let isCorrect = false;
-
-        if (fieldType === 'product') {
-            // For product fields, check against the product digits
-            const productDigits = gameState.problem.product.toString().split('').map(Number).reverse();
-            isCorrect = value === productDigits[position];
-        }
-        else if (fieldType === 'partial' && partialIndex !== undefined) {
-            // For partial product fields, check against the partial product digits
-            const partial = gameState.problem.partialProducts[partialIndex];
-            const partialDigits = partial.value.toString().split('').map(Number).reverse();
-            isCorrect = value === partialDigits[position];
-        }
-        else if (fieldType === 'carry') {
-            // For carry fields, calculate the correct carry value
-            const multiplicandStr = gameState.problem.multiplicand.toString();
-            if (position === multiplicandStr.length) {
-                // Leftmost carry
-                const leftmostDigit = parseInt(multiplicandStr[0], 10);
-                const product = leftmostDigit * gameState.problem.multiplier;
-                const correctCarry = Math.floor(product / 10);
-                isCorrect = value === correctCarry;
-            } else if (position < multiplicandStr.length) {
-                // Other carries
-                const digit = parseInt(multiplicandStr[multiplicandStr.length - 1 - position], 10);
-                const product = digit * gameState.problem.multiplier;
-                const correctCarry = Math.floor(product / 10); // The carry is the tens digit
-                isCorrect = value === correctCarry;
-            } else {
-                // If position is out of range, any value is incorrect
-                isCorrect = false;
-            }
-        }
+        // If problem was already submitted, mark new answers as pending (not validated)
+        const isCorrect = gameState.isSubmitted
+            ? null as boolean | null // Mark as pending
+            : false as boolean | null; // Default to false for initial submission
 
         // Create or update the answer
         const answer: MultiplicationUserAnswer = {
@@ -297,13 +268,13 @@ export function useMultiplicationGameState() {
 
         // Update the game state
         setGameState(prev => {
-            // If problem was already submitted, re-check completion
-            if (prev.isSubmitted && prev.problem) {
-                const complete = isMultiplicationProblemComplete(prev.problem, updatedAnswers);
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
                     userAnswers: updatedAnswers,
-                    isComplete: complete,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 
@@ -323,13 +294,13 @@ export function useMultiplicationGameState() {
                     a.partialIndex === partialIndex)
             );
 
-            // If problem was already submitted, re-check completion
-            if (prev.isSubmitted && prev.problem) {
-                const complete = isMultiplicationProblemComplete(prev.problem, filteredAnswers);
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
                     userAnswers: filteredAnswers,
-                    isComplete: complete,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 

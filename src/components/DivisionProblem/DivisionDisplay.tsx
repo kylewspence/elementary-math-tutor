@@ -114,7 +114,9 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
         // Only show validation colors after explicit submission by the user
         if (isSubmitted && userAnswer) {
-            return userAnswer.isCorrect === true ? 'correct' : 'error';
+            if (userAnswer.isCorrect === true) return 'correct';
+            if (userAnswer.isCorrect === false) return 'error';
+            // If isCorrect === null (pending), fall through to default
         }
 
         // Only show active state if not submitted or when actively editing after submission
@@ -368,7 +370,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 <div
                     className="steps-area mt-6"
                     style={{
-                        height: `${problem.steps.length * STEP_SPACING + ROW_HEIGHT}px`,
+                        height: `${problem.steps.length > 0 ? (problem.steps.length - 1) * STEP_SPACING + (ROW_HEIGHT * 2) : 0}px`,
                         width: '100%' // Ensure full width
                     }}
                 >
@@ -589,20 +591,27 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                             );
                                         })()}
 
-                                        {/* Generate quotient boxes for each step in the problem */}
-                                        {problem.steps.map((_, stepIndex) => {
-                                            return (
-                                                <div
-                                                    key={`quotient-${stepIndex}`}
-                                                    style={{
-                                                        width: `${BOX_TOTAL_WIDTH}px`,
-                                                        display: 'inline-block'
-                                                    }}
-                                                >
-                                                    {createInput(stepIndex, 'quotient', 0)}
-                                                </div>
-                                            );
-                                        })}
+                                        {/* Generate quotient boxes based on quotient digit count */}
+                                        {(() => {
+                                            const quotientDigits = problem.quotient.toString().length;
+                                            return Array.from({ length: quotientDigits }).map((_, digitIndex) => {
+                                                const position = quotientDigits - 1 - digitIndex; // Right to left positioning
+                                                // Find which step this quotient digit belongs to
+                                                const stepIndex = Math.min(digitIndex, problem.steps.length - 1);
+
+                                                return (
+                                                    <div
+                                                        key={`quotient-${digitIndex}`}
+                                                        style={{
+                                                            width: `${BOX_TOTAL_WIDTH}px`,
+                                                            display: 'inline-block'
+                                                        }}
+                                                    >
+                                                        {createInput(stepIndex, 'quotient', position)}
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
 
@@ -664,9 +673,25 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                     Fix the red squares to continue
                                 </div>
                                 <p className="text-orange-600 text-sm">
-                                    Change any incorrect answers (shown in red) to the correct values, then press Enter to advance.
+                                    Change any incorrect answers (shown in red) to the correct values, then tap Submit to advance.
                                 </p>
                             </div>
+                            {/* Submit button for error state - allows mobile users to resubmit */}
+                            <button
+                                onClick={() => onProblemSubmit?.()}
+                                disabled={!areAllFieldsFilled?.()}
+                                className={`px-6 py-2 rounded-lg font-semibold ${!areAllFieldsFilled?.()
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                    } transition-colors`}
+                            >
+                                <span className="flex items-center justify-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    Submit
+                                </span>
+                            </button>
                         </div>
                     )}
 

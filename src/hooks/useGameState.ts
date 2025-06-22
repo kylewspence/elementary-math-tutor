@@ -229,32 +229,28 @@ export function useGameState() {
                     a.fieldPosition === answer.fieldPosition)
             );
 
-            // Validate the answer (but don't show validation until explicit submission)
-            const isCorrect = validateAnswer(prev.problem as DivisionProblem, answer);
+            // If problem was already submitted, mark new answers as pending (not validated)
+            const newAnswer = prev.isSubmitted
+                ? { ...answer, isCorrect: null as boolean | null } // Mark as pending
+                : { ...answer, isCorrect: false as boolean | null }; // Default to false for initial submission
 
-            // Add validated answer to the list
-            const validatedAnswer = { ...answer, isCorrect };
-            const validatedAnswers = [...filteredAnswers, validatedAnswer];
+            // Add the new answer
+            const updatedAnswers = [...filteredAnswers, newAnswer];
 
-            // If problem was already submitted, re-check completion
-            if (prev.isSubmitted && prev.problem) {
-                const complete = isProblemComplete(prev.problem as DivisionProblem, validatedAnswers);
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
-                    userAnswers: validatedAnswers,
-                    isComplete: complete,
+                    userAnswers: updatedAnswers,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 
-            // IMPORTANT: Don't set isSubmitted or isComplete here for unsubmitted problems!
-            // These should only be set when the user explicitly clicks "Submit Answers"
-            // which calls submitProblem(). Setting isSubmitted here causes premature
-            // validation feedback and hides the submit button.
-
+            // If not yet submitted, just update the answers
             return {
                 ...prev,
-                userAnswers: validatedAnswers,
-                // Preserve existing isSubmitted and isComplete values
+                userAnswers: updatedAnswers,
             };
         });
     }, []);
@@ -268,13 +264,13 @@ export function useGameState() {
                     a.fieldPosition === position)
             );
 
-            // If problem was already submitted, re-check completion
-            if (prev.isSubmitted && prev.problem) {
-                const complete = isProblemComplete(prev.problem as DivisionProblem, filteredAnswers);
+            // If problem was already submitted, we DON'T auto-validate
+            // User must hit submit again to validate
+            if (prev.isSubmitted) {
                 return {
                     ...prev,
                     userAnswers: filteredAnswers,
-                    isComplete: complete,
+                    isComplete: false, // Reset completion since answers changed
                 };
             }
 

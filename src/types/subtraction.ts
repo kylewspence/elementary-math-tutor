@@ -33,7 +33,7 @@ export interface SubtractionUserAnswer {
     columnPosition: number;
     fieldType: 'difference' | 'borrow';
     value: number;
-    isCorrect: boolean;
+    isCorrect: boolean | null; // null = pending, true = correct, false = incorrect
     timestamp: Date;
 }
 

@@ -252,7 +252,8 @@ function App() {
     return () => window.removeEventListener('autoSaveProgress', handleAutoSave);
   }, [saveProgress, gameMode, gameState.currentLevel, gameState.currentProblemIndex, gameState.levelProblems,
     additionGameState.currentLevel, additionGameState.currentProblemIndex, additionGameState.levelProblems,
-    multiplicationGameState.currentLevel, multiplicationGameState.currentProblemIndex, multiplicationGameState.levelProblems]);
+    multiplicationGameState.currentLevel, multiplicationGameState.currentProblemIndex, multiplicationGameState.levelProblems,
+    subtractionGameState.currentLevel, subtractionGameState.currentProblemIndex, subtractionGameState.levelProblems]);
 
   // Handle auto-restore when tab becomes visible again
   useEffect(() => {
@@ -279,13 +280,19 @@ function App() {
             saved.multiplicationState.currentProblemIndex,
             saved.multiplicationState.levelProblems
           );
+        } else if (gameMode === 'subtraction' && saved.subtractionState && saved.subtractionState.levelProblems) {
+          restoreSubtractionGameState(
+            saved.subtractionState.currentLevel,
+            saved.subtractionState.currentProblemIndex,
+            saved.subtractionState.levelProblems
+          );
         }
       }
     };
 
     window.addEventListener('autoRestoreProgress', handleAutoRestore);
     return () => window.removeEventListener('autoRestoreProgress', handleAutoRestore);
-  }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState]);
+  }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState]);
 
   // Initialize the appropriate game ONLY when mode changes (after initial load)
   useEffect(() => {
@@ -299,6 +306,7 @@ function App() {
       if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) return;
       if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) return;
       if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) return;
+      if (gameMode === 'subtraction' && saved.subtractionState && saved.subtractionState.levelProblems) return;
     }
 
     // Only initialize if we don't have saved state for this specific mode
@@ -308,8 +316,10 @@ function App() {
       initializeAdditionGame();
     } else if (gameMode === 'multiplication') {
       initializeMultiplicationGame();
+    } else if (gameMode === 'subtraction') {
+      initializeSubtractionGame();
     }
-  }, [gameMode, hasLoadedSavedState, loadProgress, initializeGame, initializeAdditionGame, initializeMultiplicationGame]);
+  }, [gameMode, hasLoadedSavedState, loadProgress, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
