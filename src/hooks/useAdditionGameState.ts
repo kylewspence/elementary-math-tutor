@@ -395,6 +395,7 @@ export function useAdditionGameState() {
             if (!prev.problem) return prev;
 
             let updatedProblem = prev.problem;
+            let preservedAnswers = prev.userAnswers;
 
             // If new values were provided, update the problem
             if (newAddend1 !== undefined && newAddend2 !== undefined &&
@@ -407,11 +408,22 @@ export function useAdditionGameState() {
                     if (currentLevel) {
                         // Generate a problem with the specific addends
                         updatedProblem = generateAdditionProblem(currentLevel, newAddend1, newAddend2);
-                        // Reset answers since the problem structure changed
+
+                        // Try to preserve existing answers that are still valid for the new problem
+                        // Only keep answers that match the new problem structure
+                        preservedAnswers = prev.userAnswers.filter(answer => {
+                            // Check if this answer is still valid for the new problem structure
+                            const step = updatedProblem.steps.find(s => s.columnPosition === answer.columnPosition);
+                            if (!step) return false;
+
+                            // All field types (sum and carry) are valid as long as the column exists
+                            return true;
+                        });
+
                         return {
                             ...prev,
                             problem: { ...updatedProblem, isEditable: false },
-                            userAnswers: [],
+                            userAnswers: preservedAnswers,
                             isSubmitted: false,
                             isComplete: false,
                         };
