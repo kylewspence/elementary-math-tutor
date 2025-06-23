@@ -382,18 +382,58 @@ export function useAdditionGameState() {
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: true },
+                // Reset submission states when editing to allow resubmission
+                isSubmitted: false,
+                isComplete: false,
             };
         });
     }, []);
 
     // Disable problem editing
-    const disableEditing = useCallback(() => {
+    const disableEditing = useCallback((newAddend1?: number, newAddend2?: number) => {
         setGameState(prev => {
             if (!prev.problem) return prev;
 
+            let updatedProblem = prev.problem;
+            let preservedAnswers = prev.userAnswers;
+
+            // If new values were provided, update the problem
+            if (newAddend1 !== undefined && newAddend2 !== undefined &&
+                (newAddend1 !== prev.problem.addend1 || newAddend2 !== prev.problem.addend2)) {
+
+                // Validate the new values
+                if (newAddend1 > 0 && newAddend2 > 0) {
+                    // Find the current level object
+                    const currentLevel = ADDITION_LEVELS.find(l => l.id === prev.currentLevel);
+                    if (currentLevel) {
+                        // Generate a problem with the specific addends
+                        updatedProblem = generateAdditionProblem(currentLevel, newAddend1, newAddend2);
+
+                        // Try to preserve existing answers that are still valid for the new problem
+                        // Only keep answers that match the new problem structure
+                        preservedAnswers = prev.userAnswers.filter(answer => {
+                            // Check if this answer is still valid for the new problem structure
+                            const step = updatedProblem.steps.find(s => s.columnPosition === answer.columnPosition);
+                            if (!step) return false;
+
+                            // All field types (sum and carry) are valid as long as the column exists
+                            return true;
+                        });
+
+                        return {
+                            ...prev,
+                            problem: { ...updatedProblem, isEditable: false },
+                            userAnswers: preservedAnswers,
+                            isSubmitted: false,
+                            isComplete: false,
+                        };
+                    }
+                }
+            }
+
             return {
                 ...prev,
-                problem: { ...prev.problem, isEditable: false },
+                problem: { ...updatedProblem, isEditable: false },
             };
         });
     }, []);

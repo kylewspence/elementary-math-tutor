@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import ProblemComplete from '../UI/ProblemComplete';
+import ErrorMessage from '../UI/ErrorMessage';
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
@@ -14,7 +15,7 @@ interface DivisionDisplayProps {
     onProblemChange?: (dividend: number, divisor: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newDividend?: number, newDivisor?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -57,6 +58,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempDividend, setTempDividend] = useState<string>('');
+    const [tempDivisor, setTempDivisor] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempDividend(problem.dividend.toString());
+            setTempDivisor(problem.divisor.toString());
+        }
+    }, [problem?.dividend, problem?.divisor, problem?.isEditable]);
+
     // Auto-focus the active input
     useEffect(() => {
         if (activeInputRef.current) {
@@ -79,13 +92,29 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newDividend = parseInt(tempDividend, 10);
+                const newDivisor = parseInt(tempDivisor, 10);
+
+                // Only pass valid numbers, otherwise just disable editing without updating
+                if (!isNaN(newDividend) && !isNaN(newDivisor) && newDividend > 0 && newDivisor > 0) {
+                    onDisableEditing?.(newDividend, newDivisor);
+                } else {
+                    onDisableEditing?.();
+                }
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newDividend = parseInt(tempDividend, 10);
+                const newDivisor = parseInt(tempDivisor, 10);
+
+                // Only pass valid numbers, otherwise just disable editing without updating
+                if (!isNaN(newDividend) && !isNaN(newDivisor) && newDividend > 0 && newDivisor > 0) {
+                    onDisableEditing?.(newDividend, newDivisor);
+                } else {
+                    onDisableEditing?.();
+                }
             }
         };
 
@@ -100,7 +129,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempDividend, tempDivisor]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -198,21 +227,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
             }
         }, 100);
-    };
-
-    // Handle problem editing
-    const handleDividendChange = (value: string) => {
-        const newDividend = parseInt(value, 10);
-        if (!isNaN(newDividend) && newDividend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newDividend, problem.divisor);
-        }
-    };
-
-    const handleDivisorChange = (value: string) => {
-        const newDivisor = parseInt(value, 10);
-        if (!isNaN(newDivisor) && newDivisor > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.dividend, newDivisor);
-        }
     };
 
     // If problem is null or loading, show loading state
@@ -477,8 +491,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.dividend.toString()}
-                                onChange={(e) => handleDividendChange(e.target.value)}
+                                value={tempDividend}
+                                onChange={(e) => setTempDividend(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Dividend"
                                 autoFocus
@@ -486,8 +500,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                             <span>÷</span>
                             <input
                                 type="text"
-                                value={problem.divisor.toString()}
-                                onChange={(e) => handleDivisorChange(e.target.value)}
+                                value={tempDivisor}
+                                onChange={(e) => setTempDivisor(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Divisor"
                             />
@@ -591,27 +605,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                             );
                                         })()}
 
-                                        {/* Generate quotient boxes based on quotient digit count */}
-                                        {(() => {
-                                            const quotientDigits = problem.quotient.toString().length;
-                                            return Array.from({ length: quotientDigits }).map((_, digitIndex) => {
-                                                const position = quotientDigits - 1 - digitIndex; // Right to left positioning
-                                                // Find which step this quotient digit belongs to
-                                                const stepIndex = Math.min(digitIndex, problem.steps.length - 1);
-
-                                                return (
-                                                    <div
-                                                        key={`quotient-${digitIndex}`}
-                                                        style={{
-                                                            width: `${BOX_TOTAL_WIDTH}px`,
-                                                            display: 'inline-block'
-                                                        }}
-                                                    >
-                                                        {createInput(stepIndex, 'quotient', position)}
-                                                    </div>
-                                                );
-                                            });
-                                        })()}
+                                        {/* Generate quotient boxes - one per step as expected by navigation */}
+                                        {problem.steps.map((_, stepIndex) => (
+                                            <div
+                                                key={`quotient-${stepIndex}`}
+                                                style={{
+                                                    width: `${BOX_TOTAL_WIDTH}px`,
+                                                    display: 'inline-block'
+                                                }}
+                                            >
+                                                {createInput(stepIndex, 'quotient', 0)}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -638,8 +643,15 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {/* Submit/Next Problem button */}
                     {!isSubmitted ? (
                         <button
-                            onClick={() => onProblemSubmit?.()}
-                            disabled={!areAllFieldsFilled?.()}
+                            onClick={() => {
+                                console.log('🔍 [SUBMIT DEBUG] Submit button clicked');
+                                onProblemSubmit?.();
+                            }}
+                            disabled={(() => {
+                                const allFieldsFilledResult = areAllFieldsFilled?.();
+                                console.log(`🔍 [SUBMIT DEBUG] Submit button render - areAllFieldsFilled: ${allFieldsFilledResult}, disabled: ${!allFieldsFilledResult}`);
+                                return !allFieldsFilledResult;
+                            })()}
                             className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()
                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                 : 'bg-blue-500 text-white hover:bg-blue-600'
@@ -664,35 +676,10 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         </button>
                     ) : (
                         // Show helpful feedback when submitted but not complete (has wrong answers)
-                        <div className="text-center mb-4">
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
-                                <div className="flex items-center justify-center gap-2 text-orange-700 font-semibold">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Fix the red squares to continue
-                                </div>
-                                <p className="text-orange-600 text-sm">
-
-                                </p>
-                            </div>
-                            {/* Submit button for error state - allows mobile users to resubmit */}
-                            <button
-                                onClick={() => onProblemSubmit?.()}
-                                disabled={!areAllFieldsFilled?.()}
-                                className={`px-6 py-2 rounded-lg font-semibold ${!areAllFieldsFilled?.()
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                    } transition-colors`}
-                            >
-                                <span className="flex items-center justify-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Submit
-                                </span>
-                            </button>
-                        </div>
+                        <ErrorMessage
+                            onSubmit={() => onProblemSubmit?.()}
+                            disabled={!areAllFieldsFilled?.()}
+                        />
                     )}
 
                 </div>

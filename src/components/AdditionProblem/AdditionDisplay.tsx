@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../../types/addition';
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
+import ErrorMessage from '../UI/ErrorMessage';
 
 interface AdditionDisplayProps {
     problem: AdditionProblem | null;
@@ -12,7 +13,7 @@ interface AdditionDisplayProps {
     onAnswerClear: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newAddend1?: number, newAddend2?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -51,8 +52,38 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onUpdateProblem,
     areAllFieldsFilled
 }) => {
+    // Helper function to intelligently display digits (suppress leading zeros)
+    const smartDigitDisplay = (digit: number, originalNumber: number, columnPosition: number, totalColumns: number): string => {
+        const numberStr = originalNumber.toString();
+
+        // Calculate which digit position this column represents (from right to left, 0-indexed)
+        const digitPositionFromRight = columnPosition;
+
+        // Calculate the minimum number of columns needed for this number
+        const requiredColumns = numberStr.length;
+
+        // If this column position is beyond what's needed for this number, don't show anything
+        if (digitPositionFromRight >= requiredColumns) {
+            return ''; // This is a leading zero position
+        }
+
+        // Otherwise, show the digit (even if it's 0, because it's meaningful)
+        return digit.toString();
+    };
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
+
+    // State for temporary editing values
+    const [tempAddend1, setTempAddend1] = useState<string>('');
+    const [tempAddend2, setTempAddend2] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempAddend1(problem.addend1.toString());
+            setTempAddend2(problem.addend2.toString());
+        }
+    }, [problem?.addend1, problem?.addend2, problem?.isEditable]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -75,13 +106,17 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newAddend1 = parseInt(tempAddend1, 10);
+                const newAddend2 = parseInt(tempAddend2, 10);
+                onDisableEditing?.(newAddend1, newAddend2);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newAddend1 = parseInt(tempAddend1, 10);
+                const newAddend2 = parseInt(tempAddend2, 10);
+                onDisableEditing?.(newAddend1, newAddend2);
             }
         };
 
@@ -96,7 +131,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempAddend1, tempAddend2]);
 
     // Helper function to check if a column receives a carry - matches keyboard nav logic exactly
     const receivesCarry = useCallback((columnPosition: number) => {
@@ -200,21 +235,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
         onAnswerSubmit(answer);
     }, [onAnswerClear, onAnswerSubmit]);
-
-    // Handle problem editing
-    const handleAddend1Change = useCallback((value: string) => {
-        const newAddend = parseInt(value, 10);
-        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newAddend, problem.addend2);
-        }
-    }, [onUpdateProblem, problem]);
-
-    const handleAddend2Change = useCallback((value: string) => {
-        const newAddend = parseInt(value, 10);
-        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.addend1, newAddend);
-        }
-    }, [onUpdateProblem, problem]);
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
@@ -356,8 +376,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.addend1.toString()}
-                                onChange={(e) => handleAddend1Change(e.target.value)}
+                                value={tempAddend1}
+                                onChange={(e) => setTempAddend1(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="First Number"
                                 autoFocus
@@ -365,8 +385,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             <span>+</span>
                             <input
                                 type="text"
-                                value={problem.addend2.toString()}
-                                onChange={(e) => handleAddend2Change(e.target.value)}
+                                value={tempAddend2}
+                                onChange={(e) => setTempAddend2(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Second Number"
                             />
@@ -434,7 +454,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : step.digit1}
+                                        {smartDigitDisplay(step.digit1, problem.addend1, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
@@ -452,7 +472,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : step.digit2}
+                                        {smartDigitDisplay(step.digit2, problem.addend2, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
@@ -511,35 +531,10 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         </button>
                     ) : (
                         // Show helpful feedback when submitted but not complete (has wrong answers)
-                        <div className="text-center mb-4">
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
-                                <div className="flex items-center justify-center gap-2 text-orange-700 font-semibold mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Fix the red squares to continue
-                                </div>
-                                <p className="text-orange-600 text-sm">
-                                    Change any incorrect answers (shown in red) to the correct values, then tap Submit to advance.
-                                </p>
-                            </div>
-                            {/* Submit button for error state - allows mobile users to resubmit */}
-                            <button
-                                onClick={onProblemSubmit}
-                                disabled={!areAllFieldsFilled?.()}
-                                className={`px-6 py-2 rounded-lg font-semibold ${!areAllFieldsFilled?.()
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                    } transition-colors`}
-                            >
-                                <span className="flex items-center justify-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Submit
-                                </span>
-                            </button>
-                        </div>
+                        <ErrorMessage
+                            onSubmit={() => onProblemSubmit?.()}
+                            disabled={!areAllFieldsFilled?.()}
+                        />
                     )}
 
                 </div>

@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import type { SubtractionProblem, SubtractionUserAnswer, SubtractionGameState } from '../../types/subtraction';
 import type { SubtractionCurrentFocus } from '../../hooks/useSubtractionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import Input from '../UI/Input';
+import ErrorMessage from '../UI/ErrorMessage';
 
 interface SubtractionDisplayProps {
     problem: SubtractionProblem | null;
@@ -12,7 +13,7 @@ interface SubtractionDisplayProps {
     onAnswerClear: (columnPosition: number, fieldType: 'difference' | 'borrow') => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newMinuend?: number, newSubtrahend?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -51,8 +52,38 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
     onUpdateProblem,
     areAllFieldsFilled
 }) => {
+    // Helper function to intelligently display digits (suppress leading zeros)
+    const smartDigitDisplay = (digit: number, originalNumber: number, columnPosition: number, totalColumns: number): string => {
+        const numberStr = originalNumber.toString();
+
+        // Calculate which digit position this column represents (from right to left, 0-indexed)
+        const digitPositionFromRight = columnPosition;
+
+        // Calculate the minimum number of columns needed for this number
+        const requiredColumns = numberStr.length;
+
+        // If this column position is beyond what's needed for this number, don't show anything
+        if (digitPositionFromRight >= requiredColumns) {
+            return ''; // This is a leading zero position
+        }
+
+        // Otherwise, show the digit (even if it's 0, because it's meaningful)
+        return digit.toString();
+    };
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
+
+    // State for temporary editing values
+    const [tempMinuend, setTempMinuend] = useState<string>('');
+    const [tempSubtrahend, setTempSubtrahend] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempMinuend(problem.minuend.toString());
+            setTempSubtrahend(problem.subtrahend.toString());
+        }
+    }, [problem?.minuend, problem?.subtrahend, problem?.isEditable]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -75,13 +106,17 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newMinuend = parseInt(tempMinuend, 10);
+                const newSubtrahend = parseInt(tempSubtrahend, 10);
+                onDisableEditing?.(newMinuend, newSubtrahend);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newMinuend = parseInt(tempMinuend, 10);
+                const newSubtrahend = parseInt(tempSubtrahend, 10);
+                onDisableEditing?.(newMinuend, newSubtrahend);
             }
         };
 
@@ -96,7 +131,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempMinuend, tempSubtrahend]);
 
     // Helper function to check if a column receives a borrow - matches keyboard nav logic exactly
     const receivesBorrow = useCallback((columnPosition: number) => {
@@ -201,20 +236,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
         onAnswerSubmit(answer);
     }, [onAnswerClear, onAnswerSubmit]);
 
-    // Handle problem editing
-    const handleMinuendChange = useCallback((value: string) => {
-        const newMinuend = parseInt(value, 10);
-        if (!isNaN(newMinuend) && newMinuend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newMinuend, problem.subtrahend);
-        }
-    }, [onUpdateProblem, problem]);
 
-    const handleSubtrahendChange = useCallback((value: string) => {
-        const newSubtrahend = parseInt(value, 10);
-        if (!isNaN(newSubtrahend) && newSubtrahend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.minuend, newSubtrahend);
-        }
-    }, [onUpdateProblem, problem]);
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = useCallback((columnPosition: number, fieldType: 'difference' | 'borrow') => {
@@ -356,8 +378,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.minuend.toString()}
-                                onChange={(e) => handleMinuendChange(e.target.value)}
+                                value={tempMinuend}
+                                onChange={(e) => setTempMinuend(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="First Number"
                                 autoFocus
@@ -365,8 +387,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                             <span>-</span>
                             <input
                                 type="text"
-                                value={problem.subtrahend.toString()}
-                                onChange={(e) => handleSubtrahendChange(e.target.value)}
+                                value={tempSubtrahend}
+                                onChange={(e) => setTempSubtrahend(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Second Number"
                             />
@@ -434,7 +456,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : (step.digit1 ?? '')}
+                                        {smartDigitDisplay(step.digit1, problem.minuend, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
@@ -452,7 +474,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : (step.digit2 ?? '')}
+                                        {smartDigitDisplay(step.digit2, problem.subtrahend, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
@@ -511,35 +533,10 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                         </button>
                     ) : (
                         // Show helpful feedback when submitted but not complete (has wrong answers)
-                        <div className="text-center mb-4">
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
-                                <div className="flex items-center justify-center gap-2 text-orange-700 font-semibold mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Fix the red squares to continue
-                                </div>
-                                <p className="text-orange-600 text-sm">
-                                    Change any incorrect answers (shown in red) to the correct values, then tap Submit to advance.
-                                </p>
-                            </div>
-                            {/* Submit button for error state - allows mobile users to resubmit */}
-                            <button
-                                onClick={onProblemSubmit}
-                                disabled={!areAllFieldsFilled?.()}
-                                className={`px-6 py-2 rounded-lg font-semibold ${!areAllFieldsFilled?.()
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                    } transition-colors`}
-                            >
-                                <span className="flex items-center justify-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Submit
-                                </span>
-                            </button>
-                        </div>
+                        <ErrorMessage
+                            onSubmit={() => onProblemSubmit?.()}
+                            disabled={!areAllFieldsFilled?.()}
+                        />
                     )}
 
                 </div>

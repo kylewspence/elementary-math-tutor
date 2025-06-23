@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
+import ErrorMessage from '../UI/ErrorMessage';
 
 // Use the same constants as division for grid layout
 // const { BOX_TOTAL_WIDTH } = GRID_CONSTANTS;
@@ -11,22 +12,22 @@ interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
     currentFocus: MultiplicationCurrentFocus;
-    onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
-    onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onAnswerSubmit: (answer: MultiplicationUserAnswer) => void;
+    onAnswerClear: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newMultiplicand?: number, newMultiplier?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
-    onFieldClick: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onFieldClick: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
     onNextProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
-    moveToNextField?: (fieldType?: 'product' | 'partial' | 'carry', position?: number, partialIndex?: number) => void;
+    moveToNextField?: () => void;
     areAllFieldsFilled?: () => boolean;
 }
 
@@ -55,7 +56,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempMultiplicand, setTempMultiplicand] = useState<string>('');
+    const [tempMultiplier, setTempMultiplier] = useState<string>('');
 
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempMultiplicand(problem.multiplicand.toString());
+            setTempMultiplier(problem.multiplier.toString());
+        }
+    }, [problem?.multiplicand, problem?.multiplier, problem?.isEditable]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -79,13 +90,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newMultiplicand = parseInt(tempMultiplicand, 10);
+                const newMultiplier = parseInt(tempMultiplier, 10);
+                onDisableEditing?.(newMultiplicand, newMultiplier);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newMultiplicand = parseInt(tempMultiplicand, 10);
+                const newMultiplier = parseInt(tempMultiplier, 10);
+                onDisableEditing?.(newMultiplicand, newMultiplier);
             }
         };
 
@@ -100,7 +115,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, onDisableEditing]);
+    }, [problem, onDisableEditing, tempMultiplicand, tempMultiplier]);
 
 
 
@@ -228,20 +243,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         return false;
     };
 
-    // Handle problem editing
-    const handleMultiplicandChange = (value: string) => {
-        const newMultiplicand = parseInt(value, 10);
-        if (!isNaN(newMultiplicand) && newMultiplicand > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newMultiplicand, problem.multiplier);
-        }
-    };
 
-    const handleMultiplierChange = (value: string) => {
-        const newMultiplier = parseInt(value, 10);
-        if (!isNaN(newMultiplier) && newMultiplier > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.multiplicand, newMultiplier);
-        }
-    };
 
     // Render the multiplication grid
     const renderMultiplicationGrid = () => {
@@ -419,8 +421,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.multiplicand.toString()}
-                                onChange={(e) => handleMultiplicandChange(e.target.value)}
+                                value={tempMultiplicand}
+                                onChange={(e) => setTempMultiplicand(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Multiplicand"
                                 autoFocus
@@ -428,8 +430,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                             <span>×</span>
                             <input
                                 type="text"
-                                value={problem.multiplier.toString()}
-                                onChange={(e) => handleMultiplierChange(e.target.value)}
+                                value={tempMultiplier}
+                                onChange={(e) => setTempMultiplier(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Multiplier"
                             />
@@ -506,35 +508,10 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         </button>
                     ) : (
                         // Show helpful feedback when submitted but not complete (has wrong answers)
-                        <div className="text-center mb-4">
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
-                                <div className="flex items-center justify-center gap-2 text-orange-700 font-semibold mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Fix the red squares to continue
-                                </div>
-                                <p className="text-orange-600 text-sm">
-                                    Change any incorrect answers (shown in red) to the correct values, then tap Submit to advance.
-                                </p>
-                            </div>
-                            {/* Submit button for error state - allows mobile users to resubmit */}
-                            <button
-                                onClick={() => onProblemSubmit?.()}
-                                disabled={!areAllFieldsFilled?.()}
-                                className={`px-6 py-2 rounded-lg font-semibold ${!areAllFieldsFilled?.()
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                    } transition-colors`}
-                            >
-                                <span className="flex items-center justify-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Submit
-                                </span>
-                            </button>
-                        </div>
+                        <ErrorMessage
+                            onSubmit={() => onProblemSubmit?.()}
+                            disabled={!areAllFieldsFilled?.()}
+                        />
                     )}
 
                 </div>

@@ -23,11 +23,18 @@ export function useSharedValidation() {
         allFields: ValidationField[],
         userAnswers: ValidationAnswer[]
     ): boolean => {
-        if (allFields.length === 0) return false;
+        console.log('🔍 [SHARED VALIDATION] areAllFieldsFilled called:');
+        console.log('  All fields:', allFields);
+        console.log('  User answers:', userAnswers);
+
+        if (allFields.length === 0) {
+            console.log('  ❌ No fields to validate - returning false');
+            return false;
+        }
 
         // Check if we have an answer for each field
-        return allFields.every(field => {
-            return userAnswers.some(answer => {
+        const result = allFields.every(field => {
+            const hasAnswer = userAnswers.some(answer => {
                 // Division/Addition fields (stepNumber + fieldType + fieldPosition)
                 if (field.stepNumber !== undefined && field.fieldPosition !== undefined) {
                     return answer.stepNumber === field.stepNumber &&
@@ -50,7 +57,16 @@ export function useSharedValidation() {
 
                 return false;
             });
+
+            if (!hasAnswer) {
+                console.log(`  ❌ Missing answer for field:`, field);
+            }
+
+            return hasAnswer;
         });
+
+        console.log(`  Final result: ${result}`);
+        return result;
     }, []);
 
     return {

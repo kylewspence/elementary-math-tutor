@@ -393,17 +393,47 @@ export function useGameState() {
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: true },
+                // Reset submission states when editing to allow resubmission
+                isSubmitted: false,
+                isComplete: false,
             };
         });
     }, []);
 
     // Disable problem editing
-    const disableEditing = useCallback(() => {
+    const disableEditing = useCallback((newDividend?: number, newDivisor?: number) => {
         setGameState(prev => {
             if (!prev.problem) return prev;
+
+            let updatedProblem = prev.problem;
+
+            // If new values were provided, update the problem
+            if (newDividend !== undefined && newDivisor !== undefined &&
+                (newDividend !== prev.problem.dividend || newDivisor !== prev.problem.divisor)) {
+
+                // Validate the new values
+                if (newDividend >= newDivisor && newDividend > 0 && newDivisor > 0) {
+                    // Find the current level object
+                    const currentLevel = GAME_LEVELS.find(l => l.id === prev.currentLevel);
+                    if (currentLevel) {
+                        // Generate a problem with the specific dividend and divisor
+                        updatedProblem = generateProblem(currentLevel, newDividend, newDivisor);
+
+                        // Clear all answers - start fresh with the new problem
+                        return {
+                            ...prev,
+                            problem: { ...updatedProblem, isEditable: false },
+                            userAnswers: [], // Clear all answers like other operations
+                            isSubmitted: false,
+                            isComplete: false,
+                        };
+                    }
+                }
+            }
+
             return {
                 ...prev,
-                problem: { ...prev.problem, isEditable: false },
+                problem: { ...updatedProblem, isEditable: false },
             };
         });
     }, []);
