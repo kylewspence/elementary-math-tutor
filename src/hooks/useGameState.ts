@@ -406,7 +406,6 @@ export function useGameState() {
             if (!prev.problem) return prev;
 
             let updatedProblem = prev.problem;
-            let preservedAnswers = prev.userAnswers;
 
             // If new values were provided, update the problem
             if (newDividend !== undefined && newDivisor !== undefined &&
@@ -420,39 +419,11 @@ export function useGameState() {
                         // Generate a problem with the specific dividend and divisor
                         updatedProblem = generateProblem(currentLevel, newDividend, newDivisor);
 
-                        // Try to preserve existing answers that are still valid for the new problem
-                        // Only keep answers that match the new problem structure
-                        preservedAnswers = prev.userAnswers.filter(answer => {
-                            // Check if this answer is still valid for the new problem structure
-                            const step = updatedProblem.steps[answer.stepNumber];
-                            if (!step) return false;
-
-                            // For each field type, check if the position is still valid
-                            switch (answer.fieldType) {
-                                case 'quotient':
-                                    // Quotient positions depend on the number of quotient digits
-                                    const quotientDigits = updatedProblem.quotient.toString().length;
-                                    return answer.fieldPosition < quotientDigits;
-                                case 'multiply':
-                                    // Multiply positions depend on the number of digits in the multiply value
-                                    const multiplyDigits = step.multiply.toString().length;
-                                    return answer.fieldPosition < multiplyDigits;
-                                case 'subtract':
-                                    // Subtract positions depend on the number of digits in the subtract value
-                                    const subtractDigits = step.subtract.toString().length;
-                                    return answer.fieldPosition < subtractDigits;
-                                case 'bringDown':
-                                    // BringDown is always position 0 and exists if step has bringDown
-                                    return step.bringDown !== undefined && answer.fieldPosition === 0;
-                                default:
-                                    return false;
-                            }
-                        });
-
+                        // Clear all answers - start fresh with the new problem
                         return {
                             ...prev,
                             problem: { ...updatedProblem, isEditable: false },
-                            userAnswers: preservedAnswers,
+                            userAnswers: [], // Clear all answers like other operations
                             isSubmitted: false,
                             isComplete: false,
                         };

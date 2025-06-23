@@ -605,27 +605,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                             );
                                         })()}
 
-                                        {/* Generate quotient boxes based on quotient digit count */}
-                                        {(() => {
-                                            const quotientDigits = problem.quotient.toString().length;
-                                            return Array.from({ length: quotientDigits }).map((_, digitIndex) => {
-                                                const position = quotientDigits - 1 - digitIndex; // Right to left positioning
-                                                // Find which step this quotient digit belongs to
-                                                const stepIndex = Math.min(digitIndex, problem.steps.length - 1);
-
-                                                return (
-                                                    <div
-                                                        key={`quotient-${digitIndex}`}
-                                                        style={{
-                                                            width: `${BOX_TOTAL_WIDTH}px`,
-                                                            display: 'inline-block'
-                                                        }}
-                                                    >
-                                                        {createInput(stepIndex, 'quotient', position)}
-                                                    </div>
-                                                );
-                                            });
-                                        })()}
+                                        {/* Generate quotient boxes - one per step as expected by navigation */}
+                                        {problem.steps.map((_, stepIndex) => (
+                                            <div
+                                                key={`quotient-${stepIndex}`}
+                                                style={{
+                                                    width: `${BOX_TOTAL_WIDTH}px`,
+                                                    display: 'inline-block'
+                                                }}
+                                            >
+                                                {createInput(stepIndex, 'quotient', 0)}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -652,8 +643,15 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {/* Submit/Next Problem button */}
                     {!isSubmitted ? (
                         <button
-                            onClick={() => onProblemSubmit?.()}
-                            disabled={!areAllFieldsFilled?.()}
+                            onClick={() => {
+                                console.log('🔍 [SUBMIT DEBUG] Submit button clicked');
+                                onProblemSubmit?.();
+                            }}
+                            disabled={(() => {
+                                const allFieldsFilledResult = areAllFieldsFilled?.();
+                                console.log(`🔍 [SUBMIT DEBUG] Submit button render - areAllFieldsFilled: ${allFieldsFilledResult}, disabled: ${!allFieldsFilledResult}`);
+                                return !allFieldsFilledResult;
+                            })()}
                             className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()
                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                 : 'bg-blue-500 text-white hover:bg-blue-600'
