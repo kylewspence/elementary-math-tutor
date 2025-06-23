@@ -411,17 +411,46 @@ export function useMultiplicationGameState() {
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: true },
+                // Reset submission states when editing to allow resubmission
+                isSubmitted: false,
+                isComplete: false,
             };
         });
     }, []);
 
     // Disable problem editing
-    const disableEditing = useCallback(() => {
+    const disableEditing = useCallback((newMultiplicand?: number, newMultiplier?: number) => {
         setGameState(prev => {
             if (!prev.problem) return prev;
+
+            let updatedProblem = prev.problem;
+
+            // If new values were provided, update the problem
+            if (newMultiplicand !== undefined && newMultiplier !== undefined &&
+                (newMultiplicand !== prev.problem.multiplicand || newMultiplier !== prev.problem.multiplier)) {
+
+                // Validate the new values
+                if (newMultiplicand > 0 && newMultiplier > 0) {
+                    // Find the current level object
+                    const currentLevel = MULTIPLICATION_LEVELS.find(l => l.id === prev.currentLevel);
+                    if (currentLevel) {
+                        // Generate a problem with the specific factors
+                        updatedProblem = createSpecificMultiplicationProblem(newMultiplicand, newMultiplier, currentLevel.difficulty);
+                        // Reset answers since the problem structure changed
+                        return {
+                            ...prev,
+                            problem: { ...updatedProblem, isEditable: false },
+                            userAnswers: [],
+                            isSubmitted: false,
+                            isComplete: false,
+                        };
+                    }
+                }
+            }
+
             return {
                 ...prev,
-                problem: { ...prev.problem, isEditable: false },
+                problem: { ...updatedProblem, isEditable: false },
             };
         });
     }, []);

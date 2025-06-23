@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { DivisionProblem, UserAnswer, GameState } from '../../types/game';
 import type { CurrentFocus } from '../../hooks/useKeyboardNav';
 import Input from '../UI/Input';
@@ -15,7 +15,7 @@ interface DivisionDisplayProps {
     onProblemChange?: (dividend: number, divisor: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newDividend?: number, newDivisor?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -58,6 +58,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempDividend, setTempDividend] = useState<string>('');
+    const [tempDivisor, setTempDivisor] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempDividend(problem.dividend.toString());
+            setTempDivisor(problem.divisor.toString());
+        }
+    }, [problem?.dividend, problem?.divisor, problem?.isEditable]);
+
     // Auto-focus the active input
     useEffect(() => {
         if (activeInputRef.current) {
@@ -80,13 +92,17 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newDividend = parseInt(tempDividend, 10);
+                const newDivisor = parseInt(tempDivisor, 10);
+                onDisableEditing?.(newDividend, newDivisor);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newDividend = parseInt(tempDividend, 10);
+                const newDivisor = parseInt(tempDivisor, 10);
+                onDisableEditing?.(newDividend, newDivisor);
             }
         };
 
@@ -101,7 +117,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempDividend, tempDivisor]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -199,21 +215,6 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 onFieldClick(currentFocus.stepNumber + 1, 'quotient', 0);
             }
         }, 100);
-    };
-
-    // Handle problem editing
-    const handleDividendChange = (value: string) => {
-        const newDividend = parseInt(value, 10);
-        if (!isNaN(newDividend) && newDividend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newDividend, problem.divisor);
-        }
-    };
-
-    const handleDivisorChange = (value: string) => {
-        const newDivisor = parseInt(value, 10);
-        if (!isNaN(newDivisor) && newDivisor > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.dividend, newDivisor);
-        }
     };
 
     // If problem is null or loading, show loading state
@@ -478,8 +479,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.dividend.toString()}
-                                onChange={(e) => handleDividendChange(e.target.value)}
+                                value={tempDividend}
+                                onChange={(e) => setTempDividend(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Dividend"
                                 autoFocus
@@ -487,8 +488,8 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                             <span>÷</span>
                             <input
                                 type="text"
-                                value={problem.divisor.toString()}
-                                onChange={(e) => handleDivisorChange(e.target.value)}
+                                value={tempDivisor}
+                                onChange={(e) => setTempDivisor(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Divisor"
                             />

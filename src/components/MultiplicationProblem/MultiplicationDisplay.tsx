@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { MultiplicationProblem, MultiplicationCurrentFocus, MultiplicationUserAnswer } from '../../types/multiplication';
 import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -12,22 +12,22 @@ interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
     currentFocus: MultiplicationCurrentFocus;
-    onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
-    onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onAnswerSubmit: (answer: MultiplicationUserAnswer) => void;
+    onAnswerClear: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newMultiplicand?: number, newMultiplier?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
     fetchError?: Error | null;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
-    onFieldClick: (fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onFieldClick: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
     onNextProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
     onUpdateProblem?: (multiplicand: number, multiplier: number) => void;
-    moveToNextField?: (fieldType?: 'product' | 'partial' | 'carry', position?: number, partialIndex?: number) => void;
+    moveToNextField?: () => void;
     areAllFieldsFilled?: () => boolean;
 }
 
@@ -56,7 +56,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempMultiplicand, setTempMultiplicand] = useState<string>('');
+    const [tempMultiplier, setTempMultiplier] = useState<string>('');
 
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempMultiplicand(problem.multiplicand.toString());
+            setTempMultiplier(problem.multiplier.toString());
+        }
+    }, [problem?.multiplicand, problem?.multiplier, problem?.isEditable]);
 
     // Auto-focus the active input
     useEffect(() => {
@@ -80,13 +90,17 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newMultiplicand = parseInt(tempMultiplicand, 10);
+                const newMultiplier = parseInt(tempMultiplier, 10);
+                onDisableEditing?.(newMultiplicand, newMultiplier);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newMultiplicand = parseInt(tempMultiplicand, 10);
+                const newMultiplier = parseInt(tempMultiplier, 10);
+                onDisableEditing?.(newMultiplicand, newMultiplier);
             }
         };
 
@@ -101,7 +115,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, onDisableEditing]);
+    }, [problem, onDisableEditing, tempMultiplicand, tempMultiplier]);
 
 
 
@@ -229,20 +243,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
         return false;
     };
 
-    // Handle problem editing
-    const handleMultiplicandChange = (value: string) => {
-        const newMultiplicand = parseInt(value, 10);
-        if (!isNaN(newMultiplicand) && newMultiplicand > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newMultiplicand, problem.multiplier);
-        }
-    };
 
-    const handleMultiplierChange = (value: string) => {
-        const newMultiplier = parseInt(value, 10);
-        if (!isNaN(newMultiplier) && newMultiplier > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.multiplicand, newMultiplier);
-        }
-    };
 
     // Render the multiplication grid
     const renderMultiplicationGrid = () => {
@@ -420,8 +421,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.multiplicand.toString()}
-                                onChange={(e) => handleMultiplicandChange(e.target.value)}
+                                value={tempMultiplicand}
+                                onChange={(e) => setTempMultiplicand(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Multiplicand"
                                 autoFocus
@@ -429,8 +430,8 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                             <span>×</span>
                             <input
                                 type="text"
-                                value={problem.multiplier.toString()}
-                                onChange={(e) => handleMultiplierChange(e.target.value)}
+                                value={tempMultiplier}
+                                onChange={(e) => setTempMultiplier(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Multiplier"
                             />

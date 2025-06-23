@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import type { SubtractionProblem, SubtractionUserAnswer, SubtractionGameState } from '../../types/subtraction';
 import type { SubtractionCurrentFocus } from '../../hooks/useSubtractionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -13,7 +13,7 @@ interface SubtractionDisplayProps {
     onAnswerClear: (columnPosition: number, fieldType: 'difference' | 'borrow') => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newMinuend?: number, newSubtrahend?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -55,6 +55,18 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempMinuend, setTempMinuend] = useState<string>('');
+    const [tempSubtrahend, setTempSubtrahend] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempMinuend(problem.minuend.toString());
+            setTempSubtrahend(problem.subtrahend.toString());
+        }
+    }, [problem?.minuend, problem?.subtrahend, problem?.isEditable]);
+
     // Auto-focus the active input
     useEffect(() => {
         if (activeInputRef.current) {
@@ -76,13 +88,17 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newMinuend = parseInt(tempMinuend, 10);
+                const newSubtrahend = parseInt(tempSubtrahend, 10);
+                onDisableEditing?.(newMinuend, newSubtrahend);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newMinuend = parseInt(tempMinuend, 10);
+                const newSubtrahend = parseInt(tempSubtrahend, 10);
+                onDisableEditing?.(newMinuend, newSubtrahend);
             }
         };
 
@@ -97,7 +113,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempMinuend, tempSubtrahend]);
 
     // Helper function to check if a column receives a borrow - matches keyboard nav logic exactly
     const receivesBorrow = useCallback((columnPosition: number) => {
@@ -202,20 +218,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
         onAnswerSubmit(answer);
     }, [onAnswerClear, onAnswerSubmit]);
 
-    // Handle problem editing
-    const handleMinuendChange = useCallback((value: string) => {
-        const newMinuend = parseInt(value, 10);
-        if (!isNaN(newMinuend) && newMinuend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newMinuend, problem.subtrahend);
-        }
-    }, [onUpdateProblem, problem]);
 
-    const handleSubtrahendChange = useCallback((value: string) => {
-        const newSubtrahend = parseInt(value, 10);
-        if (!isNaN(newSubtrahend) && newSubtrahend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.minuend, newSubtrahend);
-        }
-    }, [onUpdateProblem, problem]);
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = useCallback((columnPosition: number, fieldType: 'difference' | 'borrow') => {
@@ -357,8 +360,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.minuend.toString()}
-                                onChange={(e) => handleMinuendChange(e.target.value)}
+                                value={tempMinuend}
+                                onChange={(e) => setTempMinuend(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="First Number"
                                 autoFocus
@@ -366,8 +369,8 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                             <span>-</span>
                             <input
                                 type="text"
-                                value={problem.subtrahend.toString()}
-                                onChange={(e) => handleSubtrahendChange(e.target.value)}
+                                value={tempSubtrahend}
+                                onChange={(e) => setTempSubtrahend(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Second Number"
                             />

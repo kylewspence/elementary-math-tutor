@@ -382,18 +382,46 @@ export function useSubtractionGameState() {
             return {
                 ...prev,
                 problem: { ...prev.problem, isEditable: true },
+                // Reset submission states when editing to allow resubmission
+                isSubmitted: false,
+                isComplete: false,
             };
         });
     }, []);
 
     // Disable problem editing
-    const disableEditing = useCallback(() => {
+    const disableEditing = useCallback((newMinuend?: number, newSubtrahend?: number) => {
         setGameState(prev => {
             if (!prev.problem) return prev;
 
+            let updatedProblem = prev.problem;
+
+            // If new values were provided, update the problem
+            if (newMinuend !== undefined && newSubtrahend !== undefined &&
+                (newMinuend !== prev.problem.minuend || newSubtrahend !== prev.problem.subtrahend)) {
+
+                // Validate the new values
+                if (newMinuend > 0 && newSubtrahend > 0 && newMinuend >= newSubtrahend) {
+                    // Find the current level object
+                    const currentLevel = SUBTRACTION_LEVELS.find(l => l.id === prev.currentLevel);
+                    if (currentLevel) {
+                        // Generate a problem with the specific values
+                        updatedProblem = generateSubtractionProblem(currentLevel, newMinuend, newSubtrahend);
+                        // Reset answers since the problem structure changed
+                        return {
+                            ...prev,
+                            problem: { ...updatedProblem, isEditable: false },
+                            userAnswers: [],
+                            isSubmitted: false,
+                            isComplete: false,
+                        };
+                    }
+                }
+            }
+
             return {
                 ...prev,
-                problem: { ...prev.problem, isEditable: false },
+                problem: { ...updatedProblem, isEditable: false },
             };
         });
     }, []);

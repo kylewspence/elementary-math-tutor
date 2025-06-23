@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import type { AdditionProblem, AdditionUserAnswer, AdditionGameState } from '../../types/addition';
 import type { AdditionCurrentFocus } from '../../hooks/useAdditionKeyboardNav';
 import { GRID_CONSTANTS } from '../../utils/constants';
@@ -13,7 +13,7 @@ interface AdditionDisplayProps {
     onAnswerClear: (columnPosition: number, fieldType: 'sum' | 'carry') => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
-    onDisableEditing?: () => void;
+    onDisableEditing?: (newAddend1?: number, newAddend2?: number) => void;
     isSubmitted?: boolean;
     isComplete?: boolean;
     isLoading?: boolean;
@@ -55,6 +55,18 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
+    // State for temporary editing values
+    const [tempAddend1, setTempAddend1] = useState<string>('');
+    const [tempAddend2, setTempAddend2] = useState<string>('');
+
+    // Update temp values when problem changes or editing starts
+    useEffect(() => {
+        if (problem) {
+            setTempAddend1(problem.addend1.toString());
+            setTempAddend2(problem.addend2.toString());
+        }
+    }, [problem?.addend1, problem?.addend2, problem?.isEditable]);
+
     // Auto-focus the active input
     useEffect(() => {
         if (activeInputRef.current) {
@@ -76,13 +88,17 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
             // Check if click is outside the editable header area
             if (problemRef.current && !problemRef.current.contains(target)) {
-                onDisableEditing?.();
+                const newAddend1 = parseInt(tempAddend1, 10);
+                const newAddend2 = parseInt(tempAddend2, 10);
+                onDisableEditing?.(newAddend1, newAddend2);
             }
         };
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onDisableEditing?.();
+                const newAddend1 = parseInt(tempAddend1, 10);
+                const newAddend2 = parseInt(tempAddend2, 10);
+                onDisableEditing?.(newAddend1, newAddend2);
             }
         };
 
@@ -97,7 +113,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [problem, problem?.isEditable, onDisableEditing]);
+    }, [problem, problem?.isEditable, onDisableEditing, tempAddend1, tempAddend2]);
 
     // Helper function to check if a column receives a carry - matches keyboard nav logic exactly
     const receivesCarry = useCallback((columnPosition: number) => {
@@ -201,21 +217,6 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
 
         onAnswerSubmit(answer);
     }, [onAnswerClear, onAnswerSubmit]);
-
-    // Handle problem editing
-    const handleAddend1Change = useCallback((value: string) => {
-        const newAddend = parseInt(value, 10);
-        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(newAddend, problem.addend2);
-        }
-    }, [onUpdateProblem, problem]);
-
-    const handleAddend2Change = useCallback((value: string) => {
-        const newAddend = parseInt(value, 10);
-        if (!isNaN(newAddend) && newAddend > 0 && onUpdateProblem && problem) {
-            onUpdateProblem(problem.addend1, newAddend);
-        }
-    }, [onUpdateProblem, problem]);
 
     // Helper function to create an input with consistent keyboard event handling
     const createInput = useCallback((columnPosition: number, fieldType: 'sum' | 'carry') => {
@@ -357,8 +358,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         <>
                             <input
                                 type="text"
-                                value={problem.addend1.toString()}
-                                onChange={(e) => handleAddend1Change(e.target.value)}
+                                value={tempAddend1}
+                                onChange={(e) => setTempAddend1(e.target.value)}
                                 className="w-20 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="First Number"
                                 autoFocus
@@ -366,8 +367,8 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                             <span>+</span>
                             <input
                                 type="text"
-                                value={problem.addend2.toString()}
-                                onChange={(e) => handleAddend2Change(e.target.value)}
+                                value={tempAddend2}
+                                onChange={(e) => setTempAddend2(e.target.value)}
                                 className="w-16 text-center border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Second Number"
                             />
