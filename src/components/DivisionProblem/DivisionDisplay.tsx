@@ -5,6 +5,9 @@ import Input from '../UI/Input';
 import { GRID_CONSTANTS } from '../../utils/constants';
 import ProblemComplete from '../UI/ProblemComplete';
 import ErrorMessage from '../UI/ErrorMessage';
+import { Confetti } from '../UI/confetti';
+import { ShimmerButton } from '../UI/shimmer-button';
+import { Sparkles } from '../UI/sparkles';
 
 interface DivisionDisplayProps {
     problem: DivisionProblem | null;
@@ -61,6 +64,9 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
     // State for temporary editing values
     const [tempDividend, setTempDividend] = useState<string>('');
     const [tempDivisor, setTempDivisor] = useState<string>('');
+
+    // State for Magic UI effects
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // Update temp values when problem changes or editing starts
     useEffect(() => {
@@ -130,6 +136,13 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             document.removeEventListener('keydown', handleEscapeKey);
         };
     }, [problem, problem?.isEditable, onDisableEditing, tempDividend, tempDivisor]);
+
+    // Trigger confetti when problem is completed
+    useEffect(() => {
+        if (isSubmitted && isComplete) {
+            setShowConfetti(true);
+        }
+    }, [isSubmitted, isComplete]);
 
     // Helper to get user's answer for a specific field
     const getUserAnswer = (stepNumber: number, fieldType: 'quotient' | 'multiply' | 'subtract' | 'bringDown', position: number = 0): UserAnswer | undefined => {
@@ -532,17 +545,19 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             {
                 isSubmitted && isComplete && (
                     <div className="text-center mt-2 mb-4">
-                        <ProblemComplete
-                            type="division"
-                            problem={{
-                                dividend: problem.dividend,
-                                divisor: problem.divisor,
-                                quotient: problem.quotient,
-                                remainder: problem.remainder
-                            }}
-                            onNextProblem={onNextProblem || (() => { })}
-                            variant="card"
-                        />
+                        <Sparkles color="#4ade80" density={12}>
+                            <ProblemComplete
+                                type="division"
+                                problem={{
+                                    dividend: problem.dividend,
+                                    divisor: problem.divisor,
+                                    quotient: problem.quotient,
+                                    remainder: problem.remainder
+                                }}
+                                onNextProblem={onNextProblem || (() => { })}
+                                variant="card"
+                            />
+                        </Sparkles>
                     </div>
                 )
             }
@@ -642,7 +657,7 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                 <div className="flex flex-col items-center">
                     {/* Submit/Next Problem button */}
                     {!isSubmitted ? (
-                        <button
+                        <ShimmerButton
                             onClick={() => {
                                 console.log('🔍 [SUBMIT DEBUG] Submit button clicked');
                                 onProblemSubmit?.();
@@ -652,10 +667,14 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                 console.log(`🔍 [SUBMIT DEBUG] Submit button render - areAllFieldsFilled: ${allFieldsFilledResult}, disabled: ${!allFieldsFilledResult}`);
                                 return !allFieldsFilledResult;
                             })()}
-                            className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
-                                } transition-colors`}
+                            className={`mb-4 ${!areAllFieldsFilled?.()
+                                ? 'opacity-50 cursor-not-allowed'
+                                : ''
+                                }`}
+                            background={!areAllFieldsFilled?.()
+                                ? "linear-gradient(90deg, #6b7280, #9ca3af)"
+                                : "linear-gradient(90deg, #3b82f6, #1d4ed8)"
+                            }
                         >
                             <span className="flex items-center justify-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -663,17 +682,18 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                                 </svg>
                                 Submit Answers
                             </span>
-                        </button>
+                        </ShimmerButton>
                     ) : isComplete ? (
-                        <button
+                        <ShimmerButton
                             onClick={() => onNextProblem?.()}
-                            className="px-6 py-2 rounded-lg font-semibold mb-4 bg-green-500 text-white hover:bg-green-600 transition-colors"
+                            className="mb-4"
+                            background="linear-gradient(90deg, #10b981, #059669)"
                             autoFocus
                         >
                             <span className="flex items-center justify-center gap-1">
                                 Next Problem →
                             </span>
-                        </button>
+                        </ShimmerButton>
                     ) : (
                         // Show helpful feedback when submitted but not complete (has wrong answers)
                         <ErrorMessage
@@ -684,6 +704,12 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
 
                 </div>
             </div>
+
+            {/* Confetti effect */}
+            <Confetti
+                trigger={showConfetti}
+                onComplete={() => setShowConfetti(false)}
+            />
         </div>
     );
 };

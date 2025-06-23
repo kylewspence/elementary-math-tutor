@@ -520,6 +520,19 @@ function App() {
     };
   };
 
+  const getCurrentScore = () => {
+    if (gameMode === 'division') {
+      return gameState.score;
+    } else if (gameMode === 'addition') {
+      return additionGameState.score;
+    } else if (gameMode === 'multiplication') {
+      return multiplicationGameState.score;
+    } else if (gameMode === 'subtraction') {
+      return subtractionGameState.score;
+    }
+    return 0;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -528,6 +541,7 @@ function App() {
         currentLevel={getCurrentLevelInfo().currentLevel}
         currentProblem={getCurrentProblemInfo().currentProblem}
         totalProblems={getCurrentProblemInfo().totalProblems}
+        score={getCurrentScore()}
       />
 
       <main className="container mx-auto px-4 py-8">
