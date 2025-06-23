@@ -94,7 +94,13 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             if (problemRef.current && !problemRef.current.contains(target)) {
                 const newDividend = parseInt(tempDividend, 10);
                 const newDivisor = parseInt(tempDivisor, 10);
-                onDisableEditing?.(newDividend, newDivisor);
+
+                // Only pass valid numbers, otherwise just disable editing without updating
+                if (!isNaN(newDividend) && !isNaN(newDivisor) && newDividend > 0 && newDivisor > 0) {
+                    onDisableEditing?.(newDividend, newDivisor);
+                } else {
+                    onDisableEditing?.();
+                }
             }
         };
 
@@ -102,7 +108,13 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
             if (event.key === 'Escape') {
                 const newDividend = parseInt(tempDividend, 10);
                 const newDivisor = parseInt(tempDivisor, 10);
-                onDisableEditing?.(newDividend, newDivisor);
+
+                // Only pass valid numbers, otherwise just disable editing without updating
+                if (!isNaN(newDividend) && !isNaN(newDivisor) && newDividend > 0 && newDivisor > 0) {
+                    onDisableEditing?.(newDividend, newDivisor);
+                } else {
+                    onDisableEditing?.();
+                }
             }
         };
 

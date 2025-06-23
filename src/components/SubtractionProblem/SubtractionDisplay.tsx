@@ -438,7 +438,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1 === 0 && step.columnPosition > 0 ? '' : (step.digit1 ?? '')}
+                                        {step.digit1 ?? ''}
                                     </div>
                                 ))}
                             </div>
@@ -456,7 +456,7 @@ const SubtractionDisplay: React.FC<SubtractionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2 === 0 && step.columnPosition > 0 ? '' : (step.digit2 ?? '')}
+                                        {step.digit2 ?? ''}
                                     </div>
                                 ))}
                             </div>
