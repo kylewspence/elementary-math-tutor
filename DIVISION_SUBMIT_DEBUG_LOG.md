@@ -476,3 +476,125 @@ case 'quotient':
 **Key Success**: Fixed validation without touching the working field generation logic!
 
 ---
+
+## 🔧 **ADDITION DISPLAY: Smart Leading Zero Suppression** ✅
+
+**Date:** Current session  
+**Issue:** Addition problems showing confusing leading zeros (e.g., "0010" instead of "10")
+
+**Problem Example:**
+- 1000 + 10 was displaying as:
+  ```
+    1000
+  + 0010  ← Confusing leading zeros
+  ------
+  ```
+
+**Solution Applied**: Added smart digit display logic to `AdditionDisplay.tsx`:
+
+### **Smart Display Logic:**
+```javascript
+const smartDigitDisplay = (digit: number, originalNumber: number, columnPosition: number, totalColumns: number): string => {
+    // If digit is 0, check if it's a leading zero
+    if (digit === 0) {
+        // Calculate the position from the left (most significant digit)
+        const positionFromLeft = totalColumns - 1 - columnPosition;
+        const numberStr = originalNumber.toString();
+        
+        // If this position is beyond the length of the original number, it's a leading zero
+        if (positionFromLeft >= numberStr.length) {
+            return ''; // Don't display leading zeros
+        }
+    }
+    
+    return digit.toString();
+};
+```
+
+### **Before vs After:**
+**Before:**
+```
+  1000
++ 0010  ← Leading zeros shown
+------
+```
+
+**After:**
+```
+  1000
++   10  ← Leading zeros suppressed
+------
+```
+
+### **Key Features:**
+1. **Suppresses Leading Zeros**: Won't show "0010", shows "10" instead
+2. **Preserves Trailing Zeros**: Still shows "1000" correctly (trailing zeros are meaningful)
+3. **Maintains Alignment**: Proper right-alignment preserved
+4. **Mathematical Accuracy**: Numbers display as they would be written normally
+
+### **Implementation:**
+- Updated both addend1 and addend2 display lines
+- Uses original number value to determine if a zero is leading or meaningful
+- Calculates position from left to identify leading zeros
+- Returns empty string for leading zeros, preserving alignment
+
+**Result**: Addition problems now display numbers naturally without confusing leading zeros while maintaining proper mathematical formatting and alignment.
+
+---
+
+## 🔧 **SUBTRACTION DISPLAY: Smart Leading Zero Suppression** ✅
+
+**Date:** Current session  
+**Issue:** Subtraction problems showing confusing leading zeros (e.g., "0010" instead of "10")
+
+**Solution Applied**: Added the same smart digit display logic to `SubtractionDisplay.tsx`:
+
+### **Smart Display Logic:**
+```javascript
+const smartDigitDisplay = (digit: number, originalNumber: number, columnPosition: number, totalColumns: number): string => {
+    const numberStr = originalNumber.toString();
+    
+    // Calculate which digit position this column represents (from right to left, 0-indexed)
+    const digitPositionFromRight = columnPosition;
+    
+    // Calculate the minimum number of columns needed for this number
+    const requiredColumns = numberStr.length;
+    
+    // If this column position is beyond what's needed for this number, don't show anything
+    if (digitPositionFromRight >= requiredColumns) {
+        return ''; // This is a leading zero position
+    }
+    
+    // Otherwise, show the digit (even if it's 0, because it's meaningful)
+    return digit.toString();
+};
+```
+
+### **Implementation:**
+- Updated minuend display: `{smartDigitDisplay(step.digit1, problem.minuend, step.columnPosition, displaySteps.length)}`
+- Updated subtrahend display: `{smartDigitDisplay(step.digit2, problem.subtrahend, step.columnPosition, displaySteps.length)}`
+
+### **Example Results:**
+**Before:**
+```
+  1000
+- 0010  ← Leading zeros shown
+------
+```
+
+**After:**
+```
+  1000
+-   10  ← Leading zeros suppressed
+------
+```
+
+### **Key Features:**
+1. **Suppresses Leading Zeros**: Won't show "0010", shows "10" instead
+2. **Preserves Trailing Zeros**: Still shows "1000" correctly (trailing zeros are meaningful)
+3. **Maintains Alignment**: Proper right-alignment preserved
+4. **Mathematical Accuracy**: Numbers display as they would be written normally
+
+**Result**: Subtraction problems now display numbers naturally without confusing leading zeros, matching the improved Addition display behavior.
+
+---

@@ -52,6 +52,24 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
     onUpdateProblem,
     areAllFieldsFilled
 }) => {
+    // Helper function to intelligently display digits (suppress leading zeros)
+    const smartDigitDisplay = (digit: number, originalNumber: number, columnPosition: number, totalColumns: number): string => {
+        const numberStr = originalNumber.toString();
+
+        // Calculate which digit position this column represents (from right to left, 0-indexed)
+        const digitPositionFromRight = columnPosition;
+
+        // Calculate the minimum number of columns needed for this number
+        const requiredColumns = numberStr.length;
+
+        // If this column position is beyond what's needed for this number, don't show anything
+        if (digitPositionFromRight >= requiredColumns) {
+            return ''; // This is a leading zero position
+        }
+
+        // Otherwise, show the digit (even if it's 0, because it's meaningful)
+        return digit.toString();
+    };
     const activeInputRef = useRef<HTMLInputElement>(null);
     const problemRef = useRef<HTMLDivElement>(null);
 
@@ -436,7 +454,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit1}
+                                        {smartDigitDisplay(step.digit1, problem.addend1, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
@@ -454,7 +472,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                                         className="flex items-center justify-center text-xl"
                                         style={{ width: `${BOX_TOTAL_WIDTH}px`, height: `${ROW_HEIGHT}px` }}
                                     >
-                                        {step.digit2}
+                                        {smartDigitDisplay(step.digit2, problem.addend2, step.columnPosition, displaySteps.length)}
                                     </div>
                                 ))}
                             </div>
