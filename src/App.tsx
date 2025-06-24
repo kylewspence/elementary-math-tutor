@@ -190,24 +190,28 @@ function App() {
       // Only initialize modes that don't have valid saved state
       if (!saved.divisionState || !saved.divisionState.levelProblems) {
         if (gameMode === 'division') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
           initializeGame();
         }
       }
 
       if (!saved.additionState || !saved.additionState.levelProblems) {
         if (gameMode === 'addition') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
           initializeAdditionGame();
         }
       }
 
       if (!saved.multiplicationState || !saved.multiplicationState.levelProblems) {
         if (gameMode === 'multiplication') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
           initializeMultiplicationGame();
         }
       }
 
       if (!saved.subtractionState || !saved.subtractionState.levelProblems) {
         if (gameMode === 'subtraction') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
           initializeSubtractionGame();
         }
       }
@@ -302,7 +306,29 @@ function App() {
     return () => window.removeEventListener('autoRestoreProgress', handleAutoRestore);
   }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState]);
 
+  // Handle tab switches - initialize new game modes when first accessed
+  useEffect(() => {
+    // Only run after initial load has completed
+    if (!hasLoadedSavedState) return;
 
+    // Check if the current game mode already has problems loaded (either from current session or saved state)
+    if (gameMode === 'division' && gameState.levelProblems.length > 0) return;
+    if (gameMode === 'addition' && additionGameState.levelProblems.length > 0) return;
+    if (gameMode === 'multiplication' && multiplicationGameState.levelProblems.length > 0) return;
+    if (gameMode === 'subtraction' && subtractionGameState.levelProblems.length > 0) return;
+
+    // Initialize the new game mode (this only runs on first access to a tab)
+    console.log(`🎮 Tab switch - initializing game mode: ${gameMode} (first time)`);
+    if (gameMode === 'division') {
+      initializeGame();
+    } else if (gameMode === 'addition') {
+      initializeAdditionGame();
+    } else if (gameMode === 'multiplication') {
+      initializeMultiplicationGame();
+    } else if (gameMode === 'subtraction') {
+      initializeSubtractionGame();
+    }
+  }, [gameMode, hasLoadedSavedState, gameState.levelProblems.length, additionGameState.levelProblems.length, multiplicationGameState.levelProblems.length, subtractionGameState.levelProblems.length, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
