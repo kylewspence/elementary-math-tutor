@@ -20,6 +20,8 @@ import type { MultiplicationProblem } from './types/multiplication';
 import type { SubtractionProblem } from './types/subtraction';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import type { GameMode } from './types/game';
+import { initCachePreload } from './utils/cachePreloader';
+import './utils/apiCallLogger'; // Initialize the logger
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('division');
@@ -210,8 +212,6 @@ function App() {
     }
   }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
-
-
   // Save current state when auto-save is triggered
   useEffect(() => {
     const handleAutoSave = () => {
@@ -238,13 +238,7 @@ function App() {
           levelProblems: subtractionGameState.levelProblems,
         },
       };
-      console.log('💾 Auto-save triggered - saving progress:', {
-        gameMode,
-        divisionLevel: gameState.currentLevel,
-        additionLevel: additionGameState.currentLevel,
-        multiplicationLevel: multiplicationGameState.currentLevel,
-        subtractionLevel: subtractionGameState.currentLevel
-      });
+      // Auto-save triggered - saving progress
       saveProgress(currentProgress);
     };
 
@@ -457,6 +451,12 @@ function App() {
     setGameMode(mode);
   };
 
+  // Initialize cache preloader
+  useEffect(() => {
+    // Initialize cache preloading after a short delay to not block initial render
+    initCachePreload(2000); // 2 second delay
+  }, []);
+
   const getCurrentLevelInfo = () => {
     if (gameMode === 'division') {
       return {
@@ -559,7 +559,7 @@ function App() {
 
         {gameMode === 'addition' && (
           <AdditionDisplay
-            problem={additionGameState.problem as AdditionProblem}
+            problem={additionGameState.problem as AdditionProblem | null}
             userAnswers={additionGameState.userAnswers}
             currentFocus={additionCurrentFocus}
             isSubmitted={additionGameState.isSubmitted}
@@ -584,7 +584,7 @@ function App() {
 
         {gameMode === 'multiplication' && (
           <MultiplicationDisplay
-            problem={multiplicationGameState.problem as MultiplicationProblem}
+            problem={multiplicationGameState.problem as MultiplicationProblem | null}
             userAnswers={multiplicationGameState.userAnswers}
             currentFocus={multiplicationCurrentFocus}
             isSubmitted={multiplicationGameState.isSubmitted}
@@ -610,7 +610,7 @@ function App() {
 
         {gameMode === 'subtraction' && (
           <SubtractionDisplay
-            problem={subtractionGameState.problem as SubtractionProblem}
+            problem={subtractionGameState.problem as SubtractionProblem | null}
             userAnswers={subtractionGameState.userAnswers}
             currentFocus={subtractionCurrentFocus}
             isSubmitted={subtractionGameState.isSubmitted}

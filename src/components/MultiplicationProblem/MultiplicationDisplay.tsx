@@ -12,8 +12,8 @@ interface MultiplicationDisplayProps {
     problem: MultiplicationProblem | null;
     userAnswers: MultiplicationUserAnswer[];
     currentFocus: MultiplicationCurrentFocus;
-    onAnswerSubmit: (answer: MultiplicationUserAnswer) => void;
-    onAnswerClear: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
+    onAnswerSubmit: (value: number, fieldType: 'product' | 'partial' | 'carry', position: number, partialIndex?: number) => void;
+    onAnswerClear: (fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number) => void;
     onProblemSubmit?: () => void;
     onEnableEditing?: () => void;
     onDisableEditing?: (newMultiplicand?: number, newMultiplier?: number) => void;
@@ -22,7 +22,7 @@ interface MultiplicationDisplayProps {
     isLoading?: boolean;
     fetchError?: Error | null;
     onKeyDown: (e: React.KeyboardEvent, onProblemSubmit?: () => void) => void;
-    onFieldClick: (fieldType: 'partial' | 'sum', fieldPosition: number, partialIndex?: number) => void;
+    onFieldClick: (fieldType: 'product' | 'partial' | 'carry', fieldPosition: number, partialIndex?: number) => void;
     onNextProblem?: () => void;
     onNewProblem?: () => void;
     onRetryFetch?: () => void;
@@ -62,7 +62,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
     // Update temp values when problem changes or editing starts
     useEffect(() => {
-        if (problem) {
+        if (problem && problem.multiplicand !== undefined && problem.multiplier !== undefined) {
             setTempMultiplicand(problem.multiplicand.toString());
             setTempMultiplier(problem.multiplier.toString());
         }
@@ -177,7 +177,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
                 // Auto-advance to next field after successful input
                 if (moveToNextField) {
                     setTimeout(() => {
-                        moveToNextField(fieldType, position, partialIndex);
+                        moveToNextField();
                     }, 0);
                 }
             }
@@ -247,7 +247,7 @@ const MultiplicationDisplay: React.FC<MultiplicationDisplayProps> = ({
 
     // Render the multiplication grid
     const renderMultiplicationGrid = () => {
-        if (!problem) return null;
+        if (!problem || !problem.multiplicand || !problem.multiplier || !problem.product) return null;
 
         const multiplicandStr = problem.multiplicand.toString();
         const multiplierStr = problem.multiplier.toString();

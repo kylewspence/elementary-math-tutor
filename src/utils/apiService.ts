@@ -8,6 +8,8 @@ import { calculateSubtractionSteps } from './subtractionGenerator';
 
 import { API_CONFIG } from './config';
 import { v4 as uuidv4 } from 'uuid';
+import { logApiCallStart, logApiCallEnd } from './apiCallLogger';
+import { cachedApiService } from './apiCache';
 
 // API call tracking
 let apiCallCount = 0;
@@ -57,70 +59,95 @@ const API_ENDPOINT = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MATH_PROBLEMS
  * Fetches math problems from the server
  */
 export async function fetchMathProblems(): Promise<ApiResponse> {
-    // Increment and log API call count
+    // Start logging the API call
+    const callId = logApiCallStart(
+        API_ENDPOINT,
+        'POST',
+        'fetchMathProblems'
+    );
+
+    // Increment and log API call count (legacy counter)
     apiCallCount++;
     console.log(`🌐 API CALL #${apiCallCount} - Fetching math problems from server`);
-    console.trace('API call stack trace:'); // This will show us exactly what triggered the call
 
     // Check if API configuration is complete
     if (!API_CONFIG.BASE_URL || !API_CONFIG.DEVICE_ID) {
+        const error = 'API configuration incomplete - falling back to local generation';
         console.error('API configuration incomplete:', {
             BASE_URL: API_CONFIG.BASE_URL,
             DEVICE_ID: API_CONFIG.DEVICE_ID
         });
-        throw new Error('API configuration incomplete - falling back to local generation');
+        logApiCallEnd(callId, false, error);
+        throw new Error(error);
     }
 
-    // Use the correct JSON structure as specified by the API documentation
-    const requestBody = {
-        "tag": "publicmath.get",
-        "deviceid": API_CONFIG.DEVICE_ID
-    };
+    try {
+        // Use the correct JSON structure as specified by the API documentation
+        const requestBody = {
+            "tag": "publicmath.get",
+            "deviceid": API_CONFIG.DEVICE_ID
+        };
 
-    const response = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-    });
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
 
-    if (!response.ok) {
-        console.error('API HTTP error:', response.status, response.statusText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Check if the response has the expected structure
-    if (!data || !data.public) {
-        console.error('API returned unexpected structure. Expected: { public: {...} }, Got:', data);
-
-        // More specific error messages based on what we got
-        if (data && typeof data === 'object') {
-            const keys = Object.keys(data);
-            console.error('Response contains keys:', keys);
-
-            if (keys.includes('yeah') || keys.includes('mustadd')) {
-                throw new Error('API endpoint appears to be returning test/placeholder data instead of math problems');
-            }
+        if (!response.ok) {
+            const error = `HTTP error! status: ${response.status}`;
+            console.error('API HTTP error:', response.status, response.statusText);
+            logApiCallEnd(callId, false, error);
+            throw new Error(error);
         }
 
-        throw new Error(`API response does not have expected structure. Got: ${JSON.stringify(data)}`);
+        const data = await response.json();
+
+        // Check if the response has the expected structure
+        if (!data || !data.public) {
+            console.error('API returned unexpected structure. Expected: { public: {...} }, Got:', data);
+
+            // More specific error messages based on what we got
+            if (data && typeof data === 'object') {
+                const keys = Object.keys(data);
+                console.error('Response contains keys:', keys);
+
+                if (keys.includes('yeah') || keys.includes('mustadd')) {
+                    const error = 'API endpoint appears to be returning test/placeholder data instead of math problems';
+                    logApiCallEnd(callId, false, error);
+                    throw new Error(error);
+                }
+            }
+
+            const error = `API response does not have expected structure. Got: ${JSON.stringify(data)}`;
+            logApiCallEnd(callId, false, error);
+            throw new Error(error);
+        }
+
+        // Validate that the public object has the expected math problem arrays
+        const expectedKeys = ['division_0', 'division_1', 'division_2', 'multiplication_0', 'multiplication_1', 'multiplication_2', 'addition_0', 'addition_1', 'addition_2'];
+        const actualKeys = Object.keys(data.public);
+        const missingKeys = expectedKeys.filter(key => !actualKeys.includes(key));
+
+        if (missingKeys.length > 0) {
+            console.error('API response missing expected problem types:', missingKeys);
+            console.error('Available keys in public object:', actualKeys);
+            const error = `API response missing expected problem types: ${missingKeys.join(', ')}`;
+            logApiCallEnd(callId, false, error);
+            throw new Error(error);
+        }
+
+        // Success!
+        logApiCallEnd(callId, true);
+        return data;
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logApiCallEnd(callId, false, errorMessage);
+        throw error;
     }
-
-    // Validate that the public object has the expected math problem arrays
-    const expectedKeys = ['division_0', 'division_1', 'division_2', 'multiplication_0', 'multiplication_1', 'multiplication_2', 'addition_0', 'addition_1', 'addition_2'];
-    const actualKeys = Object.keys(data.public);
-    const missingKeys = expectedKeys.filter(key => !actualKeys.includes(key));
-
-    if (missingKeys.length > 0) {
-        console.error('API response missing expected problem types:', missingKeys);
-        console.error('Available keys in public object:', actualKeys);
-        throw new Error(`API response missing expected problem types: ${missingKeys.join(', ')}`);
-    }
-
-    return data;
 }
 
 /**
@@ -535,23 +562,23 @@ function meetsSubtractionLevelRequirements(problem: SubtractionProblem, levelId:
     // Count borrows needed
     const borrowsCount = problem.steps.filter(step => step.borrow > 0).length;
 
-    // Level-specific requirements
+    // Level-specific requirements (relaxed to allow more problems)
     switch (levelId) {
         case 1:
-            // Level 1: 2-digit numbers, minimal borrowing
-            return maxDigits <= 2 && borrowsCount <= 1;
+            // Level 1: 2-digit numbers, any borrowing level
+            return maxDigits <= 2;
 
         case 2:
-            // Level 2: 2-digit numbers with more borrowing
-            return maxDigits <= 2 && borrowsCount >= 1;
+            // Level 2: 2-3 digit numbers, any borrowing level
+            return maxDigits <= 3;
 
         case 3:
-            // Level 3: 3-digit numbers, moderate borrowing
-            return maxDigits <= 3 && borrowsCount <= 2;
+            // Level 3: 2-3 digit numbers, any borrowing level
+            return maxDigits <= 3;
 
         case 4:
-            // Level 4: 3-digit numbers with more borrowing
-            return maxDigits <= 3 && borrowsCount >= 2;
+            // Level 4: 3-digit numbers, any borrowing level
+            return maxDigits <= 4;
 
         default:
             // Higher levels: any complexity
@@ -746,122 +773,189 @@ function filterSubtractionProblemsForLevel(problems: SubtractionProblem[], level
 }
 
 /**
- * Fetches division problems of a specific level
- * @param level 0=easy, 1=medium, 2=hard
+ * Fetches division problems for a specific level
  */
-export async function fetchDivisionProblems(level: number = 0): Promise<DivisionProblem[]> {
+export async function fetchDivisionProblems(level: number): Promise<DivisionProblem[]> {
+    const callId = logApiCallStart(
+        'Cached Division Problems',
+        'GET',
+        'fetchDivisionProblems',
+        level
+    );
+
     try {
-        const response = await fetchMathProblems();
+        console.log(`📊 Fetching division problems for level ${level} using cached service`);
 
-        // Get all division problems from all levels - we'll filter by difficulty later
-        const allDivisionProblems: DivisionProblem[] = [];
+        // Use cached service instead of direct API call
+        const problems = await cachedApiService.getFilteredProblems('division', level);
 
-        // Get problems from all division levels in the API response
-        for (let i = 0; i <= 2; i++) {
-            const key = `division_${i}`;
-            const divisionQuestions = response.public[key] || [];
+        // Convert raw API data to DivisionProblem format
+        const divisionProblems: DivisionProblem[] = problems.map((problem: any) => {
+            // Convert API format to MathQuestion format first
+            const mathQuestion: MathQuestion = {
+                question: problem.question,
+                number_0: problem.number_0,
+                number_1: problem.number_1,
+                operator: problem.operator
+            };
 
-            // Convert each question to a DivisionProblem, filtering out invalid ones
-            const convertedProblems = divisionQuestions
-                .map(convertToDivisionProblem)
-                .filter((problem): problem is DivisionProblem => problem !== null);
-            allDivisionProblems.push(...convertedProblems);
-        }
+            // Use the existing conversion function
+            return convertToDivisionProblem(mathQuestion);
+        }).filter((problem): problem is DivisionProblem => problem !== null);
 
         // Filter problems for the specific level
-        const filteredProblems = filterProblemsForLevel(allDivisionProblems, level);
+        const filteredProblems = filterProblemsForLevel(divisionProblems, level);
 
+        console.log(`📊 Converted ${problems.length} raw problems to ${filteredProblems.length} filtered division problems for level ${level}`);
+
+        logApiCallEnd(callId, true);
         return filteredProblems;
+
     } catch (error) {
-        console.error('Error fetching division problems:', error);
-        return []; // Return empty array to fall back to local generation
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Error fetching division problems:', errorMessage);
+        logApiCallEnd(callId, false, errorMessage);
+        throw error;
     }
 }
 
 /**
- * Fetches multiplication problems of a specific level
- * @param level 0=easy, 1=medium, 2=hard
+ * Fetches multiplication problems for a specific level
  */
-export async function fetchMultiplicationProblems(level: number = 0): Promise<MultiplicationProblem[]> {
+export async function fetchMultiplicationProblems(level: number): Promise<MultiplicationProblem[]> {
+    const callId = logApiCallStart(
+        'Cached Multiplication Problems',
+        'GET',
+        'fetchMultiplicationProblems',
+        level
+    );
+
     try {
-        const response = await fetchMathProblems();
+        console.log(`📊 Fetching multiplication problems for level ${level} using cached service`);
 
-        // Get all multiplication problems from all levels - we'll filter by difficulty later
-        const allMultiplicationProblems: MultiplicationProblem[] = [];
+        // Use cached service instead of direct API call
+        const problems = await cachedApiService.getFilteredProblems('multiplication', level);
 
-        // Get problems from all multiplication levels in the API response
-        for (let i = 0; i <= 2; i++) {
-            const key = `multiplication_${i}`;
-            const multiplicationQuestions = response.public[key] || [];
-            const problems = multiplicationQuestions.map(q => convertToMultiplicationProblem(q as MultiplicationQuestion));
-            allMultiplicationProblems.push(...problems);
-        }
+        // Convert raw API data to MultiplicationProblem format
+        const multiplicationProblems: MultiplicationProblem[] = problems.map((problem: any) => {
+            // Convert API format to MultiplicationQuestion format
+            const multiplicationQuestion: MultiplicationQuestion = {
+                question: problem.question,
+                number_0: problem.number_0,
+                number_1: problem.number_1,
+                operator: problem.operator
+            };
 
-        // Filter problems by difficulty level and remove duplicates
-        const filteredProblems = filterMultiplicationProblemsForLevel(allMultiplicationProblems, level);
+            // Use the existing conversion function
+            return convertToMultiplicationProblem(multiplicationQuestion);
+        });
 
+        // Filter problems for the specific level
+        const filteredProblems = filterMultiplicationProblemsForLevel(multiplicationProblems, level);
+
+        console.log(`📊 Converted ${problems.length} raw problems to ${filteredProblems.length} filtered multiplication problems for level ${level}`);
+
+        logApiCallEnd(callId, true);
         return filteredProblems;
-    } catch {
-        // Return empty array on error
-        return [];
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Error fetching multiplication problems:', errorMessage);
+        logApiCallEnd(callId, false, errorMessage);
+        throw error;
     }
 }
 
 /**
- * Fetches addition problems of a specific level
- * @param level 0=easy, 1=medium, 2=hard
+ * Fetches addition problems for a specific level
  */
-export async function fetchAdditionProblems(level: number = 0): Promise<AdditionProblem[]> {
+export async function fetchAdditionProblems(level: number): Promise<AdditionProblem[]> {
+    const callId = logApiCallStart(
+        'Cached Addition Problems',
+        'GET',
+        'fetchAdditionProblems',
+        level
+    );
+
     try {
-        const response = await fetchMathProblems();
+        console.log(`📊 Fetching addition problems for level ${level} using cached service`);
 
-        // Get all addition problems from all levels - we'll filter by difficulty later
-        const allAdditionProblems: AdditionProblem[] = [];
+        // Use cached service instead of direct API call
+        const problems = await cachedApiService.getFilteredProblems('addition', level);
 
-        // Get problems from all addition levels in the API response
-        for (let i = 0; i <= 2; i++) {
-            const key = `addition_${i}`;
-            const additionQuestions = response.public[key] || [];
-            const problems = additionQuestions.map(convertToAdditionProblem);
-            allAdditionProblems.push(...problems);
-        }
+        // Convert raw API data to AdditionProblem format
+        const additionProblems: AdditionProblem[] = problems.map((problem: any) => {
+            // Convert API format to MathQuestion format first
+            const mathQuestion: MathQuestion = {
+                question: problem.question,
+                number_0: problem.number_0,
+                number_1: problem.number_1,
+                operator: problem.operator
+            };
 
-        // Filter problems by difficulty level and remove duplicates
-        const filteredProblems = filterAdditionProblemsForLevel(allAdditionProblems, level);
+            // Use the existing conversion function
+            return convertToAdditionProblem(mathQuestion);
+        });
 
+        // Filter problems for the specific level
+        const filteredProblems = filterAdditionProblemsForLevel(additionProblems, level);
+
+        console.log(`📊 Converted ${problems.length} raw problems to ${filteredProblems.length} filtered addition problems for level ${level}`);
+
+        logApiCallEnd(callId, true);
         return filteredProblems;
-    } catch {
-        // Return empty array on error
-        return [];
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Error fetching addition problems:', errorMessage);
+        logApiCallEnd(callId, false, errorMessage);
+        throw error;
     }
 }
 
 /**
- * Fetches subtraction problems of a specific level
- * @param level 0=easy, 1=medium, 2=hard
+ * Fetches subtraction problems for a specific level
  */
-export async function fetchSubtractionProblems(level: number = 0): Promise<SubtractionProblem[]> {
+export async function fetchSubtractionProblems(level: number): Promise<SubtractionProblem[]> {
+    const callId = logApiCallStart(
+        'Cached Subtraction Problems',
+        'GET',
+        'fetchSubtractionProblems',
+        level
+    );
+
     try {
-        const response = await fetchMathProblems();
+        console.log(`📊 Fetching subtraction problems for level ${level} using cached service`);
 
-        // Get all subtraction problems from all levels - we'll filter by difficulty later
-        const allSubtractionProblems: SubtractionProblem[] = [];
+        // Use cached service instead of direct API call
+        const problems = await cachedApiService.getFilteredProblems('subtraction', level);
 
-        // Get problems from all subtraction levels in the API response
-        // Note: API doesn't have subtraction_0, subtraction_1, etc. so we'll use addition problems and convert them
-        for (let i = 0; i <= 2; i++) {
-            const key = `addition_${i}`;
-            const additionQuestions = response.public[key] || [];
-            const problems = additionQuestions.map(convertToSubtractionProblem);
-            allSubtractionProblems.push(...problems);
-        }
+        // Convert raw API data to SubtractionProblem format
+        const subtractionProblems: SubtractionProblem[] = problems.map((problem: any) => {
+            // Convert API format to MathQuestion format first
+            const mathQuestion: MathQuestion = {
+                question: problem.question,
+                number_0: problem.number_0,
+                number_1: problem.number_1,
+                operator: problem.operator
+            };
 
-        // Filter problems by difficulty level and remove duplicates
-        const filteredProblems = filterSubtractionProblemsForLevel(allSubtractionProblems, level);
+            // Use the existing conversion function
+            return convertToSubtractionProblem(mathQuestion);
+        });
 
+        // Filter problems for the specific level
+        const filteredProblems = filterSubtractionProblemsForLevel(subtractionProblems, level);
+
+        console.log(`📊 Converted ${problems.length} raw problems to ${filteredProblems.length} filtered subtraction problems for level ${level}`);
+
+        logApiCallEnd(callId, true);
         return filteredProblems;
-    } catch {
-        // Return empty array on error
-        return [];
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Error fetching subtraction problems:', errorMessage);
+        logApiCallEnd(callId, false, errorMessage);
+        throw error;
     }
 } 
