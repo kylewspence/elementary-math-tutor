@@ -786,6 +786,9 @@ export async function fetchDivisionProblems(level: number): Promise<DivisionProb
     try {
         console.log(`📊 Fetching division problems for level ${level} using cached service`);
 
+        // Wait for cache to be ready before proceeding
+        await cachedApiService.waitForCacheReady();
+
         // Use cached service instead of direct API call
         const problems = await cachedApiService.getFilteredProblems('division', level);
 
@@ -832,6 +835,9 @@ export async function fetchMultiplicationProblems(level: number): Promise<Multip
 
     try {
         console.log(`📊 Fetching multiplication problems for level ${level} using cached service`);
+
+        // Wait for cache to be ready before proceeding
+        await cachedApiService.waitForCacheReady();
 
         // Use cached service instead of direct API call
         const problems = await cachedApiService.getFilteredProblems('multiplication', level);
@@ -880,6 +886,9 @@ export async function fetchAdditionProblems(level: number): Promise<AdditionProb
     try {
         console.log(`📊 Fetching addition problems for level ${level} using cached service`);
 
+        // Wait for cache to be ready before proceeding
+        await cachedApiService.waitForCacheReady();
+
         // Use cached service instead of direct API call
         const problems = await cachedApiService.getFilteredProblems('addition', level);
 
@@ -926,6 +935,9 @@ export async function fetchSubtractionProblems(level: number): Promise<Subtracti
 
     try {
         console.log(`📊 Fetching subtraction problems for level ${level} using cached service`);
+
+        // Wait for cache to be ready before proceeding
+        await cachedApiService.waitForCacheReady();
 
         // Use cached service instead of direct API call
         const problems = await cachedApiService.getFilteredProblems('subtraction', level);

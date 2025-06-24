@@ -131,6 +131,8 @@ export const CACHE_KEYS = {
 export class CachedApiService {
     private hitCount = 0;
     private missCount = 0;
+    private isPreloaded = false;
+    private preloadPromise: Promise<void> | null = null;
 
     /**
      * Gets the full math problems response with caching
@@ -281,12 +283,73 @@ export class CachedApiService {
     }
 
     /**
-     * Preloads cache with fresh data
+     * Waits for cache to be ready (preloaded)
+     */
+    async waitForCacheReady(): Promise<void> {
+        if (this.isPreloaded) {
+            return; // Already ready
+        }
+
+        if (this.preloadPromise) {
+            console.log('🔍 [DEBUG] Preload promise exists, waiting for it...');
+            await this.preloadPromise; // Wait for ongoing preload
+            return;
+        }
+
+        // If no preload is happening, start one
+        console.log('🔍 [DEBUG] No preload happening, starting new preload...');
+        this.preloadPromise = this.preloadCache();
+        await this.preloadPromise;
+    }
+
+    /**
+     * Preloads cache with fresh data and all filtered combinations
      */
     async preloadCache(): Promise<void> {
+        if (this.isPreloaded) {
+            return; // Already preloaded
+        }
+
+        // If there's already a preload in progress, wait for it
+        if (this.preloadPromise) {
+            console.log('🔍 [DEBUG] Preload already in progress, waiting for it...');
+            await this.preloadPromise;
+            return;
+        }
+
+        // Start the preload and track the promise
+        console.log('🔍 [DEBUG] Starting new preload and tracking promise...');
+        this.preloadPromise = this._doPreload();
+        await this.preloadPromise;
+        this.preloadPromise = null; // Clear the promise when done
+    }
+
+    /**
+     * Internal method that does the actual preloading work
+     */
+    private async _doPreload(): Promise<void> {
         console.log('🔄 Preloading API cache...');
+
+        // First, get the full math problems response
         await this.getMathProblems(true); // Force fresh fetch
-        console.log('✅ API cache preloaded');
+
+        // Then preload all filtered combinations that the app uses
+        const operations = ['division', 'addition', 'multiplication', 'subtraction'] as const;
+        const levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Match actual levels used by the app
+
+        console.log('🔄 Preloading filtered problem sets...');
+
+        // Preload all operation/level combinations
+        const preloadPromises = operations.flatMap(operation =>
+            levels.map(level =>
+                this.getFilteredProblems(operation, level, false) // Use cache if available
+            )
+        );
+
+        await Promise.all(preloadPromises);
+
+        this.isPreloaded = true;
+        console.log('✅ API cache fully preloaded with all filtered combinations');
     }
 }
 

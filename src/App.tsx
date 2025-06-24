@@ -20,7 +20,7 @@ import type { MultiplicationProblem } from './types/multiplication';
 import type { SubtractionProblem } from './types/subtraction';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import type { GameMode } from './types/game';
-import { initCachePreload } from './utils/cachePreloader';
+
 import './utils/apiCallLogger'; // Initialize the logger
 
 function App() {
@@ -189,26 +189,40 @@ function App() {
 
       // Only initialize modes that don't have valid saved state
       if (!saved.divisionState || !saved.divisionState.levelProblems) {
-        initializeGame();
+        if (gameMode === 'division') {
+          initializeGame();
+        }
       }
 
       if (!saved.additionState || !saved.additionState.levelProblems) {
-        initializeAdditionGame();
+        if (gameMode === 'addition') {
+          initializeAdditionGame();
+        }
       }
 
       if (!saved.multiplicationState || !saved.multiplicationState.levelProblems) {
-        initializeMultiplicationGame();
+        if (gameMode === 'multiplication') {
+          initializeMultiplicationGame();
+        }
       }
 
       if (!saved.subtractionState || !saved.subtractionState.levelProblems) {
-        initializeSubtractionGame();
+        if (gameMode === 'subtraction') {
+          initializeSubtractionGame();
+        }
       }
     } else {
-      // Only initialize if we don't have saved state
-      initializeGame();
-      initializeAdditionGame();
-      initializeMultiplicationGame();
-      initializeSubtractionGame();
+      // Only initialize the current game mode if we don't have saved state
+      console.log(`🎮 Initializing game mode: ${gameMode} (no saved state)`);
+      if (gameMode === 'division') {
+        initializeGame();
+      } else if (gameMode === 'addition') {
+        initializeAdditionGame();
+      } else if (gameMode === 'multiplication') {
+        initializeMultiplicationGame();
+      } else if (gameMode === 'subtraction') {
+        initializeSubtractionGame();
+      }
     }
   }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
@@ -288,32 +302,7 @@ function App() {
     return () => window.removeEventListener('autoRestoreProgress', handleAutoRestore);
   }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState]);
 
-  // Initialize the appropriate game ONLY when mode changes (after initial load)
-  useEffect(() => {
-    // Only run after we've loaded saved state
-    if (!hasLoadedSavedState) return;
 
-    // Don't re-initialize if we have saved state for this mode
-    const saved = loadProgress();
-    if (saved) {
-      // Check if the current mode has valid saved state
-      if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) return;
-      if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) return;
-      if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) return;
-      if (gameMode === 'subtraction' && saved.subtractionState && saved.subtractionState.levelProblems) return;
-    }
-
-    // Only initialize if we don't have saved state for this specific mode
-    if (gameMode === 'division') {
-      initializeGame();
-    } else if (gameMode === 'addition') {
-      initializeAdditionGame();
-    } else if (gameMode === 'multiplication') {
-      initializeMultiplicationGame();
-    } else if (gameMode === 'subtraction') {
-      initializeSubtractionGame();
-    }
-  }, [gameMode, hasLoadedSavedState, loadProgress, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
@@ -451,11 +440,7 @@ function App() {
     setGameMode(mode);
   };
 
-  // Initialize cache preloader
-  useEffect(() => {
-    // Initialize cache preloading after a short delay to not block initial render
-    initCachePreload(2000); // 2 second delay
-  }, []);
+
 
   const getCurrentLevelInfo = () => {
     if (gameMode === 'division') {
