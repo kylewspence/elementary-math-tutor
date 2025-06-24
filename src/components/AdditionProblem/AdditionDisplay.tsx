@@ -258,7 +258,7 @@ const AdditionDisplay: React.FC<AdditionDisplayProps> = ({
                         onFieldClick(prevField.columnPosition, prevField.fieldType);
                     }
                 }}
-                onEnter={isSubmitted && isComplete ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
+                onEnter={isSubmitted && areAllAnswersCorrect() ? onNextProblem : (areAllFieldsFilled?.() ? onProblemSubmit : undefined)}
                 placeholder="?"
             />
         );

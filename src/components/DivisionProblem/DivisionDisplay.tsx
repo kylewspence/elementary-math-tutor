@@ -644,12 +644,12 @@ const DivisionDisplay: React.FC<DivisionDisplayProps> = ({
                     {!isSubmitted ? (
                         <button
                             onClick={() => {
-                                console.log('🔍 [SUBMIT DEBUG] Submit button clicked');
+
                                 onProblemSubmit?.();
                             }}
                             disabled={(() => {
                                 const allFieldsFilledResult = areAllFieldsFilled?.();
-                                console.log(`🔍 [SUBMIT DEBUG] Submit button render - areAllFieldsFilled: ${allFieldsFilledResult}, disabled: ${!allFieldsFilledResult}`);
+
                                 return !allFieldsFilledResult;
                             })()}
                             className={`px-6 py-2 rounded-lg font-semibold mb-4 ${!areAllFieldsFilled?.()

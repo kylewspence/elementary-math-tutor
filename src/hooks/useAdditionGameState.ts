@@ -85,7 +85,7 @@ export function useAdditionGameState() {
                 isSubmitted: false,
             }));
         } catch (error) {
-            console.error('Error loading addition problems:', error);
+            // Error loading addition problems
             setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
@@ -330,9 +330,17 @@ export function useAdditionGameState() {
     // Move to the next problem
     const nextProblem = useCallback(() => {
         setGameState(prev => {
+            console.log('🔧 [ADDITION DEBUG] nextProblem called with state:', {
+                currentProblemIndex: prev.currentProblemIndex,
+                levelProblemsLength: prev.levelProblems.length,
+                currentLevel: prev.currentLevel,
+                availableLevels: prev.availableLevels
+            });
+
             // If we have more problems in this level, move to the next one
             if (prev.currentProblemIndex < prev.levelProblems.length - 1) {
                 const nextIndex = prev.currentProblemIndex + 1;
+                console.log('🔧 [ADDITION DEBUG] Moving to next problem in level:', nextIndex);
                 return {
                     ...prev,
                     currentProblemIndex: nextIndex,
@@ -345,7 +353,9 @@ export function useAdditionGameState() {
 
             // If we've finished the last problem, advance to the next level if available
             const nextLevelId = prev.currentLevel + 1;
+            console.log('🔧 [ADDITION DEBUG] Finished level, checking for next level:', nextLevelId, 'available levels:', prev.availableLevels);
             if (prev.availableLevels.includes(nextLevelId)) {
+                console.log('🔧 [ADDITION DEBUG] Advancing to next level:', nextLevelId);
                 // Advance to next level and load its problems
                 // Note: This will trigger async problem loading, but we set level immediately
                 // The loadProblemsForLevel call will update problems when async operation completes
@@ -363,6 +373,7 @@ export function useAdditionGameState() {
             }
 
             // If no next level available, generate a new problem for current level
+            console.log('🔧 [ADDITION DEBUG] No next level available, generating new problem for current level');
             const newProblem = generateLevelSpecificAdditionProblem(prev.currentLevel);
             return {
                 ...prev,

@@ -25,11 +25,15 @@ function mapLevelToDifficulty(levelId: number): MultiplicationDifficulty {
  * Generates a multiplication problem specifically for the given level ID
  */
 function generateLevelSpecificMultiplicationProblem(levelId: number): MultiplicationProblem {
+    console.log('🔧 [MULTIPLICATION DEBUG] Generating problem for level:', levelId);
     // Map the level ID to a difficulty
     const difficulty = mapLevelToDifficulty(levelId);
+    console.log('🔧 [MULTIPLICATION DEBUG] Mapped to difficulty:', difficulty);
 
     // Generate the problem with the appropriate difficulty
-    return generateMultiplicationProblem(difficulty);
+    const problem = generateMultiplicationProblem(difficulty);
+    console.log('🔧 [MULTIPLICATION DEBUG] Generated problem:', problem);
+    return problem;
 }
 
 /**
@@ -57,6 +61,7 @@ export function useMultiplicationGameState() {
 
     // Load problems for a specific level
     const loadProblemsForLevel = useCallback(async (levelId: number) => {
+        console.log('🔧 [MULTIPLICATION DEBUG] Loading problems for level:', levelId);
         setIsLoading(true);
         setFetchError(null);
 
@@ -65,24 +70,32 @@ export function useMultiplicationGameState() {
 
             // Only fetch from API if feature is enabled
             if (FEATURES.USE_API_PROBLEMS) {
+                console.log('🔧 [MULTIPLICATION DEBUG] Fetching from API...');
                 // Fetch from API first
                 const apiProblems = await fetchMultiplicationProblems(levelId);
                 problems = [...apiProblems];
+                console.log('🔧 [MULTIPLICATION DEBUG] Got from API:', problems.length, 'problems');
+            } else {
+                console.log('🔧 [MULTIPLICATION DEBUG] API disabled, using local only');
             }
 
             // If we don't have enough from the API, supplement with local generation
             const MIN_PROBLEMS_FROM_API = 8;
             if (problems.length < MIN_PROBLEMS_FROM_API) {
                 const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                console.log('🔧 [MULTIPLICATION DEBUG] Generating', localProblemsNeeded, 'local problems');
                 const localProblems = Array.from({ length: localProblemsNeeded },
                     () => generateLevelSpecificMultiplicationProblem(levelId));
 
                 problems = [...problems, ...localProblems];
+                console.log('🔧 [MULTIPLICATION DEBUG] Total problems after local gen:', problems.length);
             }
 
             // Limit to 10 problems and shuffle
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
+            console.log('🔧 [MULTIPLICATION DEBUG] Final problems count:', problems.length);
+            console.log('🔧 [MULTIPLICATION DEBUG] First problem:', problems[0]);
 
             setGameState(prev => ({
                 ...prev,
@@ -93,12 +106,15 @@ export function useMultiplicationGameState() {
                 isSubmitted: false,
             }));
         } catch (error) {
-            console.error('Error loading multiplication problems:', error);
+            console.log('🔧 [MULTIPLICATION DEBUG] Error in loadProblemsForLevel:', error);
+            // Error loading multiplication problems
             setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
             const fallbackProblems = Array.from({ length: PROBLEMS_PER_LEVEL },
                 () => generateLevelSpecificMultiplicationProblem(levelId));
+
+            console.log('🔧 [MULTIPLICATION DEBUG] Fallback problems:', fallbackProblems.length);
 
             setGameState(prev => ({
                 ...prev,
@@ -115,6 +131,8 @@ export function useMultiplicationGameState() {
 
     // Initialize game state
     const initializeGame = useCallback(async () => {
+        console.log('🔧 [MULTIPLICATION DEBUG] Initializing multiplication game...');
+
         // Load initial level
         await loadProblemsForLevel(1);
 
@@ -123,6 +141,8 @@ export function useMultiplicationGameState() {
         if (FEATURES.ALLOW_LEVEL_SKIPPING) {
             initialLevels = MULTIPLICATION_LEVELS.map(l => l.id);
         }
+
+        console.log('🔧 [MULTIPLICATION DEBUG] Setting initial game state with levels:', initialLevels);
 
         setGameState(prev => ({
             ...prev,

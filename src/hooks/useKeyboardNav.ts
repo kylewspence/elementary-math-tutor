@@ -88,7 +88,7 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
     // Check if all fields have answers using shared validation
     const areAllFieldsFilled = useCallback(() => {
         if (!problem) {
-            console.log('🔍 [SUBMIT DEBUG] No problem - returning false');
+
             return false;
         }
 
@@ -109,20 +109,6 @@ export function useKeyboardNav(problem: DivisionProblem | null, userAnswers: Use
         }));
 
         const result = checkAllFieldsFilled(validationFields, validationAnswers);
-
-        // Debug logging for submit button
-        console.log('🔍 [SUBMIT DEBUG] Division areAllFieldsFilled check:');
-        console.log('  Expected fields:', validationFields.map(f => `${f.fieldType}[${f.fieldPosition}] step${f.stepNumber}`));
-        console.log('  User answers:', validationAnswers.map(a => `${a.fieldType}[${a.fieldPosition}] step${a.stepNumber} = "${a.value}"`));
-        console.log('  Missing fields:', validationFields.filter(field =>
-            !validationAnswers.some(answer =>
-                answer.stepNumber === field.stepNumber &&
-                answer.fieldType === field.fieldType &&
-                answer.fieldPosition === field.fieldPosition &&
-                answer.value !== undefined && answer.value !== null
-            )
-        ).map(f => `${f.fieldType}[${f.fieldPosition}] step${f.stepNumber}`));
-        console.log(`  Result: ${result} (${validationFields.length} fields expected, ${validationAnswers.filter(a => a.value !== undefined && a.value !== null).length} filled)`);
 
         return result;
     }, [problem, userAnswers, getAllFieldsInOrder, checkAllFieldsFilled]);

@@ -21,6 +21,8 @@ import type { SubtractionProblem } from './types/subtraction';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import type { GameMode } from './types/game';
 
+import './utils/apiCallLogger'; // Initialize the logger
+
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('division');
   const [hasLoadedSavedState, setHasLoadedSavedState] = useState(false);
@@ -187,30 +189,46 @@ function App() {
 
       // Only initialize modes that don't have valid saved state
       if (!saved.divisionState || !saved.divisionState.levelProblems) {
-        initializeGame();
+        if (gameMode === 'division') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
+          initializeGame();
+        }
       }
 
       if (!saved.additionState || !saved.additionState.levelProblems) {
-        initializeAdditionGame();
+        if (gameMode === 'addition') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
+          initializeAdditionGame();
+        }
       }
 
       if (!saved.multiplicationState || !saved.multiplicationState.levelProblems) {
-        initializeMultiplicationGame();
+        if (gameMode === 'multiplication') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
+          initializeMultiplicationGame();
+        }
       }
 
       if (!saved.subtractionState || !saved.subtractionState.levelProblems) {
-        initializeSubtractionGame();
+        if (gameMode === 'subtraction') {
+          console.log(`🎮 Initializing game mode: ${gameMode} (saved state incomplete)`);
+          initializeSubtractionGame();
+        }
       }
     } else {
-      // Only initialize if we don't have saved state
-      initializeGame();
-      initializeAdditionGame();
-      initializeMultiplicationGame();
-      initializeSubtractionGame();
+      // Only initialize the current game mode if we don't have saved state
+      console.log(`🎮 Initializing game mode: ${gameMode} (no saved state)`);
+      if (gameMode === 'division') {
+        initializeGame();
+      } else if (gameMode === 'addition') {
+        initializeAdditionGame();
+      } else if (gameMode === 'multiplication') {
+        initializeMultiplicationGame();
+      } else if (gameMode === 'subtraction') {
+        initializeSubtractionGame();
+      }
     }
   }, [loadProgress, hasLoadedSavedState, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState, gameMode, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
-
-
 
   // Save current state when auto-save is triggered
   useEffect(() => {
@@ -238,13 +256,7 @@ function App() {
           levelProblems: subtractionGameState.levelProblems,
         },
       };
-      console.log('💾 Auto-save triggered - saving progress:', {
-        gameMode,
-        divisionLevel: gameState.currentLevel,
-        additionLevel: additionGameState.currentLevel,
-        multiplicationLevel: multiplicationGameState.currentLevel,
-        subtractionLevel: subtractionGameState.currentLevel
-      });
+      // Auto-save triggered - saving progress
       saveProgress(currentProgress);
     };
 
@@ -294,22 +306,19 @@ function App() {
     return () => window.removeEventListener('autoRestoreProgress', handleAutoRestore);
   }, [loadProgress, gameMode, restoreGameState, restoreAdditionGameState, restoreMultiplicationGameState, restoreSubtractionGameState]);
 
-  // Initialize the appropriate game ONLY when mode changes (after initial load)
+  // Handle tab switches - initialize new game modes when first accessed
   useEffect(() => {
-    // Only run after we've loaded saved state
+    // Only run after initial load has completed
     if (!hasLoadedSavedState) return;
 
-    // Don't re-initialize if we have saved state for this mode
-    const saved = loadProgress();
-    if (saved) {
-      // Check if the current mode has valid saved state
-      if (gameMode === 'division' && saved.divisionState && saved.divisionState.levelProblems) return;
-      if (gameMode === 'addition' && saved.additionState && saved.additionState.levelProblems) return;
-      if (gameMode === 'multiplication' && saved.multiplicationState && saved.multiplicationState.levelProblems) return;
-      if (gameMode === 'subtraction' && saved.subtractionState && saved.subtractionState.levelProblems) return;
-    }
+    // Check if the current game mode already has problems loaded (either from current session or saved state)
+    if (gameMode === 'division' && gameState.levelProblems.length > 0) return;
+    if (gameMode === 'addition' && additionGameState.levelProblems.length > 0) return;
+    if (gameMode === 'multiplication' && multiplicationGameState.levelProblems.length > 0) return;
+    if (gameMode === 'subtraction' && subtractionGameState.levelProblems.length > 0) return;
 
-    // Only initialize if we don't have saved state for this specific mode
+    // Initialize the new game mode (this only runs on first access to a tab)
+    console.log(`🎮 Tab switch - initializing game mode: ${gameMode} (first time)`);
     if (gameMode === 'division') {
       initializeGame();
     } else if (gameMode === 'addition') {
@@ -319,7 +328,7 @@ function App() {
     } else if (gameMode === 'subtraction') {
       initializeSubtractionGame();
     }
-  }, [gameMode, hasLoadedSavedState, loadProgress, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
+  }, [gameMode, hasLoadedSavedState, gameState.levelProblems.length, additionGameState.levelProblems.length, multiplicationGameState.levelProblems.length, subtractionGameState.levelProblems.length, initializeGame, initializeAdditionGame, initializeMultiplicationGame, initializeSubtractionGame]);
 
   // Generate new problem when needed for division
   useEffect(() => {
@@ -457,6 +466,8 @@ function App() {
     setGameMode(mode);
   };
 
+
+
   const getCurrentLevelInfo = () => {
     if (gameMode === 'division') {
       return {
@@ -559,7 +570,7 @@ function App() {
 
         {gameMode === 'addition' && (
           <AdditionDisplay
-            problem={additionGameState.problem as AdditionProblem}
+            problem={additionGameState.problem as AdditionProblem | null}
             userAnswers={additionGameState.userAnswers}
             currentFocus={additionCurrentFocus}
             isSubmitted={additionGameState.isSubmitted}
@@ -584,7 +595,7 @@ function App() {
 
         {gameMode === 'multiplication' && (
           <MultiplicationDisplay
-            problem={multiplicationGameState.problem as MultiplicationProblem}
+            problem={multiplicationGameState.problem as MultiplicationProblem | null}
             userAnswers={multiplicationGameState.userAnswers}
             currentFocus={multiplicationCurrentFocus}
             isSubmitted={multiplicationGameState.isSubmitted}
@@ -610,7 +621,7 @@ function App() {
 
         {gameMode === 'subtraction' && (
           <SubtractionDisplay
-            problem={subtractionGameState.problem as SubtractionProblem}
+            problem={subtractionGameState.problem as SubtractionProblem | null}
             userAnswers={subtractionGameState.userAnswers}
             currentFocus={subtractionCurrentFocus}
             isSubmitted={subtractionGameState.isSubmitted}

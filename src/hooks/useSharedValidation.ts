@@ -23,12 +23,7 @@ export function useSharedValidation() {
         allFields: ValidationField[],
         userAnswers: ValidationAnswer[]
     ): boolean => {
-        console.log('🔍 [SHARED VALIDATION] areAllFieldsFilled called:');
-        console.log('  All fields:', allFields);
-        console.log('  User answers:', userAnswers);
-
         if (allFields.length === 0) {
-            console.log('  ❌ No fields to validate - returning false');
             return false;
         }
 
@@ -58,14 +53,9 @@ export function useSharedValidation() {
                 return false;
             });
 
-            if (!hasAnswer) {
-                console.log(`  ❌ Missing answer for field:`, field);
-            }
-
             return hasAnswer;
         });
 
-        console.log(`  Final result: ${result}`);
         return result;
     }, []);
 

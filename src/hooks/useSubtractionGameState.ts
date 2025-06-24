@@ -62,18 +62,23 @@ export function useSubtractionGameState() {
                 problems = [...apiProblems];
             }
 
+            console.log('🔧 [SUBTRACTION DEBUG] Problems from API:', problems.length);
+
             // If we don't have enough from the API, supplement with local generation
             const MIN_PROBLEMS_FROM_API = 8;
             if (problems.length < MIN_PROBLEMS_FROM_API) {
                 const localProblemsNeeded = PROBLEMS_PER_LEVEL - problems.length;
+                console.log('🔧 [SUBTRACTION DEBUG] Need', localProblemsNeeded, 'local problems');
                 const localProblems = Array.from({ length: localProblemsNeeded },
                     () => generateLevelSpecificSubtractionProblem(levelId));
 
                 problems = [...problems, ...localProblems];
+                console.log('🔧 [SUBTRACTION DEBUG] Total problems after adding local:', problems.length);
             }
 
             // Limit to 10 problems and shuffle
             problems = problems.slice(0, PROBLEMS_PER_LEVEL);
+            console.log('🔧 [SUBTRACTION DEBUG] Final problems after slice:', problems.length, 'PROBLEMS_PER_LEVEL:', PROBLEMS_PER_LEVEL);
             problems = shuffleArray(problems);
 
             setGameState(prev => ({
@@ -85,7 +90,7 @@ export function useSubtractionGameState() {
                 isSubmitted: false,
             }));
         } catch (error) {
-            console.error('Error loading subtraction problems:', error);
+            // Error loading subtraction problems
             setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems

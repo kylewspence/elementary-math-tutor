@@ -88,7 +88,7 @@ export function useGameState() {
             }));
 
         } catch (error) {
-            console.error('Error loading division problems:', error);
+            // Error loading division problems
             setFetchError('Failed to load problems. Please try again.');
 
             // Fallback to locally generated problems
